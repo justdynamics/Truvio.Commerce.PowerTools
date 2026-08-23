@@ -64,6 +64,11 @@ Requires Dynamicweb 10.8 or newer. Issues and feature requests: https://github.c
     <DefineConstants Condition="$([System.Version]::Parse('$(DwVersionNumeric)').CompareTo($([System.Version]::Parse('10.24.0')))) &gt;= 0">$(DefineConstants);DW_HAS_SCREEN_EXPLANATION</DefineConstants>
     <!-- BadgeType.Outline* variants exist from 10.23; older hosts fall back to solid badges. -->
     <DefineConstants Condition="$([System.Version]::Parse('$(DwVersionNumeric)').CompareTo($([System.Version]::Parse('10.23.0')))) &gt;= 0">$(DefineConstants);DW_HAS_OUTLINE_BADGES</DefineConstants>
+    <!-- A query clause whose field is not in the index schema THROWS in Helpers.ParseQueryExpressionInternal
+         up to 10.19.7, and from 10.21.13 only logs a warning and drops the clause. The Query tester has to
+         report the right consequence, so the behaviour is compiled in per host. (10.20.x is not in the
+         local package cache; 10.21 is the first version verified to warn.) -->
+    <DefineConstants Condition="$([System.Version]::Parse('$(DwVersionNumeric)').CompareTo($([System.Version]::Parse('10.21.0')))) &gt;= 0">$(DefineConstants);DW_DROPS_UNKNOWN_CLAUSE_FIELD</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

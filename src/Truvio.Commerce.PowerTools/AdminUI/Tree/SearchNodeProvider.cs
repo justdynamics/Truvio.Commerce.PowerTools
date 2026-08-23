@@ -15,6 +15,7 @@ public sealed class SearchNodeProvider : NavigationNodeProvider<SearchSection>
     public const string FieldUsageNodeId = "PowerTools_FieldUsage";
     public const string QueryLinterNodeId = "PowerTools_QueryLinter";
     public const string DocumentsNodeId = "PowerTools_Documents";
+    public const string QueryTesterNodeId = "PowerTools_QueryTester";
 
     public override IEnumerable<NavigationNode> GetRootNodes()
     {
@@ -59,6 +60,16 @@ public sealed class SearchNodeProvider : NavigationNodeProvider<SearchSection>
             Sort = 40,
             HasSubNodes = false,
             NodeAction = NavigateScreenAction.To<IndexPickScreen>().With(new IndexPickQuery())
+        };
+
+        yield return new NavigationNode
+        {
+            Id = QueryTesterNodeId,
+            Name = "Query tester",
+            Icon = Icon.Flask,
+            Sort = 50,
+            HasSubNodes = false,
+            NodeAction = NavigateScreenAction.To<QueryPickScreen>().With(new QueryPickQuery())
         };
     }
 
