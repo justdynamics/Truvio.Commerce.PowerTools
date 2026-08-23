@@ -1,6 +1,6 @@
 # Concepts
 
-## What the Security Viewer answers
+## What the Content Access Viewer answers
 
 "Which content does this account see?" — asked by business users who gate pages, grid
 rows, or paragraphs by group to personalise the experience (member areas, B2B portals,

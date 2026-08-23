@@ -14,10 +14,10 @@ public sealed class AudienceItemModel : DataViewModelBase
 
     public string OriginKind { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Content")]
+    [ConfigurableProperty("Content", isSearchable: true)]
     public string ItemType { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Name")]
+    [ConfigurableProperty("Name", isSearchable: true)]
     public string Name { get; set; } = string.Empty;
 
     [ConfigurableProperty("Sees it")]
@@ -26,6 +26,6 @@ public sealed class AudienceItemModel : DataViewModelBase
     [ConfigurableProperty("Level")]
     public string Level { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Why")]
+    [ConfigurableProperty("Why", isSearchable: true)]
     public string Reason { get; set; } = string.Empty;
 }

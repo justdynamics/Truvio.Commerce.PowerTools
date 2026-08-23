@@ -13,15 +13,15 @@ namespace Truvio.Commerce.PowerTools.AdminUI.Queries;
 /// with the effective level, its origin, and any gating warnings on that page.
 /// AccountKey carries the account ("role:Anonymous" / "group:42" / "user:17").
 /// </summary>
-public sealed class AccessOverviewQuery : DataQueryModelBase<DataListViewModel<AccessNodeModel>>
+public sealed class AccessOverviewQuery : DataQueryListBase<AccessNodeModel, AccessNodeModel, DataListViewModel<AccessNodeModel>>
 {
     public string AccountKey { get; set; } = string.Empty;
 
-    public override DataListViewModel<AccessNodeModel>? GetModel()
+    protected override IEnumerable<AccessNodeModel>? GetListItems()
     {
         var account = new DwAccountCatalog().Resolve(AccountKey);
         if (account is null)
-            return new DataListViewModel<AccessNodeModel>();
+            return [];
 
         var source = new DwContentSecuritySource();
         var evaluator = new EffectiveAccessEvaluator(source);
@@ -78,11 +78,7 @@ public sealed class AccessOverviewQuery : DataQueryModelBase<DataListViewModel<A
             }
         }
 
-        return new DataListViewModel<AccessNodeModel>
-        {
-            Data = items,
-            TotalCount = items.Count
-        };
+        return items;
     }
 
     internal static string Describe(EffectiveAccess access, IReadOnlyDictionary<int, PageNode> pagesById) =>
@@ -106,4 +102,8 @@ public sealed class AccessOverviewQuery : DataQueryModelBase<DataListViewModel<A
         _ when int.TryParse(ownerId, out _) => $"group {ownerId}",
         _ => ownerId
     };
+
+    protected override IEnumerable<AccessNodeModel> MapModels(IEnumerable<AccessNodeModel> items) => items;
+
+    protected override DataListViewModel<AccessNodeModel> MakeListModel() => new();
 }

@@ -21,7 +21,7 @@ up the screens, tree nodes, and permission entities from the assembly).
 DW10 admin → **PowerTools** area (wrench icon in the left navigation, between Apps and
 Settings) → **Security** section:
 
-- **Security Viewer** — pick an account, inspect its content access, drill into a page.
+- **Content Access Viewer** — pick an account, inspect its content access, drill into a page.
 - **Warnings** — run the misconfiguration rules across the install.
 
 The PowerTools area is contributed entirely by the app — it exists only in the admin UI
@@ -30,7 +30,7 @@ while the package is installed. Each tool family gets its own section in the are
 ## Verifying a personalisation gate
 
 1. Gate content with the deny+grant pair (broad roles → None, target group → Read).
-2. Open Security Viewer → pick the target group → confirm "Sees it: Yes" with the group as winner.
+2. Open Content Access Viewer → pick the target group → confirm "Sees it: Yes" with the group as winner.
 3. Pick a different group (or Authenticated users) → confirm "Sees it: No".
 4. Check Warnings — the gate should produce no SECOPS-W1 finding.
 

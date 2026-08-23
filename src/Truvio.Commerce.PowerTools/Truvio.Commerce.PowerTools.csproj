@@ -18,8 +18,8 @@
     <Description>Truvio PowerTools — a growing suite of admin power tools for Dynamicweb 10 by JustDynamics, in one dedicated "PowerTools" area of the administration.
 
 Included tools:
-• Security Viewer — pick any security account (role, group, or user) and see its effective content access across pages, grid rows, and paragraphs, with origin explanations.
-• Access Warnings — misconfiguration findings: ineffective group grants, gated sign-in pages, ignored legacy permission columns, orphaned grants.
+• Content Access Viewer — pick any security account (role, group, or user) and see its effective CONTENT access (pages, grid rows, paragraphs) across pages, grid rows, and paragraphs, with origin explanations.
+• Content Access Warnings — content-permission misconfiguration findings: ineffective group grants, gated sign-in pages, ignored legacy permission columns, orphaned grants.
 • Price Explainer — pick a user (or the anonymous visitor) and a product: can they see it, what do they pay, and why — the assortment that grants or blocks it, the price-matrix row that wins and why every other row lost, the product discounts that apply; switch currency, shop, quantity and date.
 • Operations Console — install health in one place: scheduled tasks (state, runs, who ran them, failing and stale tasks), integration activities (last result, broken task→activity links), logs and storage (log folders and largest tables, retention, growth findings), recent changes.
 • Index &amp; Query Inspector — repositories and indexes with build status and schema, field where-used (dangling and unused fields), a query linter (incl. the blank-parameter leak that returns the whole index), and a live document browser that diffs product documents against the database.

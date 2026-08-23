@@ -13,16 +13,16 @@ public sealed class ScheduledTaskModel : DataViewModelBase
     /// <summary>Drives the state badge; not a column of its own.</summary>
     public string State { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Task")]
+    [ConfigurableProperty("Task", isSearchable: true)]
     public string Name { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Add-in")]
+    [ConfigurableProperty("Add-in", isSearchable: true)]
     public string AddIn { get; set; } = string.Empty;
 
     [ConfigurableProperty("Runs")]
     public string Schedule { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Status")]
+    [ConfigurableProperty("Status", isSearchable: true)]
     public string Status { get; set; } = string.Empty;
 
     [ConfigurableProperty("Last run")]
@@ -69,22 +69,22 @@ public sealed class IntegrationActivityModel : DataViewModelBase
 
     public string ResultKind { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Activity")]
+    [ConfigurableProperty("Activity", isSearchable: true)]
     public string Name { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Source")]
+    [ConfigurableProperty("Source", isSearchable: true)]
     public string Source { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Destination")]
+    [ConfigurableProperty("Destination", isSearchable: true)]
     public string Destination { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Scheduled by")]
+    [ConfigurableProperty("Scheduled by", isSearchable: true)]
     public string ScheduledBy { get; set; } = string.Empty;
 
     [ConfigurableProperty("Last run")]
     public string LastRun { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Result")]
+    [ConfigurableProperty("Result", isSearchable: true)]
     public string LastResult { get; set; } = string.Empty;
 }
 
@@ -174,13 +174,13 @@ public sealed class RecentChangeModel : DataViewModelBase
     [ConfigurableProperty("Ago")]
     public string Ago { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Who")]
+    [ConfigurableProperty("Who", isSearchable: true)]
     public string Who { get; set; } = string.Empty;
 
-    [ConfigurableProperty("What")]
+    [ConfigurableProperty("What", isSearchable: true)]
     public string What { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Source")]
+    [ConfigurableProperty("Source", isSearchable: true)]
     public string Source { get; set; } = string.Empty;
 }
 

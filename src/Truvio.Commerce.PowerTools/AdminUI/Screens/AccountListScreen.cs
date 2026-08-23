@@ -12,7 +12,12 @@ namespace Truvio.Commerce.PowerTools.AdminUI.Screens;
 /// <summary>Pick the security account whose content access to inspect.</summary>
 public sealed class AccountListScreen : ListScreenBase<AccountListModel>
 {
-    protected override string GetScreenName() => "Security Viewer - accounts";
+    protected override string GetScreenName() => "Content Access Viewer - accounts";
+
+#if DW_HAS_SCREEN_EXPLANATION
+    protected override string? GetScreenExplanation() =>
+        "Which pages, grid rows and paragraphs an account can see (content permissions only - product visibility and prices are in the Price Explainer)";
+#endif
 
     protected override IEnumerable<ListViewMapping> GetViewMappings() =>
     [

@@ -11,9 +11,9 @@ public sealed class ExplainerAccountModel : DataViewModelBase
     [ConfigurableProperty("Type")]
     public string Kind { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Name")]
+    [ConfigurableProperty("Name", isSearchable: true)]
     public string Name { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Details")]
+    [ConfigurableProperty("Details", isSearchable: true)]
     public string Detail { get; set; } = string.Empty;
 }

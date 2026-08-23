@@ -10,24 +10,24 @@ namespace Truvio.Commerce.PowerTools.AdminUI.Queries;
 /// The personalisation drilldown for one page and one account: the page verdict first, then
 /// what each grid row and paragraph resolves to.
 /// </summary>
-public sealed class PageAudienceQuery : DataQueryModelBase<DataListViewModel<AudienceItemModel>>
+public sealed class PageAudienceQuery : DataQueryListBase<AudienceItemModel, AudienceItemModel, DataListViewModel<AudienceItemModel>>
 {
     public string AccountKey { get; set; } = string.Empty;
 
     public int PageId { get; set; }
 
-    public override DataListViewModel<AudienceItemModel>? GetModel()
+    protected override IEnumerable<AudienceItemModel>? GetListItems()
     {
         var account = new DwAccountCatalog().Resolve(AccountKey);
         if (account is null || PageId <= 0)
-            return new DataListViewModel<AudienceItemModel>();
+            return [];
 
         var source = new DwContentSecuritySource();
         var evaluator = new EffectiveAccessEvaluator(source);
 
         var page = Dynamicweb.Content.Services.Pages.GetPage(PageId);
         if (page is null)
-            return new DataListViewModel<AudienceItemModel>();
+            return [];
 
         var pagesById = source.GetPages(page.AreaId).ToDictionary(p => p.Id);
         var pageAccess = evaluator.EvaluatePage(account, PageId, pagesById);
@@ -79,11 +79,7 @@ public sealed class PageAudienceQuery : DataQueryModelBase<DataListViewModel<Aud
             });
         }
 
-        return new DataListViewModel<AudienceItemModel>
-        {
-            Data = items,
-            TotalCount = items.Count
-        };
+        return items;
     }
 
     private static string Verdict(Core.Permissions.EffectiveAccess pageAccess, Core.Permissions.EffectiveAccess access)
@@ -92,4 +88,8 @@ public sealed class PageAudienceQuery : DataQueryModelBase<DataListViewModel<Aud
             return "No (page is denied)";
         return access.GrantsRead ? "Yes" : "No (renders empty)";
     }
+
+    protected override IEnumerable<AudienceItemModel> MapModels(IEnumerable<AudienceItemModel> items) => items;
+
+    protected override DataListViewModel<AudienceItemModel> MakeListModel() => new();
 }

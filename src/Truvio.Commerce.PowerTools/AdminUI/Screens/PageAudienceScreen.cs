@@ -34,7 +34,7 @@ public sealed class PageAudienceScreen : ListScreenBase<AudienceItemModel>
 
     protected override string GetScreenName() =>
         Account is null
-            ? "Security Viewer - page audience"
+            ? "Content Access Viewer - page audience"
             : $"Page '{PageName}' seen by {Account.DisplayName}";
 
 #if DW_HAS_SCREEN_EXPLANATION

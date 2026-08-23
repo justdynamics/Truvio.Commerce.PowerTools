@@ -8,7 +8,7 @@ namespace Truvio.Commerce.PowerTools.AdminUI.Screens;
 /// <summary>Install-wide permission misconfiguration findings.</summary>
 public sealed class WarningListScreen : ListScreenBase<FindingModel>
 {
-    protected override string GetScreenName() => "Security Viewer - warnings";
+    protected override string GetScreenName() => "Content Access Warnings";
 
     protected override IEnumerable<ListViewMapping> GetViewMappings() =>
     [

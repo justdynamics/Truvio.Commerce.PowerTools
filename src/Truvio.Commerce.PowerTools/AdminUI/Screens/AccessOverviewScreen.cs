@@ -26,7 +26,7 @@ public sealed class AccessOverviewScreen : ListScreenBase<AccessNodeModel>
 
     protected override string GetScreenName() =>
         Account is null
-            ? "Security Viewer - content access"
+            ? "Content Access Viewer - pages"
             : $"Content access: {Account.DisplayName}";
 
 #if DW_HAS_SCREEN_EXPLANATION

@@ -15,8 +15,8 @@ Found a problem or have an idea? [Report it on GitHub](https://github.com/justdy
 
 | Tool | Section | What it does |
 |---|---|---|
-| **Security Viewer** | Security | Pick a security account — a frontend role, a user group, or a user — and see exactly what content that account can access, across pages, grid rows, and paragraphs. Built for business users who use permissions for personalisation and need to verify who sees what. |
-| **Access Warnings** | Security | Install-wide misconfiguration findings: ineffective group grants, gated sign-in pages, ignored legacy permission columns, orphaned grants. |
+| **Content Access Viewer** (formerly Security Viewer) | Security | Pick a security account — a frontend role, a user group, or a user — and see exactly what content that account can access, across pages, grid rows, and paragraphs. Built for business users who use permissions for personalisation and need to verify who sees what. |
+| **Content Access Warnings** | Security | Install-wide misconfiguration findings: ineffective group grants, gated sign-in pages, ignored legacy permission columns, orphaned grants. |
 | **Operations Console** | Operations | Health of the install in one place: scheduled tasks (state, last/next run, who ran them, failures, stale tasks), integration activities (providers, last result, broken task→activity links), logs & storage (log folders by size, largest DB tables, retention settings, growth findings), recent changes (command log, audit, config timestamps). Rules OPS-W1…W9 — see [docs/operations-console.md](docs/operations-console.md). |
 | **Index & Query Inspector** | Search | Repositories and indexes with build status and full schema, field where-used (dangling / unused fields), a 17-rule query linter (IDX-W1…W17, incl. the blank-parameter leak that returns the whole index), and a live document browser that diffs product documents against the database. See [docs/index-inspector.md](docs/index-inspector.md). |
 | **Price Explainer** | Commerce | Pick a user (or the anonymous visitor) and a product, and see whether they can see it and what they pay — and *why*: which assortment grants or blocks it, which price-matrix row wins and why every other row lost, which product discounts apply. Switch currency, shop, quantity and date from the Actions menu. |
@@ -31,7 +31,7 @@ visible only to users with access to the respective tools.
 
 | Screen | What it shows |
 |---|---|
-| Security Viewer | Pick the account to inspect (roles, groups, users) — searchable (name, username, e-mail, group name) and paged. |
+| Content Access Viewer | Pick the account to inspect (roles, groups, users) — searchable (name, username, e-mail, group name) and paged. |
 | Content access | Every page with the account's effective level, its origin (set here / inherited / role default), and gating warnings. |
 | Page audience | Drilldown for one page: the page verdict, then each grid row and paragraph with visible/hidden and the winning grant or deny. |
 | Warnings | Install-wide misconfiguration findings (see below). |

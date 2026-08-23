@@ -18,7 +18,7 @@ public sealed class AccessNodeModel : DataViewModelBase
     /// <summary>AccessOrigin name backing the Why column badge ("" for website rows).</summary>
     public string OriginKind { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Page")]
+    [ConfigurableProperty("Page", isSearchable: true)]
     public string Name { get; set; } = string.Empty;
 
     [ConfigurableProperty("Sees it")]
@@ -27,9 +27,9 @@ public sealed class AccessNodeModel : DataViewModelBase
     [ConfigurableProperty("Level")]
     public string Level { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Why")]
+    [ConfigurableProperty("Why", isSearchable: true)]
     public string Origin { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Warnings")]
+    [ConfigurableProperty("Warnings", isSearchable: true)]
     public string Warning { get; set; } = string.Empty;
 }

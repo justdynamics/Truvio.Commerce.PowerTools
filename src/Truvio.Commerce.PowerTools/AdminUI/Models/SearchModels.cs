@@ -11,13 +11,13 @@ public sealed class IndexListModel : DataViewModelBase
 
     public string HealthKind { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Repository")]
+    [ConfigurableProperty("Repository", isSearchable: true)]
     public string Repository { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Index")]
+    [ConfigurableProperty("Index", isSearchable: true)]
     public string Index { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Builder")]
+    [ConfigurableProperty("Builder", isSearchable: true)]
     public string Builder { get; set; } = string.Empty;
 
     [ConfigurableProperty("Fields")]
@@ -26,7 +26,7 @@ public sealed class IndexListModel : DataViewModelBase
     [ConfigurableProperty("Last build")]
     public string LastBuild { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Status")]
+    [ConfigurableProperty("Status", isSearchable: true)]
     public string Status { get; set; } = string.Empty;
 }
 
@@ -74,21 +74,21 @@ public sealed class FieldUsageModel : DataViewModelBase
 {
     public string StatusKind { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Field")]
+    [ConfigurableProperty("Field", isSearchable: true)]
     public string Field { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Index")]
+    [ConfigurableProperty("Index", isSearchable: true)]
     public string Index { get; set; } = string.Empty;
 
     /// <summary>Type and index flags in one column — the list grid gives every column the
     /// same width, so five columns is the readable maximum here.</summary>
-    [ConfigurableProperty("Type")]
+    [ConfigurableProperty("Type", isSearchable: true)]
     public string Type { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Used by")]
+    [ConfigurableProperty("Used by", isSearchable: true)]
     public string UsedBy { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Status")]
+    [ConfigurableProperty("Status", isSearchable: true)]
     public string Status { get; set; } = string.Empty;
 }
 
@@ -98,16 +98,16 @@ public sealed class QueryLintModel : DataViewModelBase
     [ConfigurableProperty("Severity")]
     public string Severity { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Rule")]
+    [ConfigurableProperty("Rule", isSearchable: true)]
     public string RuleId { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Where")]
+    [ConfigurableProperty("Where", isSearchable: true)]
     public string Entity { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Finding")]
+    [ConfigurableProperty("Finding", isSearchable: true)]
     public string Title { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Detail")]
+    [ConfigurableProperty("Detail", isSearchable: true)]
     public string Detail { get; set; } = string.Empty;
 }
 
@@ -118,19 +118,19 @@ public sealed class IndexPickModel : DataViewModelBase
 
     public string Item { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Repository")]
+    [ConfigurableProperty("Repository", isSearchable: true)]
     public string Repository { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Index")]
+    [ConfigurableProperty("Index", isSearchable: true)]
     public string Index { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Online instance")]
+    [ConfigurableProperty("Online instance", isSearchable: true)]
     public string Instance { get; set; } = string.Empty;
 
     [ConfigurableProperty("Documents")]
     public string Documents { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Status")]
+    [ConfigurableProperty("Status", isSearchable: true)]
     public string Status { get; set; } = string.Empty;
 
     public string HealthKind { get; set; } = string.Empty;
@@ -147,13 +147,13 @@ public sealed class DocumentRowModel : DataViewModelBase
 
     public string MatchKind { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Key")]
+    [ConfigurableProperty("Key", isSearchable: true)]
     public string Key { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Label")]
+    [ConfigurableProperty("Label", isSearchable: true)]
     public string Label { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Summary")]
+    [ConfigurableProperty("Summary", isSearchable: true)]
     public string Summary { get; set; } = string.Empty;
 
     [ConfigurableProperty("Database")]

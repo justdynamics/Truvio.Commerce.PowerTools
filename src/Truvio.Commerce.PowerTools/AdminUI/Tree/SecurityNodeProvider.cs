@@ -25,7 +25,7 @@ public sealed class SecurityNodeProvider : NavigationNodeProvider<SecuritySectio
         yield return new NavigationNode
         {
             Id = SecurityViewerNodeId,
-            Name = "Security Viewer",
+            Name = "Content Access Viewer",
             Icon = Icon.Shield,
             Sort = 10,
             HasSubNodes = false,
@@ -36,7 +36,7 @@ public sealed class SecurityNodeProvider : NavigationNodeProvider<SecuritySectio
         yield return new NavigationNode
         {
             Id = WarningsNodeId,
-            Name = "Warnings",
+            Name = "Content Access Warnings",
             Icon = Icon.ExclamationTriangle,
             Sort = 20,
             HasSubNodes = false,

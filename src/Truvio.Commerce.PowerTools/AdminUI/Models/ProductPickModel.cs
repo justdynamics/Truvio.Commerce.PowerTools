@@ -13,13 +13,13 @@ public sealed class ProductPickModel : DataViewModelBase
 
     public bool IsActive { get; set; }
 
-    [ConfigurableProperty("Number")]
+    [ConfigurableProperty("Number", isSearchable: true)]
     public string Number { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Name")]
+    [ConfigurableProperty("Name", isSearchable: true)]
     public string Name { get; set; } = string.Empty;
 
-    [ConfigurableProperty("Variant")]
+    [ConfigurableProperty("Variant", isSearchable: true)]
     public string Variant { get; set; } = string.Empty;
 
     [ConfigurableProperty("Active")]
