@@ -1,0 +1,72 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Truvio.Commerce.PowerTools</RootNamespace>
+    <AssemblyName>Truvio.Commerce.PowerTools</AssemblyName>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+
+    <!-- NuGet package metadata -->
+    <PackageId>Truvio.Commerce.PowerTools</PackageId>
+    <!-- Prerelease suffix renders as the BETA flag in the DW10 admin "Available apps" list -->
+    <Version>0.2.0-beta</Version>
+    <AssemblyVersion>0.2.0.0</AssemblyVersion>
+    <Title>Truvio PowerTools</Title>
+    <!-- The description lists every tool in the suite — keep it current when a tool ships. -->
+    <Description>Truvio PowerTools — a growing suite of admin power tools for Dynamicweb 10 by JustDynamics, in one dedicated "PowerTools" area of the administration.
+
+Included tools:
+• Security Viewer — pick any security account (role, group, or user) and see its effective content access across pages, grid rows, and paragraphs, with origin explanations.
+• Access Warnings — misconfiguration findings: ineffective group grants, gated sign-in pages, ignored legacy permission columns, orphaned grants.
+
+Requires Dynamicweb 10.8 or newer. Issues and feature requests: https://github.com/justdynamics/Truvio.Commerce.PowerTools/issues</Description>
+    <Authors>JustDynamics</Authors>
+    <Company>JustDynamics</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <!-- Shown in the DW10 admin "Available apps" list: NuGetAddinProvider maps the package's
+         IconUrl (served by nuget.org from this embedded icon) onto AddinInfo.Image. -->
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageProjectUrl>https://github.com/justdynamics/Truvio.Commerce.PowerTools</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/justdynamics/Truvio.Commerce.PowerTools</RepositoryUrl>
+    <!-- "dynamicweb-app-store" + "Addin" + "dw10" are required by the DW10 admin app-store
+         search (NuGetAddinProvider DEFAULT_SEARCH_TERM). -->
+    <PackageTags>dynamicweb-app-store Addin dw10 tools security permissions personalisation content truvio-powertools justdynamics dynamicweb</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="icon.png" Pack="true" PackagePath="\" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Truvio.Commerce.PowerTools.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!-- Overridable per host: dotnet build -p:DynamicwebVersion=10.27.9 produces a build
+         binding against that platform version (a DLL compiled against a newer DW version
+         fails to load silently on an older host). -->
+    <DynamicwebVersion Condition="'$(DynamicwebVersion)' == ''">10.28.1-PreRelease</DynamicwebVersion>
+    <!-- Numeric part for feature gating (strips prerelease suffixes). -->
+    <DwVersionNumeric>$(DynamicwebVersion.Split('-')[0])</DwVersionNumeric>
+    <!-- ListScreenBase.GetScreenExplanation exists from 10.24; older hosts skip the subtitle. -->
+    <DefineConstants Condition="$([System.Version]::Parse('$(DwVersionNumeric)').CompareTo($([System.Version]::Parse('10.24.0')))) &gt;= 0">$(DefineConstants);DW_HAS_SCREEN_EXPLANATION</DefineConstants>
+    <!-- BadgeType.Outline* variants exist from 10.23; older hosts fall back to solid badges. -->
+    <DefineConstants Condition="$([System.Version]::Parse('$(DwVersionNumeric)').CompareTo($([System.Version]::Parse('10.23.0')))) &gt;= 0">$(DefineConstants);DW_HAS_OUTLINE_BADGES</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dynamicweb" Version="$(DynamicwebVersion)" />
+    <PackageReference Include="Dynamicweb.Application.UI" Version="$(DynamicwebVersion)" />
+    <PackageReference Include="Dynamicweb.CoreUI.Rendering" Version="$(DynamicwebVersion)" />
+  </ItemGroup>
+
+</Project>

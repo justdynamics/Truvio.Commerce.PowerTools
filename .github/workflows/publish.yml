@@ -5,7 +5,7 @@ name: Publish to NuGet.org
 #
 # One-time setup on nuget.org (profile -> Trusted Publishing -> Create):
 #   Repository owner: justdynamics
-#   Repository:       Truvio.Commerce.PowerApps.SecOps
+#   Repository:       Truvio.Commerce.PowerTools
 #   Workflow file:    publish.yml
 # and a repository secret NUGET_USER holding the nuget.org profile name that owns the policy.
 #
@@ -32,13 +32,13 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Test
-        run: dotnet test tests/Truvio.Commerce.PowerApps.SecOps.Tests --configuration Release
+        run: dotnet test tests/Truvio.Commerce.PowerTools.Tests --configuration Release
 
       # Packed against the verified minimum platform version — the app then installs on any
       # DW 10.8+ host (a DLL compiled against a newer DW version is silently skipped by older
       # hosts). Hosts 10.23-/10.24- get solid badges / no screen subtitles via feature gates.
       - name: Pack
-        run: dotnet pack src/Truvio.Commerce.PowerApps.SecOps/Truvio.Commerce.PowerApps.SecOps.csproj --configuration Release -p:DynamicwebVersion=10.8.4 --output artifacts
+        run: dotnet pack src/Truvio.Commerce.PowerTools/Truvio.Commerce.PowerTools.csproj --configuration Release -p:DynamicwebVersion=10.8.4 --output artifacts
 
       # Exchanges the GitHub OIDC token for a short-lived nuget.org API key.
       - name: NuGet login (trusted publishing)

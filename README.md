@@ -1,24 +1,30 @@
-# Truvio PowerApps — SecOps
+# Truvio PowerTools
 
-Security tools for Dynamicweb 10 by [JustDynamics](https://www.justdynamics.nl), delivered
-as a backend app with its own admin UI and published as a NuGet package (visible in the
+A growing suite of admin power tools for Dynamicweb 10 by
+[JustDynamics](https://www.justdynamics.nl) — one backend app, one install, its own
+**PowerTools** area in the administration, published as a NuGet package (visible in the
 DW10 admin **Available apps** list).
 
 Compatible with **Dynamicweb 10.8 and newer** (the published package is compiled against
 the 10.8 API; hosts below 10.23/10.24 get solid instead of outlined badges and no screen
 subtitles — everything else is identical).
 
-Found a problem or have an idea? [Report it on GitHub](https://github.com/justdynamics/Truvio.Commerce.PowerApps.SecOps/issues).
+Found a problem or have an idea? [Report it on GitHub](https://github.com/justdynamics/Truvio.Commerce.PowerTools/issues).
 
-The first tool is the **Security Viewer**: pick a security account — a frontend role, a
-user group, or a user — and see exactly what content that account can access, across
-pages, grid rows, and paragraphs. Built for business users who use permissions for
-personalisation and need to verify who sees what.
+## Tools
+
+| Tool | Section | What it does |
+|---|---|---|
+| **Security Viewer** | Security | Pick a security account — a frontend role, a user group, or a user — and see exactly what content that account can access, across pages, grid rows, and paragraphs. Built for business users who use permissions for personalisation and need to verify who sees what. |
+| **Access Warnings** | Security | Install-wide misconfiguration findings: ineffective group grants, gated sign-in pages, ignored legacy permission columns, orphaned grants. |
+
+More tools are planned; each lands in its own section of the PowerTools area.
 
 ## Screens
 
-All screens live in an own **Tools** section of the Content area tree (directly above the
-Recycle bin), visible only to users with access to the app.
+All screens live in the dedicated **PowerTools** area of the admin navigation (between
+Apps and Settings), grouped into per-tool-family sections. The area's sections are
+visible only to users with access to the respective tools.
 
 | Screen | What it shows |
 |---|---|
@@ -47,12 +53,12 @@ accounts bypass checks entirely and are badged as such. The viewer is strictly r
 
 ## Install
 
-- **App store**: DW10 admin → Apps → Available apps → search "SecOps" → install.
-- **Package reference**: add `Truvio.Commerce.PowerApps.SecOps` to your `Dynamicweb.Host.Suite` project.
-- **Manual**: build, copy `Truvio.Commerce.PowerApps.SecOps.dll` into the host's `bin\`, restart.
+- **App store**: DW10 admin → Apps → Available apps → search "PowerTools" → install.
+- **Package reference**: add `Truvio.Commerce.PowerTools` to your `Dynamicweb.Host.Suite` project.
+- **Manual**: build, copy `Truvio.Commerce.PowerTools.dll` into the host's `bin\`, restart.
 
 Access to the screens can be managed like any other permission: the app registers a
-"Truvio PowerApps SecOps" permission entity (key `truvio-secops-security-viewer`). Per DW
+"Truvio PowerTools" permission entity (key `truvio-powertools-security-viewer`). Per DW
 semantics it is open until an admin explicitly manages it; checks fail closed.
 
 ## Development

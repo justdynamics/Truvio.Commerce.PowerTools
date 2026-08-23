@@ -1,5 +1,5 @@
 name: Bug report
-description: Something in a Truvio PowerApps SecOps tool does not behave as expected
+description: Something in a Truvio PowerTools tool does not behave as expected
 title: "[Bug] "
 labels: ["bug"]
 body:
@@ -14,7 +14,7 @@ body:
   - type: input
     id: app-version
     attributes:
-      label: SecOps app version
+      label: PowerTools app version
       description: Shown in the Apps area / NuGet package version
       placeholder: "0.1.0-beta"
     validations:

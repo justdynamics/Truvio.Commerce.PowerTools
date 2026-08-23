@@ -4,6 +4,7 @@ obj/
 .vs/
 TestResults/
 *.nupkg
-docs/security-viewer-cabp-*.png
-docs/security-viewer-tools-section.png
-docs/security-viewer-account-search.png
+# Screenshots are ignored by default — several were taken on a real prospect's install
+# (cabp) and must never reach the public repo. Whitelist vetted images explicitly.
+docs/*.png
+!docs/security-viewer-overview.png
