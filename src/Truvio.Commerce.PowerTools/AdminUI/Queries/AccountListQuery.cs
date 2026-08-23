@@ -2,6 +2,8 @@ using Dynamicweb.CoreUI.Data;
 using Truvio.Commerce.PowerTools.AdminUI.Models;
 using Truvio.Commerce.PowerTools.Core.Principals;
 using Truvio.Commerce.PowerTools.Core.Principals.Dw;
+using Truvio.Commerce.PowerTools.Core.Settings.Dw;
+using Truvio.Commerce.PowerTools.Core.Settings;
 
 namespace Truvio.Commerce.PowerTools.AdminUI.Queries;
 
@@ -16,10 +18,13 @@ namespace Truvio.Commerce.PowerTools.AdminUI.Queries;
 public sealed class AccountListQuery : DataQueryListBase<AccountListModel, AccountListModel, DataListViewModel<AccountListModel>>
 {
     /// <summary>Upper bound on users materialized per request; refine the search beyond it.</summary>
-    private const int UserFetchCap = 500;
+    /// <summary>Default upper bound on users materialized per request; overridable in PowerTools settings.</summary>
+    private const int DefaultUserFetchCap = 500;
 
     protected override IEnumerable<AccountListModel>? GetListItems()
     {
+        var settings = DwPowerToolsSettings.Current;
+        var userFetchCap = PowerToolsSettings.Positive(settings.UserFetchCap, DefaultUserFetchCap);
         var catalog = new DwAccountCatalog();
         var items = new List<AccountListModel>();
 
@@ -45,9 +50,12 @@ public sealed class AccountListQuery : DataQueryListBase<AccountListModel, Accou
             });
         }
 
-        var (users, totalUsers) = catalog.GetUsers(Search, UserFetchCap);
+        var (users, totalUsers) = catalog.GetUsers(Search, userFetchCap);
         foreach (var user in users)
         {
+            if (settings.HideAdministrators && user.BypassesChecks)
+                continue;
+
             var membership = user.BypassesChecks
                 ? "Administrator - sees everything, permissions are not evaluated"
                 : $"Member of {user.OwnerIds.Count - 1} group(s)";
@@ -61,13 +69,13 @@ public sealed class AccountListQuery : DataQueryListBase<AccountListModel, Accou
             });
         }
 
-        if (totalUsers > UserFetchCap)
+        if (totalUsers > userFetchCap)
         {
             items.Add(new AccountListModel
             {
                 AccountKey = string.Empty,
                 Kind = "User",
-                Name = $"... {totalUsers - UserFetchCap} more users not shown",
+                Name = $"... {totalUsers - userFetchCap} more users not shown",
                 Detail = "Use the search to narrow the user list"
             });
         }

@@ -3,6 +3,8 @@ using Dynamicweb.CoreUI.Data;
 using Truvio.Commerce.PowerTools.AdminUI.Models;
 using Truvio.Commerce.PowerTools.Core.Commerce;
 using Truvio.Commerce.PowerTools.Core.Commerce.Dw;
+using Truvio.Commerce.PowerTools.Core.Settings;
+using Truvio.Commerce.PowerTools.Core.Settings.Dw;
 
 namespace Truvio.Commerce.PowerTools.AdminUI.Queries;
 
@@ -40,13 +42,19 @@ public sealed class PriceExplainQuery : DataQueryModelBase<PriceExplainModel>
     public DateTime? GetTime() =>
         DateTime.TryParseExact(Date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var d) ? d : null;
 
+    /// <summary>The currency asked for, or the PowerTools override, or (blank) the DW default.</summary>
+    public string EffectiveCurrencyCode() =>
+        string.IsNullOrWhiteSpace(CurrencyCode)
+            ? DwPowerToolsSettings.Current.DefaultCurrencyCode
+            : CurrencyCode;
+
     public ExplainRequest ToRequest() => new()
     {
         UserId = GetUserId(),
         ProductId = ProductId,
         VariantId = VariantId,
         LanguageId = LanguageId,
-        CurrencyCode = CurrencyCode,
+        CurrencyCode = EffectiveCurrencyCode(),
         CountryCode = CountryCode,
         ShopId = ShopId,
         Quantity = Quantity <= 0 ? 1 : Quantity,
@@ -73,7 +81,7 @@ public sealed class PriceExplainQuery : DataQueryModelBase<PriceExplainModel>
                 DiscountTotal = report.DwDiscountTotal,
                 AppliedDiscountCount = report.Discounts.Count(d => d.AppliedByDw),
                 FinalPrice = report.DwFinalPrice,
-                Rows = ToRows(report)
+                Rows = ToRows(report, PowerToolsSettings.Positive(DwPowerToolsSettings.Current.PriceRowCap, DefaultPriceRowCap))
             };
         }
         catch (Exception ex)
@@ -86,8 +94,12 @@ public sealed class PriceExplainQuery : DataQueryModelBase<PriceExplainModel>
         }
     }
 
-    internal static List<ExplainRowModel> ToRows(ExplainReport report)
+    /// <summary>Price-matrix rows rendered before the section truncates; overridable in settings.</summary>
+    internal const int DefaultPriceRowCap = 100;
+
+    internal static List<ExplainRowModel> ToRows(ExplainReport report, int priceRowCap = DefaultPriceRowCap)
     {
+        var rowCap = priceRowCap > 0 ? priceRowCap : DefaultPriceRowCap;
         var rows = new List<ExplainRowModel>();
 
         // ---- Result first: the answer, then the reasoning. ----------------------------------
@@ -131,7 +143,10 @@ public sealed class PriceExplainQuery : DataQueryModelBase<PriceExplainModel>
         Header("Price matrix");
         Add("Price matrix", "Product default price", "Fallback", "info", report.ProductDefaultPrice,
             "Used only when no matrix row matches");
-        foreach (var v in report.PriceMatrix.Rows.OrderByDescending(r => r.IsWinner).ThenByDescending(r => r.Matches).ThenBy(r => r.ComparableAmount))
+        var matrixRows = report.PriceMatrix.Rows
+            .OrderByDescending(r => r.IsWinner).ThenByDescending(r => r.Matches).ThenBy(r => r.ComparableAmount)
+            .ToList();
+        foreach (var v in matrixRows.Take(rowCap))
         {
             var row = v.Row;
             var amount = $"{row.Amount.ToString("0.00", CultureInfo.InvariantCulture)} {row.CurrencyCode}{(row.IsWithVat ? " incl. VAT" : "")}";
@@ -153,6 +168,10 @@ public sealed class PriceExplainQuery : DataQueryModelBase<PriceExplainModel>
             }
             Add("Price matrix", $"Row {row.Id}", verdict, kind, amount, why);
         }
+        if (matrixRows.Count > rowCap)
+            Add("Price matrix", "…", "Truncated", "warn", string.Empty,
+                $"{matrixRows.Count - rowCap} further row(s) not shown — raise the price row cap in PowerTools settings");
+
         foreach (var (qty, price) in report.QuantityPrices)
             Add("Price matrix", $"Quantity break ≥ {qty}", "Tier", "info", price, "DW quantity price for this context");
 

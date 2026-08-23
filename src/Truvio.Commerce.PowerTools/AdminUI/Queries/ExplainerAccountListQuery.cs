@@ -1,6 +1,8 @@
 using Dynamicweb.CoreUI.Data;
 using Truvio.Commerce.PowerTools.AdminUI.Models;
 using Truvio.Commerce.PowerTools.Core.Principals.Dw;
+using Truvio.Commerce.PowerTools.Core.Settings.Dw;
+using Truvio.Commerce.PowerTools.Core.Settings;
 
 namespace Truvio.Commerce.PowerTools.AdminUI.Queries;
 
@@ -13,10 +15,12 @@ public sealed class ExplainerAccountListQuery : DataQueryListBase<ExplainerAccou
 {
     public const string AnonymousKey = "anonymous";
 
-    private const int UserFetchCap = 500;
+    private const int DefaultUserFetchCap = 500;
 
     protected override IEnumerable<ExplainerAccountModel>? GetListItems()
     {
+        var settings = DwPowerToolsSettings.Current;
+        var userFetchCap = PowerToolsSettings.Positive(settings.UserFetchCap, DefaultUserFetchCap);
         var catalog = new DwAccountCatalog();
         var items = new List<ExplainerAccountModel>
         {
@@ -29,9 +33,12 @@ public sealed class ExplainerAccountListQuery : DataQueryListBase<ExplainerAccou
             }
         };
 
-        var (users, totalUsers) = catalog.GetUsers(Search, UserFetchCap);
+        var (users, totalUsers) = catalog.GetUsers(Search, userFetchCap);
         foreach (var user in users)
         {
+            if (settings.HideAdministrators && user.BypassesChecks)
+                continue;
+
             var membership = $"Member of {user.OwnerIds.Count - 1} group(s)";
             items.Add(new ExplainerAccountModel
             {
@@ -42,13 +49,13 @@ public sealed class ExplainerAccountListQuery : DataQueryListBase<ExplainerAccou
             });
         }
 
-        if (totalUsers > UserFetchCap)
+        if (totalUsers > userFetchCap)
         {
             items.Add(new ExplainerAccountModel
             {
                 AccountKey = string.Empty,
                 Kind = "User",
-                Name = $"... {totalUsers - UserFetchCap} more users not shown",
+                Name = $"... {totalUsers - userFetchCap} more users not shown",
                 Detail = "Use the search to narrow the user list"
             });
         }

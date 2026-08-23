@@ -56,6 +56,13 @@ public static class DwIndexDocuments
     /// <summary>Hard result cap — this is a diagnostic, not a data export.</summary>
     public const int MaxTake = 50;
 
+    /// <summary>
+    /// The cap actually applied: the PowerTools "document rows" setting, itself capped at 500 so
+    /// a mistyped value can never turn the browser into an export.
+    /// </summary>
+    public static int MaxTakeLimit() => Math.Clamp(
+        Settings.PowerToolsSettings.Positive(Settings.Dw.DwPowerToolsSettings.Current.DocumentRowsPerPage, MaxTake), 1, 500);
+
     // The system names the product index builder actually emits (ProductIndexSchemaExtender
     // maps ProductID -> "ID", ProductNumber -> "Number", ProductName -> "Name", ...).
     private const string ProductIdField = "ID";
@@ -83,7 +90,7 @@ public static class DwIndexDocuments
         if (string.IsNullOrEmpty(repository) || string.IsNullOrEmpty(item))
             return DocumentBrowseResult.Failed("No index selected.");
 
-        take = Math.Clamp(take <= 0 ? 10 : take, 1, MaxTake);
+        take = Math.Clamp(take <= 0 ? 10 : take, 1, MaxTakeLimit());
 
         IIndex? index;
         try

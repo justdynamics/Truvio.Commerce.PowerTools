@@ -22,7 +22,11 @@ namespace Truvio.Commerce.PowerTools.Core.Search.Dw;
 public sealed class DwSearchSource : ISearchSource
 {
     /// <summary>The platform's own staleness threshold (IndexHelper flags a warning past 24h).</summary>
-    private static readonly TimeSpan StaleAfter = TimeSpan.FromHours(24);
+    public const int DefaultStaleHours = 24;
+
+    /// <summary>Configurable through PowerTools settings; defaults to the platform's own 24 hours.</summary>
+    private readonly TimeSpan _staleAfter = TimeSpan.FromHours(
+        Settings.PowerToolsSettings.Positive(Settings.Dw.DwPowerToolsSettings.Current.StaleIndexHours, DefaultStaleHours));
 
     private const string IndexItemType = "Index";
     private const string QueryItemType = "Query";
@@ -181,7 +185,7 @@ public sealed class DwSearchSource : ISearchSource
             onlineInstance);
     }
 
-    private static (IndexHealth, string) Health(int instanceCount, int missingHistory, bool anyFailed, DateTime? lastBuild)
+    private (IndexHealth, string) Health(int instanceCount, int missingHistory, bool anyFailed, DateTime? lastBuild)
     {
         if (anyFailed)
             return (IndexHealth.Failed, "At least one instance failed on its last build.");
@@ -193,8 +197,8 @@ public sealed class DwSearchSource : ISearchSource
             return (IndexHealth.Stale,
                 $"{missingHistory} of {instanceCount} instance(s) have never been built.");
 
-        return DateTime.Now - lastBuild.Value > StaleAfter
-            ? (IndexHealth.Stale, "The newest instance build is older than 24 hours.")
+        return DateTime.Now - lastBuild.Value > _staleAfter
+            ? (IndexHealth.Stale, $"The newest instance build is older than {_staleAfter.TotalHours:0.##} hours.")
             : (IndexHealth.Ok, "All instances built successfully.");
     }
 

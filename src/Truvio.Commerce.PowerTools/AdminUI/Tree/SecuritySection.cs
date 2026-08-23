@@ -1,5 +1,6 @@
 using Dynamicweb.CoreUI.Navigation;
 using Truvio.Commerce.PowerTools.AdminUI.Security;
+using Truvio.Commerce.PowerTools.Core.Settings.Dw;
 
 namespace Truvio.Commerce.PowerTools.AdminUI.Tree;
 
@@ -19,5 +20,6 @@ public sealed class SecuritySection : NavigationSection<PowerToolsArea>
     }
 
     /// <summary>Visible only with Read on the Security Viewer function grant.</summary>
-    public override bool ShouldShow() => PowerToolsAccess.CanUseSecurityViewer();
+    public override bool ShouldShow() =>
+        PowerToolsAccess.CanUseSecurityViewer() && DwPowerToolsSettings.Current.SecuritySectionEnabled;
 }

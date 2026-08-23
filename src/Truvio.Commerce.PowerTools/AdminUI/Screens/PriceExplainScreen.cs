@@ -10,6 +10,7 @@ using Truvio.Commerce.PowerTools.AdminUI.Models;
 using Truvio.Commerce.PowerTools.AdminUI.Queries;
 using Truvio.Commerce.PowerTools.Core.Commerce.Dw;
 using Icon = Dynamicweb.CoreUI.Icons.Icon;
+using Truvio.Commerce.PowerTools.Core.Settings.Dw;
 
 namespace Truvio.Commerce.PowerTools.AdminUI.Screens;
 
@@ -23,8 +24,6 @@ namespace Truvio.Commerce.PowerTools.AdminUI.Screens;
 /// </summary>
 public sealed class PriceExplainScreen : OverviewScreenBase<PriceExplainModel>
 {
-    private static readonly double[] QuantityPresets = [1, 5, 10, 25, 50, 100, 500];
-
     private PriceExplainQuery Q => Query as PriceExplainQuery ?? new PriceExplainQuery();
 
     protected override string GetScreenName() =>
@@ -156,9 +155,11 @@ public sealed class PriceExplainScreen : OverviewScreenBase<PriceExplainModel>
             });
         }
 
+        var settings = DwPowerToolsSettings.Current;
+
         groups.Add(new ActionGroup
         {
-            Nodes = QuantityPresets.Select(qty => new ActionNode
+            Nodes = settings.Quantities().Select(qty => new ActionNode
             {
                 Name = $"Quantity: {qty:0.##}",
                 Icon = Icon.Cube,
@@ -167,16 +168,10 @@ public sealed class PriceExplainScreen : OverviewScreenBase<PriceExplainModel>
         });
 
         var today = DateTime.Today;
-        groups.Add(new ActionGroup
-        {
-            Nodes =
-            [
-                DateAction(q, "Date: now", string.Empty),
-                DateAction(q, $"Date: +7 days ({today.AddDays(7):yyyy-MM-dd})", today.AddDays(7).ToString("yyyy-MM-dd")),
-                DateAction(q, $"Date: +30 days ({today.AddDays(30):yyyy-MM-dd})", today.AddDays(30).ToString("yyyy-MM-dd")),
-                DateAction(q, $"Date: +90 days ({today.AddDays(90):yyyy-MM-dd})", today.AddDays(90).ToString("yyyy-MM-dd"))
-            ]
-        });
+        var dateNodes = new List<ActionNode> { DateAction(q, "Date: now", string.Empty) };
+        dateNodes.AddRange(settings.DateOffsets().Select(days =>
+            DateAction(q, $"Date: +{days} days ({today.AddDays(days):yyyy-MM-dd})", today.AddDays(days).ToString("yyyy-MM-dd"))));
+        groups.Add(new ActionGroup { Nodes = dateNodes });
 
         return groups;
     }

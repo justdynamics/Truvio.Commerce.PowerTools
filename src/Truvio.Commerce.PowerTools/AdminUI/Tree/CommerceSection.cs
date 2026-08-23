@@ -1,5 +1,6 @@
 using Dynamicweb.CoreUI.Navigation;
 using Truvio.Commerce.PowerTools.AdminUI.Security;
+using Truvio.Commerce.PowerTools.Core.Settings.Dw;
 
 namespace Truvio.Commerce.PowerTools.AdminUI.Tree;
 
@@ -14,5 +15,6 @@ public sealed class CommerceSection : NavigationSection<PowerToolsArea>
     }
 
     /// <summary>Visible only with Read on the Price Explainer function grant.</summary>
-    public override bool ShouldShow() => PowerToolsAccess.CanUsePriceExplainer();
+    public override bool ShouldShow() =>
+        PowerToolsAccess.CanUsePriceExplainer() && DwPowerToolsSettings.Current.CommerceSectionEnabled;
 }

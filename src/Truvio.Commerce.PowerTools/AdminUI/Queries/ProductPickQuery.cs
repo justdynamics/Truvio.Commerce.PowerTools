@@ -2,6 +2,8 @@ using Dynamicweb.CoreUI.Data;
 using Dynamicweb.Ecommerce;
 using Dynamicweb.Ecommerce.Products;
 using Truvio.Commerce.PowerTools.AdminUI.Models;
+using Truvio.Commerce.PowerTools.Core.Settings.Dw;
+using Truvio.Commerce.PowerTools.Core.Settings;
 
 namespace Truvio.Commerce.PowerTools.AdminUI.Queries;
 
@@ -12,12 +14,13 @@ namespace Truvio.Commerce.PowerTools.AdminUI.Queries;
 /// </summary>
 public sealed class ProductPickQuery : DataQueryListBase<ProductPickModel, ProductPickModel, DataListViewModel<ProductPickModel>>
 {
-    private const int FetchCap = 200;
+    private const int DefaultFetchCap = 200;
 
     public string AccountKey { get; set; } = string.Empty;
 
     protected override IEnumerable<ProductPickModel>? GetListItems()
     {
+        var fetchCap = PowerToolsSettings.Positive(DwPowerToolsSettings.Current.ProductPickCap, DefaultFetchCap);
         var languageId = Services.Languages.GetDefaultLanguageId();
         var defaultCurrency = Services.Currencies.GetDefaultCurrency();
 
@@ -26,7 +29,7 @@ public sealed class ProductPickQuery : DataQueryListBase<ProductPickModel, Produ
             SearchValue = Search ?? string.Empty,
             LanguageIds = [languageId],
             PageNumber = 1,
-            PageSize = FetchCap,
+            PageSize = fetchCap,
             IncludeOrphanedProducts = true,
             VariantFilter = ProductSearchFilter.VariantStateFilter.All
         });
@@ -50,13 +53,13 @@ public sealed class ProductPickQuery : DataQueryListBase<ProductPickModel, Produ
             });
         }
 
-        if (result.TotalCount > FetchCap)
+        if (result.TotalCount > fetchCap)
         {
             items.Add(new ProductPickModel
             {
                 ProductId = string.Empty,
                 Number = "...",
-                Name = $"{result.TotalCount - FetchCap} more products not shown - use the search to narrow the list"
+                Name = $"{result.TotalCount - fetchCap} more products not shown - use the search to narrow the list"
             });
         }
 

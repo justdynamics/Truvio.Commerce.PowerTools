@@ -94,7 +94,7 @@ public sealed class IndexNotBuiltRule : IQueryLintRule
             {
                 IndexHealth.NeverBuilt => (FindingSeverity.Critical, "Index has never been built"),
                 IndexHealth.Failed => (FindingSeverity.Critical, "Last index build failed"),
-                IndexHealth.Stale => (FindingSeverity.Warning, "Index has not been rebuilt for over 24 hours"),
+                IndexHealth.Stale => (FindingSeverity.Warning, "Index has not been rebuilt recently"),
                 _ => (FindingSeverity.Info, string.Empty)
             };
 

@@ -177,7 +177,7 @@ public sealed class DocumentDetailQuery : DataQueryModelBase<DocumentDetailModel
             return new DocumentDetailModel { Error = $"Index '{Repository}/{Item}' was not found." };
 
         var compare = DwIndexDocuments.IsProductIndex(index);
-        var take = Math.Clamp(Math.Max(Ordinal, 1), 1, DwIndexDocuments.MaxTake);
+        var take = Math.Clamp(Math.Max(Ordinal, 1), 1, DwIndexDocuments.MaxTakeLimit());
         var result = DwIndexDocuments.Browse(Repository, Item, Text, Field, Value, take, compare);
 
         if (!string.IsNullOrEmpty(result.Error))

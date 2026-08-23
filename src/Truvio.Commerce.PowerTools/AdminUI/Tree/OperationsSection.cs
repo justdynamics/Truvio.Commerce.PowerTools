@@ -1,5 +1,6 @@
 using Dynamicweb.CoreUI.Navigation;
 using Truvio.Commerce.PowerTools.AdminUI.Security;
+using Truvio.Commerce.PowerTools.Core.Settings.Dw;
 
 namespace Truvio.Commerce.PowerTools.AdminUI.Tree;
 
@@ -17,5 +18,6 @@ public sealed class OperationsSection : NavigationSection<PowerToolsArea>
     }
 
     /// <summary>Visible only with Read on the Operations function grant.</summary>
-    public override bool ShouldShow() => PowerToolsAccess.CanUseOperations();
+    public override bool ShouldShow() =>
+        PowerToolsAccess.CanUseOperations() && DwPowerToolsSettings.Current.OperationsSectionEnabled;
 }
