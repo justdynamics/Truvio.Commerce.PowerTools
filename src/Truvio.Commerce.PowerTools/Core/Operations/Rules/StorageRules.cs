@@ -20,13 +20,27 @@ public sealed class LogGrowthRule : IOperationsRule
     public const long CriticalBytes = 2L * 1024 * 1024 * 1024;
     public const double UnrotatedDays = 30;
 
+    private readonly long _warningBytes;
+    private readonly long _criticalBytes;
+
+    public LogGrowthRule() : this(WarningBytes, CriticalBytes)
+    {
+    }
+
+    /// <summary>Configurable through PowerTools settings; non-positive sizes fall back to the defaults.</summary>
+    public LogGrowthRule(long warningBytes, long criticalBytes)
+    {
+        _warningBytes = warningBytes > 0 ? warningBytes : WarningBytes;
+        _criticalBytes = criticalBytes > 0 ? criticalBytes : CriticalBytes;
+    }
+
     public IEnumerable<Finding> Evaluate(OperationsSnapshot snapshot)
     {
-        foreach (var folder in snapshot.LogFolders.Where(f => f.Bytes >= WarningBytes))
+        foreach (var folder in snapshot.LogFolders.Where(f => f.Bytes >= _warningBytes))
         {
             yield return new Finding(
                 SizeId,
-                folder.Bytes >= CriticalBytes ? FindingSeverity.Critical : FindingSeverity.Warning,
+                folder.Bytes >= _criticalBytes ? FindingSeverity.Critical : FindingSeverity.Warning,
                 OperationsEntities.LogFolder,
                 folder.RelativePath,
                 folder.Name,
@@ -77,6 +91,16 @@ public sealed class TableBloatRule : IOperationsRule
     public const long CriticalBytes = 1024L * 1024 * 1024;
     public const long RetentionRowFloor = 100_000;
 
+    private readonly double _shareThreshold;
+
+    public TableBloatRule() : this(ShareThreshold)
+    {
+    }
+
+    /// <summary>Configurable through PowerTools settings (0 &lt; share ≤ 1); anything else falls back.</summary>
+    public TableBloatRule(double shareThreshold) =>
+        _shareThreshold = shareThreshold is > 0 and <= 1 ? shareThreshold : ShareThreshold;
+
     /// <summary>
     /// Tables DW only ever appends to. Trimming them is retention-configuration work, never a
     /// schema change, so naming them is safe and stable.
@@ -109,7 +133,7 @@ public sealed class TableBloatRule : IOperationsRule
             foreach (var table in snapshot.Tables)
             {
                 var share = (double)table.Bytes / total;
-                if (share < ShareThreshold || table.Bytes < ShareFloorBytes)
+                if (share < _shareThreshold || table.Bytes < ShareFloorBytes)
                     continue;
 
                 yield return new Finding(

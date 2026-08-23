@@ -4,6 +4,7 @@ using Truvio.Commerce.PowerTools.Core.Diagnostics;
 using Truvio.Commerce.PowerTools.Core.Operations;
 using Truvio.Commerce.PowerTools.Core.Operations.Dw;
 using Truvio.Commerce.PowerTools.Core.Operations.Rules;
+using Truvio.Commerce.PowerTools.Core.Settings.Dw;
 
 namespace Truvio.Commerce.PowerTools.AdminUI.Queries;
 
@@ -20,9 +21,11 @@ public sealed class LogsStorageQuery : DataQueryModelBase<LogsStorageModel>
     {
         try
         {
+            var settings = DwPowerToolsSettings.Current;
             var source = new DwOperationsSource();
             var snapshot = source.Snapshot();
-            var findings = new OperationsHealthEngine([new LogGrowthRule(), new TableBloatRule()]).Run(snapshot);
+            var findings = new OperationsHealthEngine(
+                [OperationsHealthEngine.LogGrowth(settings), OperationsHealthEngine.TableBloat(settings)]).Run(snapshot);
 
             var model = new LogsStorageModel
             {

@@ -2,6 +2,7 @@ using Dynamicweb.CoreUI.Data;
 using Truvio.Commerce.PowerTools.AdminUI.Models;
 using Truvio.Commerce.PowerTools.Core.Operations;
 using Truvio.Commerce.PowerTools.Core.Operations.Dw;
+using Truvio.Commerce.PowerTools.Core.Settings.Dw;
 
 namespace Truvio.Commerce.PowerTools.AdminUI.Queries;
 
@@ -15,7 +16,7 @@ public sealed class OperationsHealthQuery : DataQueryModelBase<OperationsHealthM
     {
         try
         {
-            var health = new OperationsHealthEngine().Summarise(new DwOperationsSource().Snapshot());
+            var health = new OperationsHealthEngine(DwPowerToolsSettings.Current).Summarise(new DwOperationsSource().Snapshot());
 
             var model = new OperationsHealthModel
             {

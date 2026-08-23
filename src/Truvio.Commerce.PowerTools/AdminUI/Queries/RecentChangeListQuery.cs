@@ -2,6 +2,8 @@ using Dynamicweb.CoreUI.Data;
 using Truvio.Commerce.PowerTools.AdminUI.Models;
 using Truvio.Commerce.PowerTools.Core.Operations;
 using Truvio.Commerce.PowerTools.Core.Operations.Dw;
+using Truvio.Commerce.PowerTools.Core.Settings.Dw;
+using Truvio.Commerce.PowerTools.Core.Settings;
 
 namespace Truvio.Commerce.PowerTools.AdminUI.Queries;
 
@@ -15,13 +17,20 @@ public sealed class RecentChangeListQuery : DataQueryListBase<RecentChangeModel,
 
     private const int FetchCap = 500;
 
-    /// <summary>How far back to look, in days. Round-trips through the screen URL.</summary>
-    public int Days { get; set; } = DefaultDays;
+    /// <summary>How far back to look, in days. Round-trips through the screen URL; 0 = use the configured default.</summary>
+    public int Days { get; set; }
+
+    /// <summary>
+    /// The window actually used. A method, not a property: CoreUI serialises every public
+    /// property of a query into the screen URL.
+    /// </summary>
+    public int EffectiveDays() =>
+        Days > 0 ? Days : PowerToolsSettings.Positive(DwPowerToolsSettings.Current.RecentChangesDays, DefaultDays);
 
     protected override IEnumerable<RecentChangeModel>? GetListItems()
     {
         var now = DateTime.Now;
-        var days = Days <= 0 ? DefaultDays : Days;
+        var days = EffectiveDays();
         var changes = new DwOperationsSource().GetRecentChanges(days, FetchCap);
 
         var search = (Search ?? string.Empty).Trim();

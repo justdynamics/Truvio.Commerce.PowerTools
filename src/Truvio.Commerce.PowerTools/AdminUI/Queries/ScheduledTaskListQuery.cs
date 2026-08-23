@@ -3,6 +3,7 @@ using Truvio.Commerce.PowerTools.AdminUI.Models;
 using Truvio.Commerce.PowerTools.Core.Operations;
 using Truvio.Commerce.PowerTools.Core.Operations.Dw;
 using Truvio.Commerce.PowerTools.Core.Operations.Rules;
+using Truvio.Commerce.PowerTools.Core.Settings.Dw;
 
 namespace Truvio.Commerce.PowerTools.AdminUI.Queries;
 
@@ -20,7 +21,7 @@ public sealed class ScheduledTaskListQuery : DataQueryListBase<ScheduledTaskMode
 
         // Only the task-shaped rules matter here, and they need no storage read.
         var snapshot = new OperationsSnapshot(tasks, source.GetActivities(), [], [], source.GetRetention(), now);
-        var findings = new OperationsHealthEngine([new FailingTaskRule(), new StaleTaskRule(), new BrokenActivityLinkRule()])
+        var findings = new OperationsHealthEngine([new FailingTaskRule(), OperationsHealthEngine.StaleTask(DwPowerToolsSettings.Current), new BrokenActivityLinkRule()])
             .Run(snapshot)
             .Where(f => f.EntityName == OperationsEntities.ScheduledTask)
             .ToLookup(f => f.EntityKey, StringComparer.Ordinal);

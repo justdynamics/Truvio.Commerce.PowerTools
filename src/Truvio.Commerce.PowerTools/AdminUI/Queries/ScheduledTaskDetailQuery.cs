@@ -3,6 +3,8 @@ using Dynamicweb.CoreUI.Data;
 using Truvio.Commerce.PowerTools.AdminUI.Models;
 using Truvio.Commerce.PowerTools.Core.Operations;
 using Truvio.Commerce.PowerTools.Core.Operations.Dw;
+using Truvio.Commerce.PowerTools.Core.Settings.Dw;
+using Truvio.Commerce.PowerTools.Core.Settings;
 
 namespace Truvio.Commerce.PowerTools.AdminUI.Queries;
 
@@ -32,7 +34,7 @@ public sealed class ScheduledTaskDetailQuery : DataQueryModelBase<ScheduledTaskD
                 return new ScheduledTaskDetailModel { Title = "Scheduled task", Error = $"Task {TaskId} no longer exists." };
 
             var activities = source.GetActivities();
-            var runs = source.GetTaskRuns(task.Id, RunCount);
+            var runs = source.GetTaskRuns(task.Id, PowerToolsSettings.Positive(DwPowerToolsSettings.Current.RunHistoryDepth, RunCount));
             var parameters = source.GetTaskParameters(task.Id);
 
             var model = new ScheduledTaskDetailModel

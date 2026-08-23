@@ -54,6 +54,16 @@ public sealed class StaleTaskRule : IOperationsRule
     /// <summary>How many intervals may pass before the task counts as stale.</summary>
     public const int IntervalTolerance = 2;
 
+    private readonly int _tolerance;
+
+    public StaleTaskRule() : this(IntervalTolerance)
+    {
+    }
+
+    /// <summary>Configurable through PowerTools settings; a non-positive value falls back to the default.</summary>
+    public StaleTaskRule(int intervalTolerance) =>
+        _tolerance = intervalTolerance > 0 ? intervalTolerance : IntervalTolerance;
+
     public IEnumerable<Finding> Evaluate(OperationsSnapshot snapshot)
     {
         foreach (var task in snapshot.Tasks.Where(t => t.Enabled))
@@ -76,7 +86,7 @@ public sealed class StaleTaskRule : IOperationsRule
                 continue;
 
             var overdueBy = snapshot.Now - task.LastRun.Value;
-            var allowed = TimeSpan.FromMinutes((double)task.IntervalMinutes * IntervalTolerance);
+            var allowed = TimeSpan.FromMinutes((double)task.IntervalMinutes * _tolerance);
             if (overdueBy <= allowed)
                 continue;
 

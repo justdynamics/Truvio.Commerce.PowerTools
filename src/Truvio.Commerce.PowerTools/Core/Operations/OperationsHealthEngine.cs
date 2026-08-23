@@ -43,6 +43,21 @@ public sealed class OperationsHealthEngine
 
     public OperationsHealthEngine(IReadOnlyList<IOperationsRule> rules) => _rules = rules;
 
+    /// <summary>Every rule, with the thresholds the admin configured in PowerTools settings.</summary>
+    public OperationsHealthEngine(Settings.PowerToolsSettings settings)
+        : this([new FailingTaskRule(), StaleTask(settings), new BrokenActivityLinkRule(), LogGrowth(settings), TableBloat(settings)])
+    {
+    }
+
+    public static StaleTaskRule StaleTask(Settings.PowerToolsSettings settings) =>
+        new(settings.StaleTaskIntervalMultiplier);
+
+    public static LogGrowthRule LogGrowth(Settings.PowerToolsSettings settings) =>
+        new(settings.LogFolderWarningMb * 1024L * 1024L, settings.LogFolderCriticalMb * 1024L * 1024L);
+
+    public static TableBloatRule TableBloat(Settings.PowerToolsSettings settings) =>
+        new(settings.TableSharePercent / 100d);
+
     public IReadOnlyList<Finding> Run(OperationsSnapshot snapshot)
     {
         var findings = new List<Finding>();
