@@ -16,6 +16,11 @@ public sealed class PowerToolsPermissionEntity : IPermissionEntity
 
     public const string SecurityViewerKey = "truvio-powertools-security-viewer";
 
+    public const string PriceExplainerKey = "truvio-powertools-price-explainer";
+
+    /// <summary>Every function grant the suite exposes, in display order.</summary>
+    public static readonly IReadOnlyList<string> AllKeys = [SecurityViewerKey, PriceExplainerKey];
+
     private readonly string _key;
 
     public PowerToolsPermissionEntity(string key) => _key = key;
@@ -32,23 +37,27 @@ public sealed class PowerToolsPermissionEntityLookup : IPermissionEntityLookup
     public string PermissionName => PowerToolsPermissionEntity.PermissionName;
 
     public IPermissionEntity? GetPermissionEntityByKey(string key) =>
-        key is PowerToolsPermissionEntity.SecurityViewerKey
+        PowerToolsPermissionEntity.AllKeys.Contains(key)
             ? new PowerToolsPermissionEntity(key)
             : null;
 }
 
 /// <summary>
-/// Access checks for the PowerTools suite. The viewer is read-only, so Read on the function
+/// Access checks for the PowerTools suite. Every tool is read-only, so Read on its function
 /// grant is the only requirement. Checks fail CLOSED — an exception during evaluation
 /// denies access.
 /// </summary>
 public static class PowerToolsAccess
 {
-    public static bool CanUseSecurityViewer()
+    public static bool CanUseSecurityViewer() => HasRead(PowerToolsPermissionEntity.SecurityViewerKey);
+
+    public static bool CanUsePriceExplainer() => HasRead(PowerToolsPermissionEntity.PriceExplainerKey);
+
+    private static bool HasRead(string key)
     {
         try
         {
-            return new PowerToolsPermissionEntity(PowerToolsPermissionEntity.SecurityViewerKey)
+            return new PowerToolsPermissionEntity(key)
                 .GetPermission()
                 .HasPermission(PermissionLevel.Read);
         }

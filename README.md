@@ -17,6 +17,7 @@ Found a problem or have an idea? [Report it on GitHub](https://github.com/justdy
 |---|---|---|
 | **Security Viewer** | Security | Pick a security account — a frontend role, a user group, or a user — and see exactly what content that account can access, across pages, grid rows, and paragraphs. Built for business users who use permissions for personalisation and need to verify who sees what. |
 | **Access Warnings** | Security | Install-wide misconfiguration findings: ineffective group grants, gated sign-in pages, ignored legacy permission columns, orphaned grants. |
+| **Price Explainer** | Commerce | Pick a user (or the anonymous visitor) and a product, and see whether they can see it and what they pay — and *why*: which assortment grants or blocks it, which price-matrix row wins and why every other row lost, which product discounts apply. Switch currency, shop, quantity and date from the Actions menu. |
 
 More tools are planned; each lands in its own section of the PowerTools area.
 
@@ -32,6 +33,8 @@ visible only to users with access to the respective tools.
 | Content access | Every page with the account's effective level, its origin (set here / inherited / role default), and gating warnings. |
 | Page audience | Drilldown for one page: the page verdict, then each grid row and paragraph with visible/hidden and the winning grant or deny. |
 | Warnings | Install-wide misconfiguration findings (see below). |
+| Price Explainer | Pick the account (anonymous visitor or a user — searchable), then the product (searchable; variants listed separately). |
+| Explanation | Result (sees it / price before discounts / discounts / pays), the evaluated context, every assortment with held/grants/not-held, every price-matrix row with wins/shadowed/rejected and the exact reason, every active product discount with applied/rejected/not-applied and the reason. |
 
 ## Warning rules
 
@@ -51,6 +54,23 @@ the highest contribution wins; pages without rows inherit from the nearest ances
 carrying rows; grid rows and paragraphs without rows follow their page. Administrator-type
 accounts bypass checks entirely and are badged as such. The viewer is strictly read-only.
 
+## How prices are explained
+
+The Price Explainer runs two things side by side. DW's own engine (`PriceManager.GetPrice`,
+`DiscountInfoCollection`) produces the authoritative numbers for the chosen user, currency,
+country, shop, quantity and date. Independently, the explainer mirrors DW's selection rules
+on the raw data so every row can carry a verdict: the twelve price filters of
+`PriceService.FindPrices` (variant, unit, stock location, quantity threshold, language,
+validity window, currency, country, shop, user / customer number, group / legacy customer
+group), then *the cheapest matching row wins* — priority is not consulted, and ties fall to
+database order (flagged). Visibility mirrors `AssortmentService`: a product in no assortment
+is open to everyone (but hidden from assortment-filtered lists — flagged), otherwise the
+account must hold one of its assortments through a user or group permission, or the
+anonymous flag. Discounts are pre-checked on currency, shop, validity, language, country,
+anonymous flag and user / group / customer-number targeting; cart-dependent conditions are
+reported, not guessed. When DW's number and the mirrored selection disagree — a custom price
+provider, a price subscriber — the report says so.
+
 ## Install
 
 - **App store**: DW10 admin → Apps → Available apps → search "PowerTools" → install.
@@ -58,8 +78,9 @@ accounts bypass checks entirely and are badged as such. The viewer is strictly r
 - **Manual**: build, copy `Truvio.Commerce.PowerTools.dll` into the host's `bin\`, restart.
 
 Access to the screens can be managed like any other permission: the app registers a
-"Truvio PowerTools" permission entity (key `truvio-powertools-security-viewer`). Per DW
-semantics it is open until an admin explicitly manages it; checks fail closed.
+"Truvio PowerTools" permission entity with one key per tool
+(`truvio-powertools-security-viewer`, `truvio-powertools-price-explainer`). Per DW semantics
+each is open until an admin explicitly manages it; checks fail closed.
 
 ## Development
 

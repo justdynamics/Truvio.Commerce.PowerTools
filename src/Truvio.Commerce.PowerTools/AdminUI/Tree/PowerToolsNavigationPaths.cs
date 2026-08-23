@@ -10,13 +10,41 @@ internal static class PowerToolsNavigationPaths
     /// <see cref="NavigationContext.Empty"/> — the same convention the Settings area uses.
     /// Only this assembly's providers resolve paths under the area.
     /// </summary>
-    public static NavigationNodePath For(string nodeId) =>
+    public static NavigationNodePath For(string nodeId) => For<SecuritySection>(nodeId);
+
+    public static NavigationNodePath For<TSection>(string nodeId) =>
         new([
             typeof(PowerToolsArea).FullName!,
             NavigationContext.Empty,
-            typeof(SecuritySection).FullName!,
+            typeof(TSection).FullName!,
             nodeId
         ]);
+}
+
+// ---- Commerce section --------------------------------------------------------------------
+
+public sealed class ExplainerAccountListNavigationNodePathProvider : NavigationNodePathProvider<ExplainerAccountModel>
+{
+    public ExplainerAccountListNavigationNodePathProvider() => AllowNullModel = true;
+
+    protected override NavigationNodePath GetNavigationNodePathInternal(ExplainerAccountModel? model) =>
+        PowerToolsNavigationPaths.For<CommerceSection>(CommerceNodeProvider.PriceExplainerNodeId);
+}
+
+public sealed class ProductPickNavigationNodePathProvider : NavigationNodePathProvider<ProductPickModel>
+{
+    public ProductPickNavigationNodePathProvider() => AllowNullModel = true;
+
+    protected override NavigationNodePath GetNavigationNodePathInternal(ProductPickModel? model) =>
+        PowerToolsNavigationPaths.For<CommerceSection>(CommerceNodeProvider.PriceExplainerNodeId);
+}
+
+public sealed class PriceExplainNavigationNodePathProvider : NavigationNodePathProvider<PriceExplainModel>
+{
+    public PriceExplainNavigationNodePathProvider() => AllowNullModel = true;
+
+    protected override NavigationNodePath GetNavigationNodePathInternal(PriceExplainModel? model) =>
+        PowerToolsNavigationPaths.For<CommerceSection>(CommerceNodeProvider.PriceExplainerNodeId);
 }
 
 /// <summary>Anchors the account picker (and its drilldowns) under PowerTools > Security > Security Viewer.</summary>
