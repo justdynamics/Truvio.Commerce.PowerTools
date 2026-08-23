@@ -3,6 +3,7 @@ using Dynamicweb.CoreUI.Data;
 using Truvio.Commerce.PowerTools.AdminUI.Models;
 using Truvio.Commerce.PowerTools.Core.Search;
 using Truvio.Commerce.PowerTools.Core.Search.Dw;
+using Truvio.Commerce.PowerTools.Core.Settings.Dw;
 
 namespace Truvio.Commerce.PowerTools.AdminUI.Queries;
 
@@ -133,7 +134,11 @@ public sealed class QueryLintQuery : DataQueryModelBase<DataListViewModel<QueryL
     {
         var findings = new QueryLintEngine().Run(SearchQueryHelpers.Catalog());
 
-        var items = findings.Select(f => new QueryLintModel
+        // Settings can mute rules, parameters and whole queries — never silently: the count of
+        // what was dropped is appended as the last row.
+        var filtered = DwPowerToolsSettings.Current.FilterSearchFindings(findings);
+
+        var items = filtered.Visible.Select(f => new QueryLintModel
         {
             Severity = f.Severity.ToString(),
             RuleId = f.RuleId,
@@ -141,6 +146,18 @@ public sealed class QueryLintQuery : DataQueryModelBase<DataListViewModel<QueryL
             Title = f.Title,
             Detail = f.Detail
         }).ToList();
+
+        if (filtered.HiddenCount > 0)
+        {
+            items.Add(new QueryLintModel
+            {
+                Severity = string.Empty,
+                RuleId = string.Empty,
+                Entity = "PowerTools settings",
+                Title = filtered.HiddenNotice(),
+                Detail = "Ignored rule ids, parameters and queries are configured under PowerTools ▸ Settings."
+            });
+        }
 
         return new DataListViewModel<QueryLintModel>
         {

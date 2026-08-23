@@ -2,6 +2,7 @@ using Dynamicweb.CoreUI.Data;
 using Truvio.Commerce.PowerTools.AdminUI.Models;
 using Truvio.Commerce.PowerTools.Core.Diagnostics;
 using Truvio.Commerce.PowerTools.Core.Permissions.Dw;
+using Truvio.Commerce.PowerTools.Core.Settings.Dw;
 
 namespace Truvio.Commerce.PowerTools.AdminUI.Queries;
 
@@ -12,7 +13,10 @@ public sealed class FindingListQuery : DataQueryListBase<FindingModel, FindingMo
     {
         var findings = new WarningEngine().Run(new DwContentSecuritySource());
 
-        var items = findings.Select(f => new FindingModel
+        // Suppression is never silent: whatever settings mute is counted in a trailing row.
+        var filtered = DwPowerToolsSettings.Current.FilterWarningFindings(findings);
+
+        var items = filtered.Visible.Select(f => new FindingModel
         {
             Severity = f.Severity.ToString(),
             RuleId = f.RuleId,
@@ -20,6 +24,18 @@ public sealed class FindingListQuery : DataQueryListBase<FindingModel, FindingMo
             Title = f.Title,
             Detail = f.Detail
         }).ToList();
+
+        if (filtered.HiddenCount > 0)
+        {
+            items.Add(new FindingModel
+            {
+                Severity = string.Empty,
+                RuleId = string.Empty,
+                Entity = "PowerTools settings",
+                Title = filtered.HiddenNotice(),
+                Detail = "Suppressed warning rules are configured under PowerTools ▸ Settings."
+            });
+        }
 
         return items;
     }

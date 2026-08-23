@@ -41,7 +41,9 @@ public sealed class BlankParameterClauseRule : IQueryLintRule
                     $"Clause '{clause}' vanishes when '{clause.ParameterName}' is not supplied",
                     $"Parameter '{clause.ParameterName}' has no default value, so unless every caller passes it " +
                     $"the clause is removed from the executed query and {LuceneSemantics.DropEffect(parent)}. " +
-                    "Give the parameter a default value, or make the clause a constant.");
+                    "Give the parameter a default value, or make the clause a constant.",
+                    // The parameter this finding is about — lets settings suppress it by name.
+                    clause.ParameterName);
             }
         }
     }
@@ -76,7 +78,12 @@ public sealed class QueryMatchesEverythingRule : IQueryLintRule
                 catalog.Describe(query),
                 "Query can return every document in the index",
                 detail + " When the expression resolves to nothing the index provider falls back to a " +
-                "match-all query, so the caller silently gets the whole index.");
+                "match-all query, so the caller silently gets the whole index.",
+                // The parameters whose missing defaults collapse the query — suppressible by name.
+                string.Join(",", query.Clauses()
+                    .Where(c => c.ValueKind == ClauseValueKind.Parameter && !string.IsNullOrEmpty(c.ParameterName))
+                    .Select(c => c.ParameterName)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)));
         }
     }
 }

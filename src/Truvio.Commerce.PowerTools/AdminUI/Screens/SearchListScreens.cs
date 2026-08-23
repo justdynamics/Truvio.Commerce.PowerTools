@@ -7,6 +7,7 @@ using Dynamicweb.CoreUI.Screens;
 using Truvio.Commerce.PowerTools.AdminUI.Models;
 using Truvio.Commerce.PowerTools.AdminUI.Queries;
 using Truvio.Commerce.PowerTools.AdminUI.Security;
+using Truvio.Commerce.PowerTools.Core.Settings.Dw;
 
 namespace Truvio.Commerce.PowerTools.AdminUI.Screens;
 
@@ -155,28 +156,32 @@ public sealed class QueryLintScreen : ListScreenBase<QueryLintModel>
                     Name = "Repositories & indexes",
                     Icon = Icon.Database,
                     NodeAction = NavigateScreenAction.To<IndexListScreen>().With(new IndexListQuery())
+                },
+                new ActionNode
+                {
+                    Name = "PowerTools settings",
+                    Icon = Icon.Cog,
+                    NodeAction = NavigateScreenAction.To<PowerToolsSettingsScreen>().With(new PowerToolsSettingsQuery())
                 }
             ]
         }
     ];
 
-    protected override IEnumerable<ListViewMapping> GetViewMappings() =>
-    [
-        new RowViewMapping
-        {
-            Columns =
-            [
-                CreateMapping(m => m.Severity),
-                CreateMapping(m => m.RuleId),
-                CreateMapping(m => m.Entity),
-                CreateMapping(m => m.Title),
-                CreateMapping(m => m.Detail)
-            ]
-        }
-    ];
+    protected override IEnumerable<ListViewMapping> GetViewMappings()
+    {
+        var columns = new List<Dynamicweb.CoreUI.Data.ModelMapping> { CreateMapping(m => m.Severity) };
+        if (DwPowerToolsSettings.Current.ShowRuleIds)
+            columns.Add(CreateMapping(m => m.RuleId));
+        columns.Add(CreateMapping(m => m.Entity));
+        columns.Add(CreateMapping(m => m.Title));
+        columns.Add(CreateMapping(m => m.Detail));
 
+        return [new RowViewMapping { Columns = columns }];
+    }
+
+    // The trailing "N findings hidden by settings" row has no severity: no badge for it.
     protected override Cell? GetCell(string propertyName, QueryLintModel model) =>
-        propertyName == nameof(QueryLintModel.Severity)
+        propertyName == nameof(QueryLintModel.Severity) && !string.IsNullOrEmpty(model.Severity)
             ? Badges.Severity(model.Severity)
             : null;
 }
