@@ -148,16 +148,21 @@ public sealed class DwCommerceExplainer
 
         // ---- DW's own price -----------------------------------------------------------------
         var dwPrice = PriceManager.GetPrice(priceContext, product, product.DefaultUnitId, 0);
+        var providers = InstalledPriceProviders();
+        var exclusive = providers.Where(p => p.Exclusive).Select(p => p.Name).ToList();
         var dwSource = dwPrice.PriceSource switch
         {
             PriceSource.PriceMatrix => "Price matrix",
             PriceSource.ProductDefault => "Product default price",
             PriceSource.CustomProvider => "Custom price provider",
+            null when dwPrice.Price == 0 && exclusive.Count > 0 => "No price",
             _ => "Unknown"
         };
 
-        if (dwPrice.PriceSource == PriceSource.CustomProvider)
-            warnings.Add("A custom price provider is installed — the matrix explanation below shows DW's built-in selection, which the provider may override");
+        if (dwPrice.PriceSource is null && dwPrice.Price == 0 && exclusive.Count > 0)
+            warnings.Add($"SELLS AT ZERO: the exclusive price provider {string.Join(", ", exclusive)} returned no price for this context, and DW does not fall back to the product default price when an exclusive provider returns nothing (PriceManager.FindPrice) — the storefront shows {Format(dwPrice)}");
+        else if (dwPrice.PriceSource == PriceSource.CustomProvider || exclusive.Count > 0)
+            warnings.Add($"A custom price provider is installed ({string.Join(", ", providers.Select(p => p.Name + (p.Exclusive ? " - exclusive" : "")))}) — the matrix explanation below shows DW's built-in selection, which the provider {(exclusive.Count > 0 ? "replaces" : "may override")}");
         else if (dwPrice.PriceSource == PriceSource.PriceMatrix && matrix.Winner is null)
             warnings.Add("DW reports a price-matrix price but the built-in filters match no row — a price subscriber or provider is intervening");
         else if (dwPrice.PriceSource == PriceSource.ProductDefault && matrix.Winner is not null)
@@ -269,6 +274,27 @@ public sealed class DwCommerceExplainer
             yield return groupIds.Contains(value)
                 ? $"Price row(s) {rowIds} use the legacy customer-group column with value '{value}' — that column is matched against a group's customer number, not its id, and no group has customer number '{value}'. If group {value} was intended, set the row's user group instead; as it stands the row applies to nobody"
                 : $"Price row(s) {rowIds} target customer group '{value}', but no user group carries that customer number — the row applies to nobody";
+        }
+    }
+
+    /// <summary>Custom PriceProvider add-ins DW would consult (DefaultPriceProvider excluded), with their exclusivity.</summary>
+    private static IReadOnlyList<(string Name, bool Exclusive)> InstalledPriceProviders()
+    {
+        try
+        {
+            return Dynamicweb.Extensibility.AddIns.AddInManager.GetTypes<PriceProvider>()
+                .Where(t => t != typeof(DefaultPriceProvider))
+                .Select(t =>
+                {
+                    var exclusive = false;
+                    try { exclusive = Dynamicweb.Extensibility.AddIns.AddInManager.GetInstance<PriceProvider>(t)?.HandlePricesExclusively ?? false; } catch { }
+                    return (t.Name, exclusive);
+                })
+                .ToList();
+        }
+        catch
+        {
+            return [];
         }
     }
 
