@@ -19,7 +19,10 @@ Found a problem or have an idea? [Report it on GitHub](https://github.com/justdy
 | **Content Access Warnings** | Security | Install-wide misconfiguration findings: ineffective group grants, gated sign-in pages, ignored legacy permission columns, orphaned grants. |
 | **Operations Console** | Operations | Health of the install in one place: scheduled tasks (state, last/next run, who ran them, failures, stale tasks), integration activities (providers, last result, broken task→activity links), logs & storage (log folders by size, largest DB tables, retention settings, growth findings), recent changes (command log, audit, config timestamps). Rules OPS-W1…W9 — see [docs/operations-console.md](docs/operations-console.md). |
 | **Index & Query Inspector** | Search | Repositories and indexes with build status and full schema, field where-used (dangling / unused fields), a 17-rule query linter (IDX-W1…W17, incl. the blank-parameter leak that returns the whole index), and a live document browser that diffs product documents against the database. See [docs/index-inspector.md](docs/index-inspector.md). |
+| **Query Tester** | Search | Pick a query, supply parameter values, run it live: hits vs. defaults-only vs. index total, the executed Lucene query text, a clause-by-clause trace (active / dropped by blank parameter / unknown field / always true), per-clause impact, "why is document X not in the result", and ordered fix suggestions. See [docs/query-tester.md](docs/query-tester.md). |
 | **Price Explainer** | Commerce | Pick a user (or the anonymous visitor) and a product, and see whether they can see it and what they pay — and *why*: which assortment grants or blocks it, which price-matrix row wins and why every other row lost, which product discounts apply. Switch currency, shop, quantity and date from the Actions menu. |
+
+**Settings** (PowerTools ▸ Settings) tune every tool: linter suppressions (rule ids, parameter names, queries), stale/bloat thresholds, picker caps, Price Explainer presets, per-section toggles. Suppressed findings are always shown as a "hidden by settings" count. See [docs/settings.md](docs/settings.md).
 
 More tools are planned; each lands in its own section of the PowerTools area.
 
@@ -81,7 +84,7 @@ provider, a price subscriber — the report says so.
 
 Access to the screens can be managed like any other permission: the app registers a
 "Truvio PowerTools" permission entity with one key per tool
-(`truvio-powertools-security-viewer`, `truvio-powertools-price-explainer`, `truvio-powertools-operations`, `truvio-powertools-search`). Per DW semantics
+(`truvio-powertools-security-viewer`, `truvio-powertools-price-explainer`, `truvio-powertools-operations`, `truvio-powertools-search`; `truvio-powertools-settings` needs Edit to save settings). Per DW semantics
 each is open until an admin explicitly manages it; checks fail closed.
 
 ## Development
