@@ -11,8 +11,8 @@
     <!-- NuGet package metadata -->
     <PackageId>Truvio.Commerce.PowerTools</PackageId>
     <!-- Prerelease suffix renders as the BETA flag in the DW10 admin "Available apps" list -->
-    <Version>0.3.0-beta</Version>
-    <AssemblyVersion>0.3.0.0</AssemblyVersion>
+    <Version>0.4.0-beta</Version>
+    <AssemblyVersion>0.4.0.0</AssemblyVersion>
     <Title>Truvio PowerTools</Title>
     <!-- The description lists every tool in the suite — keep it current when a tool ships. -->
     <Description>Truvio PowerTools — a growing suite of admin power tools for Dynamicweb 10 by JustDynamics, in one dedicated "PowerTools" area of the administration.
@@ -21,6 +21,8 @@ Included tools:
 • Security Viewer — pick any security account (role, group, or user) and see its effective content access across pages, grid rows, and paragraphs, with origin explanations.
 • Access Warnings — misconfiguration findings: ineffective group grants, gated sign-in pages, ignored legacy permission columns, orphaned grants.
 • Price Explainer — pick a user (or the anonymous visitor) and a product: can they see it, what do they pay, and why — the assortment that grants or blocks it, the price-matrix row that wins and why every other row lost, the product discounts that apply; switch currency, shop, quantity and date.
+• Operations Console — install health in one place: scheduled tasks (state, runs, who ran them, failing and stale tasks), integration activities (last result, broken task→activity links), logs and storage (log folders and largest tables, retention, growth findings), recent changes.
+• Index &amp; Query Inspector — repositories and indexes with build status and schema, field where-used (dangling and unused fields), a query linter (incl. the blank-parameter leak that returns the whole index), and a live document browser that diffs product documents against the database.
 
 Requires Dynamicweb 10.8 or newer. Issues and feature requests: https://github.com/justdynamics/Truvio.Commerce.PowerTools/issues</Description>
     <Authors>JustDynamics</Authors>
@@ -33,7 +35,7 @@ Requires Dynamicweb 10.8 or newer. Issues and feature requests: https://github.c
     <RepositoryUrl>https://github.com/justdynamics/Truvio.Commerce.PowerTools</RepositoryUrl>
     <!-- "dynamicweb-app-store" + "Addin" + "dw10" are required by the DW10 admin app-store
          search (NuGetAddinProvider DEFAULT_SEARCH_TERM). -->
-    <PackageTags>dynamicweb-app-store Addin dw10 tools security permissions personalisation content commerce prices assortments discounts truvio-powertools justdynamics dynamicweb</PackageTags>
+    <PackageTags>dynamicweb-app-store Addin dw10 tools security permissions personalisation content commerce prices assortments discounts operations scheduled-tasks integration logs indexing search queries truvio-powertools justdynamics dynamicweb</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
