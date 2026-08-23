@@ -1,0 +1,46 @@
+name: Bug report
+description: Something in a Truvio PowerApps SecOps tool does not behave as expected
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: input
+    id: dw-version
+    attributes:
+      label: Dynamicweb version
+      description: Visible in the admin footer, e.g. 10.27.9
+      placeholder: "10.27.9"
+    validations:
+      required: true
+  - type: input
+    id: app-version
+    attributes:
+      label: SecOps app version
+      description: Shown in the Apps area / NuGet package version
+      placeholder: "0.1.0-beta"
+    validations:
+      required: true
+  - type: dropdown
+    id: screen
+    attributes:
+      label: Which screen?
+      options:
+        - Security Viewer (account picker)
+        - Content access overview
+        - Page audience
+        - Warnings
+        - Tree / navigation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: permissions
+    attributes:
+      label: Permission setup (if relevant)
+      description: E.g. "page X has Authenticated frontend -> None plus group Y -> Read" — the viewer's Why column text helps too.

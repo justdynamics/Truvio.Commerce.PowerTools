@@ -1,0 +1,9 @@
+bin/
+obj/
+*.user
+.vs/
+TestResults/
+*.nupkg
+docs/security-viewer-cabp-*.png
+docs/security-viewer-tools-section.png
+docs/security-viewer-account-search.png

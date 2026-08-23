@@ -1,0 +1,22 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Truvio.Commerce.PowerApps.SecOps", "src\Truvio.Commerce.PowerApps.SecOps\Truvio.Commerce.PowerApps.SecOps.csproj", "{4E1A6A0B-32F0-4B7E-9C6C-9A62E10A6D01}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Truvio.Commerce.PowerApps.SecOps.Tests", "tests\Truvio.Commerce.PowerApps.SecOps.Tests\Truvio.Commerce.PowerApps.SecOps.Tests.csproj", "{4E1A6A0B-32F0-4B7E-9C6C-9A62E10A6D02}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4E1A6A0B-32F0-4B7E-9C6C-9A62E10A6D01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E1A6A0B-32F0-4B7E-9C6C-9A62E10A6D01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E1A6A0B-32F0-4B7E-9C6C-9A62E10A6D01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E1A6A0B-32F0-4B7E-9C6C-9A62E10A6D01}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E1A6A0B-32F0-4B7E-9C6C-9A62E10A6D02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E1A6A0B-32F0-4B7E-9C6C-9A62E10A6D02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E1A6A0B-32F0-4B7E-9C6C-9A62E10A6D02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E1A6A0B-32F0-4B7E-9C6C-9A62E10A6D02}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
