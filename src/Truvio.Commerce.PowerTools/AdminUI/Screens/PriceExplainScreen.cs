@@ -64,6 +64,8 @@ public sealed class PriceExplainScreen : OverviewScreenBase<PriceExplainModel>
     private static string RenderTable(IReadOnlyList<ExplainRowModel> rows)
     {
         var sb = new StringBuilder();
+        // The group renders its heading with ~1.5rem inset but the component flush to the edge.
+        sb.Append("<div style=\"padding:0 1.5rem .75rem 1.5rem\">");
         sb.Append("<table style=\"width:100%;border-collapse:collapse;font-size:inherit\">");
         foreach (var r in rows)
         {
@@ -83,7 +85,7 @@ public sealed class PriceExplainScreen : OverviewScreenBase<PriceExplainModel>
               .Append($"<td style=\"padding:6px 0 6px 8px;vertical-align:top;white-space:normal\">{detail}</td>")
               .Append("</tr>");
         }
-        sb.Append("</table>");
+        sb.Append("</table></div>");
         return sb.ToString();
     }
 
