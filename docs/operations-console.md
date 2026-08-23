@@ -28,6 +28,10 @@ short columns for the same reason.
 
 Pure, in `Core/Operations/Rules/`, unit-tested against hand-built snapshots. Ids are stable.
 
+The thresholds below are the shipped defaults; OPS-W2's 2×, OPS-W6's sizes and OPS-W8's share are
+configurable under **PowerTools ▸ Settings** (see `docs/settings.md`), as are the recent-changes
+window and the run-history depth.
+
 | Id | Rule | Fires when | Severity |
 |---|---|---|---|
 | OPS-W1 | `FailingTaskRule` | Enabled task, last run recorded as failed (`TaskLastResult = 0`) or with stored exception text | Critical |

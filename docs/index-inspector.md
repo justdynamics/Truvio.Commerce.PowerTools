@@ -23,6 +23,10 @@ health badge. Health is derived from the build status of each instance:
 The 24 h threshold is the platform's own: `IndexHelper.GetIndexStatusInformation` flags an
 index as a warning once `lastBuildTime < DateTime.Now.AddHours(-24)`.
 
+That 24 h default, the linter's rule/parameter/query suppressions and the document row cap are
+configurable under **PowerTools ▸ Settings** (see `docs/settings.md`); anything the linter hides is
+counted in a trailing "N findings hidden by settings" row.
+
 Clicking a row opens the **index detail**: instances (provider, online flag, availability,
 last build, duration, state), everything in the repositories that reads from the index,
 the builder settings, and the full schema with per-field flags, analyzer, boost and a
