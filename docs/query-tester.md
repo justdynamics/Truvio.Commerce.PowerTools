@@ -36,6 +36,12 @@ as the input**:
 Clicking a row clears that parameter. Screen actions: *Run the query*, *Use the declared
 defaults*, *Clear all values*, *Select another query*.
 
+Assignments accumulate: typing `eq=blue`, then `q=bike`, leaves both set. (The admin client
+rebuilds the screen URL from the page URL plus the search text, so the server keeps the last
+merged set per backend user and query while the search box is in use; every link on the
+screen — row clicks, *Run the query*, *Clear all values* — carries the merged set and resets
+that draft.)
+
 The accumulated set travels in the screen URL as `Parameters=name=value;name2=value2`, so a
 finished test is a shareable link. Names may contain spaces (`Bike type=Gravel`) and values
 may contain `=`; a value cannot contain `;`. Names beginning with `#` are tester settings

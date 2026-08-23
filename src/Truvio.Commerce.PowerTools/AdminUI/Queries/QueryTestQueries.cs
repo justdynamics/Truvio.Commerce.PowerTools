@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using Dynamicweb.CoreUI.Data;
 using Truvio.Commerce.PowerTools.AdminUI.Models;
@@ -84,12 +85,30 @@ public sealed class QueryParameterQuery : DataQueryListBase<QueryParameterModel,
         if (string.IsNullOrEmpty(Repository) || string.IsNullOrEmpty(Item))
             return [];
 
-        // A typed assignment is applied first, so the rows below already show the new state.
+        // The search box is the input, but the admin client rebuilds the screen URL from the
+        // page URL plus the new Search text — it never learns the merged Parameters. So a
+        // second assignment would arrive with the URL's (stale) Parameters and wipe the first.
+        // The draft below bridges that gap: while the search box is in use, the base is the
+        // last merged set for this user and query; any link navigation (every link on this
+        // screen carries the merged set, and "Clear all" carries an empty one) resets it.
         var typed = Search ?? string.Empty;
-        if (typed.Contains('='))
+        var draftKey = DraftKey();
+        if (string.IsNullOrEmpty(typed))
         {
-            Parameters = ParameterValues.Merge(Parameters, typed);
-            typed = string.Empty;
+            Drafts[draftKey] = Parameters;
+        }
+        else
+        {
+            if (string.IsNullOrEmpty(Parameters) && Drafts.TryGetValue(draftKey, out var draft))
+                Parameters = draft;
+
+            if (typed.Contains('='))
+            {
+                Parameters = ParameterValues.Merge(Parameters, typed);
+                typed = string.Empty;
+            }
+
+            Drafts[draftKey] = Parameters;
         }
 
         SearchCatalog catalog;
@@ -148,6 +167,24 @@ public sealed class QueryParameterQuery : DataQueryListBase<QueryParameterModel,
         return rows
             .Where(row => SearchQueryHelpers.Matches(typed, row.Name, row.Type, row.Value))
             .ToList();
+    }
+
+    /// <summary>The last merged parameter set per backend user and query, see <see cref="Rows"/>.</summary>
+    private static readonly ConcurrentDictionary<string, string> Drafts = new(StringComparer.Ordinal);
+
+    private string DraftKey()
+    {
+        string user;
+        try
+        {
+            user = Dynamicweb.Security.UserManagement.User.GetCurrentBackendUser()?.ID.ToString(CultureInfo.InvariantCulture) ?? "-";
+        }
+        catch
+        {
+            user = "-";
+        }
+
+        return $"{user}|{Repository}|{Item}";
     }
 
     private static string Effect(bool hasValue, QueryParameterSpec parameter, bool used)
