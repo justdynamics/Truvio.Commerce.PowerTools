@@ -22,8 +22,14 @@ public sealed class PowerToolsPermissionEntity : IPermissionEntity
 
     public const string SearchInspectorKey = "truvio-powertools-search";
 
+    /// <summary>Suite settings: Read to look, Edit to change. Everything else is read-only.</summary>
+    public const string SettingsKey = "truvio-powertools-settings";
+
     /// <summary>Every function grant the suite exposes, in display order.</summary>
-    public static readonly IReadOnlyList<string> AllKeys = [SecurityViewerKey, PriceExplainerKey, OperationsKey, SearchInspectorKey];
+    public static readonly IReadOnlyList<string> AllKeys = [SecurityViewerKey, PriceExplainerKey, OperationsKey, SearchInspectorKey, SettingsKey];
+
+    /// <summary>The tool grants — every key except the settings grant.</summary>
+    public static readonly IReadOnlyList<string> ToolKeys = [SecurityViewerKey, PriceExplainerKey, OperationsKey, SearchInspectorKey];
 
     private readonly string _key;
 
@@ -61,13 +67,23 @@ public static class PowerToolsAccess
 
     public static bool CanUseSearchInspector() => HasRead(PowerToolsPermissionEntity.SearchInspectorKey);
 
-    private static bool HasRead(string key)
+    /// <summary>Looking at the settings needs nothing beyond access to any one tool.</summary>
+    public static bool CanViewSettings() =>
+        PowerToolsPermissionEntity.AllKeys.Any(HasRead);
+
+    /// <summary>Changing them is a write, so it needs Edit on the settings grant specifically.</summary>
+    public static bool CanEditSettings() =>
+        HasLevel(PowerToolsPermissionEntity.SettingsKey, PermissionLevel.Edit);
+
+    private static bool HasRead(string key) => HasLevel(key, PermissionLevel.Read);
+
+    private static bool HasLevel(string key, PermissionLevel level)
     {
         try
         {
             return new PowerToolsPermissionEntity(key)
                 .GetPermission()
-                .HasPermission(PermissionLevel.Read);
+                .HasPermission(level);
         }
         catch
         {
