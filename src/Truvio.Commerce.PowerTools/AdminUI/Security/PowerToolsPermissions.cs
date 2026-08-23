@@ -20,8 +20,10 @@ public sealed class PowerToolsPermissionEntity : IPermissionEntity
 
     public const string OperationsKey = "truvio-powertools-operations";
 
+    public const string SearchInspectorKey = "truvio-powertools-search";
+
     /// <summary>Every function grant the suite exposes, in display order.</summary>
-    public static readonly IReadOnlyList<string> AllKeys = [SecurityViewerKey, PriceExplainerKey, OperationsKey];
+    public static readonly IReadOnlyList<string> AllKeys = [SecurityViewerKey, PriceExplainerKey, OperationsKey, SearchInspectorKey];
 
     private readonly string _key;
 
@@ -56,6 +58,8 @@ public static class PowerToolsAccess
     public static bool CanUsePriceExplainer() => HasRead(PowerToolsPermissionEntity.PriceExplainerKey);
 
     public static bool CanUseOperations() => HasRead(PowerToolsPermissionEntity.OperationsKey);
+
+    public static bool CanUseSearchInspector() => HasRead(PowerToolsPermissionEntity.SearchInspectorKey);
 
     private static bool HasRead(string key)
     {

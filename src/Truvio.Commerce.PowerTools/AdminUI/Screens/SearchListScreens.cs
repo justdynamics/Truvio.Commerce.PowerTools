@@ -1,0 +1,219 @@
+using Dynamicweb.CoreUI.Actions;
+using Dynamicweb.CoreUI.Actions.Implementations;
+using Dynamicweb.CoreUI.Icons;
+using Dynamicweb.CoreUI.Lists;
+using Dynamicweb.CoreUI.Lists.ViewMappings;
+using Dynamicweb.CoreUI.Screens;
+using Truvio.Commerce.PowerTools.AdminUI.Models;
+using Truvio.Commerce.PowerTools.AdminUI.Queries;
+using Truvio.Commerce.PowerTools.AdminUI.Security;
+
+namespace Truvio.Commerce.PowerTools.AdminUI.Screens;
+
+/// <summary>Every index in every repository, with its build health.</summary>
+public sealed class IndexListScreen : ListScreenBase<IndexListModel>
+{
+    protected override string GetScreenName() => "Repositories & indexes";
+
+#if DW_HAS_SCREEN_EXPLANATION
+    protected override string? GetScreenExplanation() =>
+        "Pick an index to see its schema, instances, builder settings and the queries that read from it";
+#endif
+
+    protected override IEnumerable<ActionGroup>? GetScreenActions() =>
+    [
+        new()
+        {
+            Nodes =
+            [
+                new ActionNode
+                {
+                    Name = "Query linter",
+                    Icon = Icon.Bug,
+                    NodeAction = NavigateScreenAction.To<QueryLintScreen>().With(new QueryLintQuery())
+                },
+                new ActionNode
+                {
+                    Name = "Field where-used",
+                    Icon = Icon.Sitemap,
+                    NodeAction = NavigateScreenAction.To<FieldUsageScreen>().With(new FieldUsageQuery())
+                }
+            ]
+        }
+    ];
+
+    protected override IEnumerable<ListViewMapping> GetViewMappings() =>
+    [
+        new RowViewMapping
+        {
+            Columns =
+            [
+                CreateMapping(m => m.Repository),
+                CreateMapping(m => m.Index),
+                CreateMapping(m => m.Builder),
+                CreateMapping(m => m.Fields),
+                CreateMapping(m => m.LastBuild),
+                CreateMapping(m => m.Status)
+            ]
+        }
+    ];
+
+    protected override Cell? GetCell(string propertyName, IndexListModel model) =>
+        propertyName == nameof(IndexListModel.Status)
+            ? SearchBadges.Health(model.HealthKind, model.Status)
+            : null;
+
+    protected override ActionBase? GetListItemPrimaryAction(IndexListModel model) =>
+        PowerToolsAccess.CanUseSearchInspector()
+            ? NavigateScreenAction.To<IndexDetailScreen>()
+                .With(new IndexDetailQuery { Repository = model.RepositoryName, Item = model.Item })
+            : null;
+}
+
+/// <summary>One row per index field, with everything that references it.</summary>
+public sealed class FieldUsageScreen : ListScreenBase<FieldUsageModel>
+{
+    private FieldUsageQuery Q => Query as FieldUsageQuery ?? new FieldUsageQuery();
+
+    protected override string GetScreenName() => "Field where-used";
+
+#if DW_HAS_SCREEN_EXPLANATION
+    protected override string? GetScreenExplanation() =>
+        "Search by field name; 'Dangling' means a query references a field the index does not have, " +
+        "'Unused' means an indexed field nothing ever asks for";
+#endif
+
+    protected override IEnumerable<ActionGroup>? GetScreenActions()
+    {
+        var problemsOnly = Q.ProblemsOnly;
+
+        return
+        [
+            new ActionGroup
+            {
+                Nodes =
+                [
+                    new ActionNode
+                    {
+                        Name = problemsOnly ? "Show all fields" : "Show only dangling and unused",
+                        Icon = problemsOnly ? Icon.ListUl : Icon.Filter,
+                        NodeAction = NavigateScreenAction.To<FieldUsageScreen>()
+                            .With(new FieldUsageQuery { ProblemsOnly = !problemsOnly })
+                    },
+                    new ActionNode
+                    {
+                        Name = "Repositories & indexes",
+                        Icon = Icon.Database,
+                        NodeAction = NavigateScreenAction.To<IndexListScreen>().With(new IndexListQuery())
+                    }
+                ]
+            }
+        ];
+    }
+
+    protected override IEnumerable<ListViewMapping> GetViewMappings() =>
+    [
+        new RowViewMapping
+        {
+            Columns =
+            [
+                // Status first, like the Warnings screen: field system names are long and
+                // push the trailing columns out of view.
+                CreateMapping(m => m.Status),
+                CreateMapping(m => m.Field),
+                CreateMapping(m => m.Index),
+                CreateMapping(m => m.Type),
+                CreateMapping(m => m.UsedBy)
+            ]
+        }
+    ];
+
+    protected override Cell? GetCell(string propertyName, FieldUsageModel model) =>
+        propertyName == nameof(FieldUsageModel.Status)
+            ? SearchBadges.FieldStatus(model.StatusKind)
+            : null;
+}
+
+/// <summary>Lint findings across every query and facet group in the install.</summary>
+public sealed class QueryLintScreen : ListScreenBase<QueryLintModel>
+{
+    protected override string GetScreenName() => "Query linter";
+
+#if DW_HAS_SCREEN_EXPLANATION
+    protected override string? GetScreenExplanation() =>
+        "Rules IDX-W1..IDX-W17 over every query, sort, facet and index in the repositories";
+#endif
+
+    protected override IEnumerable<ActionGroup>? GetScreenActions() =>
+    [
+        new()
+        {
+            Nodes =
+            [
+                new ActionNode
+                {
+                    Name = "Repositories & indexes",
+                    Icon = Icon.Database,
+                    NodeAction = NavigateScreenAction.To<IndexListScreen>().With(new IndexListQuery())
+                }
+            ]
+        }
+    ];
+
+    protected override IEnumerable<ListViewMapping> GetViewMappings() =>
+    [
+        new RowViewMapping
+        {
+            Columns =
+            [
+                CreateMapping(m => m.Severity),
+                CreateMapping(m => m.RuleId),
+                CreateMapping(m => m.Entity),
+                CreateMapping(m => m.Title),
+                CreateMapping(m => m.Detail)
+            ]
+        }
+    ];
+
+    protected override Cell? GetCell(string propertyName, QueryLintModel model) =>
+        propertyName == nameof(QueryLintModel.Severity)
+            ? Badges.Severity(model.Severity)
+            : null;
+}
+
+/// <summary>Step 1 of the document browser: pick the index to read.</summary>
+public sealed class IndexPickScreen : ListScreenBase<IndexPickModel>
+{
+    protected override string GetScreenName() => "Document browser - indexes";
+
+#if DW_HAS_SCREEN_EXPLANATION
+    protected override string? GetScreenExplanation() =>
+        "Pick an index to read its documents; an index that has never been built has nothing to show";
+#endif
+
+    protected override IEnumerable<ListViewMapping> GetViewMappings() =>
+    [
+        new RowViewMapping
+        {
+            Columns =
+            [
+                CreateMapping(m => m.Repository),
+                CreateMapping(m => m.Index),
+                CreateMapping(m => m.Instance),
+                CreateMapping(m => m.Documents),
+                CreateMapping(m => m.Status)
+            ]
+        }
+    ];
+
+    protected override Cell? GetCell(string propertyName, IndexPickModel model) =>
+        propertyName == nameof(IndexPickModel.Status)
+            ? SearchBadges.Health(model.HealthKind, model.Status)
+            : null;
+
+    protected override ActionBase? GetListItemPrimaryAction(IndexPickModel model) =>
+        PowerToolsAccess.CanUseSearchInspector()
+            ? NavigateScreenAction.To<DocumentBrowserScreen>()
+                .With(new DocumentBrowserQuery { Repository = model.RepositoryName, Item = model.Item })
+            : null;
+}
