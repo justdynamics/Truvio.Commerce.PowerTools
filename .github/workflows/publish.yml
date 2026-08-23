@@ -7,7 +7,8 @@ name: Publish to NuGet.org
 #   Repository owner: justdynamics
 #   Repository:       Truvio.Commerce.PowerTools
 #   Workflow file:    publish.yml
-# and a repository secret NUGET_USER holding the nuget.org profile name that owns the policy.
+# and a repository secret NUGET_USER holding the nuget.org profile name that CREATED the policy.
+# The policy is bound to GitHub environment "production"; the job below declares it.
 #
 # Release flow: bump <Version> in the csproj, then push a matching tag (e.g. v0.1.0-beta).
 
@@ -20,6 +21,7 @@ on:
 jobs:
   publish:
     runs-on: windows-latest
+    environment: production # must match the environment on the nuget.org trusted-publishing policy
     permissions:
       contents: read
       id-token: write # required for OIDC token exchange with nuget.org
