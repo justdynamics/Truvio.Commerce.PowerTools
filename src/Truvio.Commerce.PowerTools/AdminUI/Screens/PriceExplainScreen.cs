@@ -241,6 +241,24 @@ public sealed class PriceExplainToolbarInjector : ScreenInjector<PriceExplainScr
             return ToolbarSwitch.Option($"+{days} days ({date})", active: q.Date == date, Navigate(q, x => x.Date = date));
         }));
         ToolbarSwitch.Add(layout, string.IsNullOrEmpty(q.Date) ? "Now" : q.Date, Icon.CalendarAlt, dateOptions);
+
+        // Opens the storefront PDP in a new tab — the mapped (or auto-detected) product page
+        // with the product in context. Renders as the browser's own frontend session.
+        var previewUrl = SafePreviewUrl(q);
+        if (previewUrl is not null)
+            ToolbarSwitch.AddButton(layout, "Preview", Icon.ExternalLinkAlt, NavigateLinkAction.To(previewUrl));
+    }
+
+    private static string? SafePreviewUrl(PriceExplainQuery q)
+    {
+        try
+        {
+            return Core.Commerce.Dw.DwPdpLocator.UrlFor(q.ShopId, q.ProductId, q.VariantId);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static NavigateScreenAction Navigate(PriceExplainQuery q, Action<PriceExplainQuery> change)

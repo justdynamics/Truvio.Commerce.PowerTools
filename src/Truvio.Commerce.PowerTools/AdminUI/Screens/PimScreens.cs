@@ -146,28 +146,51 @@ public sealed class PimProductQualityScreen : OverviewScreenBase<PimProductQuali
             AddComponent(new HtmlBlock { Value = OpsHtml.Table(section.Rows) }, section.Heading, Group.GroupWidth.Col_12);
     }
 
-    protected override IEnumerable<ActionGroup>? GetScreenActions() =>
-    [
-        new()
+    protected override IEnumerable<ActionGroup>? GetScreenActions()
+    {
+        var nodes = new List<ActionNode>
         {
-            Nodes =
-            [
-                new ActionNode
-                {
-                    Name = "Back to the explorer",
-                    Icon = Icon.Tag,
-                    NodeAction = NavigateScreenAction.To<PimCompletenessScreen>()
-                        .With(new PimCompletenessQuery { GroupId = Q.GroupId, LanguageId = Q.LanguageId })
-                },
-                new ActionNode
-                {
-                    Name = "Catalog quality",
-                    Icon = Icon.Heartbeat,
-                    NodeAction = NavigateScreenAction.To<PimQualityScreen>().With(new PimQualityQuery())
-                }
-            ]
+            new()
+            {
+                Name = "Back to the explorer",
+                Icon = Icon.Tag,
+                NodeAction = NavigateScreenAction.To<PimCompletenessScreen>()
+                    .With(new PimCompletenessQuery { GroupId = Q.GroupId, LanguageId = Q.LanguageId })
+            },
+            new()
+            {
+                Name = "Catalog quality",
+                Icon = Icon.Heartbeat,
+                NodeAction = NavigateScreenAction.To<PimQualityScreen>().With(new PimQualityQuery())
+            }
+        };
+
+        // The storefront PDP for this product, in a new tab — mapped in PowerTools settings
+        // or auto-detected from the shop's website.
+        var previewUrl = SafePreviewUrl();
+        if (previewUrl is not null)
+            nodes.Add(new ActionNode
+            {
+                Name = "Preview in shop",
+                Icon = Icon.ExternalLinkAlt,
+                NodeAction = NavigateLinkAction.To(previewUrl)
+            });
+
+        return [new ActionGroup { Nodes = nodes }];
+    }
+
+    private string? SafePreviewUrl()
+    {
+        try
+        {
+            var shopId = Core.Commerce.Dw.DwPdpLocator.ShopForGroup(Q.GroupId, Q.LanguageId);
+            return Core.Commerce.Dw.DwPdpLocator.UrlFor(shopId, Q.ProductId);
         }
-    ];
+        catch
+        {
+            return null;
+        }
+    }
 }
 
 /// <summary>

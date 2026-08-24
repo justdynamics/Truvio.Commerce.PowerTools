@@ -87,6 +87,16 @@ This is a straight copy of how DW builds its own settings screens (decompiled at
 | Rate deviation tolerance | `RateDeviationPercent` | 25 | Percent a configured exchange rate may deviate from the price-matrix evidence (CUR-W2) or the live reference (CUR-W3) before the health screen reports it. |
 | Live currency rate check | `LiveRateCheckEnabled` | off | Compare configured rates against the ECB daily reference rates on the health screen — the suite's only outbound call, so it must be opted into. A failed fetch means "no live comparison", never a finding. |
 | Live rate feed URL | `LiveRateFeedUrl` | — | Override for the reference feed; blank uses `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml`. |
+| Preview pages | `PreviewPages` | — | Where "Preview in shop" opens the storefront PDP: one `SHOPID=PageId` per line, a bare page id as the default for other shops. Blank auto-detects a Swift product-details page (`Swift-v2_ProductDetails`) on a website bound to the shop; the detection is cached for the process lifetime, an explicit mapping is read live and always wins. |
+
+### PIM quality (`…/Pim/…`)
+
+| Setting | Key | Default | Effect |
+|---|---|---|---|
+| Product scan cap | `PimProductCap` | 200 | Most products scored per page in the PIM screens; the rest collapse into a "N more" line. |
+| Completeness threshold | `PimCompletenessThreshold` | 60 | Score below which a product is reported (PIM-W1). |
+| Common gap threshold | `PimCommonGapPercent` | 25 | Percent of scanned products missing the same field before PIM-W2 calls it the field to fix first. |
+| Suppressed PIM rules | `PimSuppressedRules` | — | PIM rule ids never shown, one per line; trailing `*` matches a prefix. |
 
 ### PIM quality (`…/Pim/…`)
 

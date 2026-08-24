@@ -162,3 +162,17 @@ the rule with its assignments. Open item: `CalculateProductCompletenessForMultip
 has not yet been timed on a large catalog (~12k products) — the marine demo receives the
 released package and is the perf test host; the product cap + trailing "N more" row bound the
 cost until then.
+
+
+## Preview in shop (0.9.1)
+
+The product screens carry a "Preview in shop" action that opens the storefront PDP in a new
+tab — on the PowerTools Product quality screen, on the Price Explainer toolbar, and injected
+server-side into DW's **own** product edit screen (a `ScreenInjector`, so the AdminUI
+JS-injection limitation does not apply; any resolution failure simply hides the button). The
+URL is DW's always-valid entry `/Default.aspx?ID={page}&ProductID={id}` — the frontend
+rewrites it to the friendly URL. The target page comes from the **Preview pages** setting
+(`SHOPID=PageId` per line, bare id = default) or, unconfigured, from auto-detection of a
+Swift product-details page on the shop's website. The tab renders as the browser's own
+frontend session: a login-gated storefront asks for sign-in first, and there is no
+"view as user" (DW has no supported mechanism for that).

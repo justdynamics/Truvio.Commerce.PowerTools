@@ -68,6 +68,9 @@ public sealed record PowerToolsSettings
     /// <summary>Override for the reference feed URL; blank = the ECB daily reference rates.</summary>
     public string LiveRateFeedUrl { get; init; } = string.Empty;
 
+    /// <summary>"SHOPID=PageId" per line (bare page id = default) — where "Preview in shop" navigates.</summary>
+    public string PreviewPages { get; init; } = string.Empty;
+
     // ---- PIM quality ------------------------------------------------------------------------
     /// <summary>Most products scored per page in the PIM screens.</summary>
     public int PimProductCap { get; init; } = Shipped.PimProductCap;

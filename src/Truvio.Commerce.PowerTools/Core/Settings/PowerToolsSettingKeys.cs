@@ -38,6 +38,7 @@ public static class PowerToolsSettingKeys
     public const string RateDeviationPercent = Root + "/Commerce/RateDeviationPercent";
     public const string LiveRateCheckEnabled = Root + "/Commerce/LiveRateCheckEnabled";
     public const string LiveRateFeedUrl = Root + "/Commerce/LiveRateFeedUrl";
+    public const string PreviewPages = Root + "/Commerce/PreviewPages";
 
     // ---- PIM quality ---------------------------------------------------------------------------
     public const string PimProductCap = Root + "/Pim/ProductCap";

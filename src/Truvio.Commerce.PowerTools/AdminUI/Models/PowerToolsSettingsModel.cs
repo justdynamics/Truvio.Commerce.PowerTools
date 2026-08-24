@@ -98,6 +98,10 @@ public sealed class PowerToolsSettingsModel : SettingsViewModelBase
     [Settings(Keys.LiveRateFeedUrl)]
     public string LiveRateFeedUrl { get; set; } = string.Empty;
 
+    [ConfigurableProperty("Preview pages", "Where 'Preview in shop' opens the storefront product page: one SHOPID=PageId per line, a bare page id as the default for every other shop. Blank auto-detects a Swift product-details page.")]
+    [Settings(Keys.PreviewPages)]
+    public string PreviewPages { get; set; } = string.Empty;
+
     // ---- PIM quality ---------------------------------------------------------------------------
 
     [ConfigurableProperty("Product scan cap", "Most products scored per page in the PIM quality screens.")]

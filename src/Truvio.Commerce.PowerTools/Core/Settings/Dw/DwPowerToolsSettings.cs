@@ -65,6 +65,7 @@ public static class DwPowerToolsSettings
             RateDeviationPercent = Int(Keys.RateDeviationPercent, d.RateDeviationPercent),
             LiveRateCheckEnabled = Bool(Keys.LiveRateCheckEnabled, d.LiveRateCheckEnabled),
             LiveRateFeedUrl = Str(Keys.LiveRateFeedUrl, d.LiveRateFeedUrl).Trim(),
+            PreviewPages = Str(Keys.PreviewPages, d.PreviewPages),
 
             PimProductCap = Int(Keys.PimProductCap, d.PimProductCap),
             PimCompletenessThreshold = Int(Keys.PimCompletenessThreshold, d.PimCompletenessThreshold),

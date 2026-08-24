@@ -20,6 +20,7 @@ public sealed class PowerToolsSettingsScreen : EditScreenBase<PowerToolsSettings
     private const string LinterTab = "Query linter";
     private const string OperationsTab = "Operations";
     private const string CommerceTab = "Price Explainer";
+    private const string PimTab = "PIM quality";
     private const string SecurityTab = "Content Access";
     private const string GeneralTab = "General";
 
@@ -75,6 +76,30 @@ public sealed class PowerToolsSettingsScreen : EditScreenBase<PowerToolsSettings
             EditorFor(m => m.DefaultCurrencyCode)
         ]);
 
+        AddComponents(CommerceTab, "Currency guard",
+        [
+            EditorFor(m => m.RateDeviationPercent),
+            EditorFor(m => m.LiveRateCheckEnabled),
+            EditorFor(m => m.LiveRateFeedUrl)
+        ]);
+
+        AddComponents(CommerceTab, "Preview",
+        [
+            EditorFor(m => m.PreviewPages)
+        ]);
+
+        AddComponents(PimTab, "Scanning",
+        [
+            EditorFor(m => m.PimProductCap),
+            EditorFor(m => m.PimCompletenessThreshold),
+            EditorFor(m => m.PimCommonGapPercent)
+        ]);
+
+        AddComponents(PimTab, "Suppressions",
+        [
+            EditorFor(m => m.PimSuppressedRules)
+        ]);
+
         AddComponents(SecurityTab, "Accounts",
         [
             EditorFor(m => m.UserFetchCap),
@@ -90,6 +115,7 @@ public sealed class PowerToolsSettingsScreen : EditScreenBase<PowerToolsSettings
         [
             EditorFor(m => m.SecuritySectionEnabled),
             EditorFor(m => m.CommerceSectionEnabled),
+            EditorFor(m => m.PimSectionEnabled),
             EditorFor(m => m.OperationsSectionEnabled),
             EditorFor(m => m.SearchSectionEnabled)
         ]);
@@ -105,6 +131,8 @@ public sealed class PowerToolsSettingsScreen : EditScreenBase<PowerToolsSettings
         nameof(PowerToolsSettingsModel.IgnoredRules) or
         nameof(PowerToolsSettingsModel.IgnoredParameters) or
         nameof(PowerToolsSettingsModel.IgnoredQueries) or
+        nameof(PowerToolsSettingsModel.PimSuppressedRules) or
+        nameof(PowerToolsSettingsModel.PreviewPages) or
         nameof(PowerToolsSettingsModel.SuppressedWarningRules) => new Textarea { Rows = 4 },
 
         nameof(PowerToolsSettingsModel.StaleIndexHours) => Num("Hours"),
@@ -118,6 +146,10 @@ public sealed class PowerToolsSettingsScreen : EditScreenBase<PowerToolsSettings
         nameof(PowerToolsSettingsModel.ProductPickCap) => Num("products"),
         nameof(PowerToolsSettingsModel.PriceRowCap) => Num("rows"),
         nameof(PowerToolsSettingsModel.UserFetchCap) => Num("users"),
+        nameof(PowerToolsSettingsModel.RateDeviationPercent) => Num("%"),
+        nameof(PowerToolsSettingsModel.PimProductCap) => Num("products"),
+        nameof(PowerToolsSettingsModel.PimCompletenessThreshold) => Num("%"),
+        nameof(PowerToolsSettingsModel.PimCommonGapPercent) => Num("%"),
 
         _ => null
     };
