@@ -131,7 +131,7 @@ public sealed class QueryValuesScreen : PromptScreenBase<QueryValuesModel>
 /// </summary>
 public sealed class QueryTestScreen : OverviewScreenBase<QueryTestModel>
 {
-    private static readonly int[] TakePresets = [10, 25];
+    internal static readonly int[] TakePresets = [10, 25];
 
     private QueryTestQuery Q => Query as QueryTestQuery ?? new QueryTestQuery();
 
@@ -188,18 +188,6 @@ public sealed class QueryTestScreen : OverviewScreenBase<QueryTestModel>
                 [
                     new ActionNode
                     {
-                        Name = "Set parameters",
-                        Icon = Icon.SlidersV,
-                        NodeAction = OpenDialogAction.To<QueryValuesScreen>()
-                            .With(new QueryValuesQuery
-                            {
-                                Repository = q.Repository,
-                                Item = q.Item,
-                                Parameters = q.Parameters
-                            })
-                    },
-                    new ActionNode
-                    {
                         Name = "Use the declared defaults",
                         Icon = Icon.Redo,
                         NodeAction = Navigate(q, x => x.Parameters = Defaults(q))
@@ -209,33 +197,6 @@ public sealed class QueryTestScreen : OverviewScreenBase<QueryTestModel>
                         Name = "Clear all values",
                         Icon = Icon.TrashAlt,
                         NodeAction = Navigate(q, x => x.Parameters = string.Empty)
-                    }
-                ]
-            },
-            new()
-            {
-                Nodes = TakePresets.Select(take => new ActionNode
-                {
-                    Name = $"Show {take} documents",
-                    Icon = Icon.ListUl,
-                    NodeAction = Navigate(q, x => x.Take = take)
-                }).ToList()
-            },
-            new()
-            {
-                Nodes =
-                [
-                    new ActionNode
-                    {
-                        Name = q.Impact ? "Skip the per-clause impact" : "Measure the per-clause impact",
-                        Icon = Icon.Comparison,
-                        NodeAction = Navigate(q, x => x.Impact = !q.Impact)
-                    },
-                    new ActionNode
-                    {
-                        Name = q.ShowFacets ? "Hide facet counts" : "Show facet counts",
-                        Icon = Icon.ChartBar,
-                        NodeAction = Navigate(q, x => x.ShowFacets = !q.ShowFacets)
                     }
                 ]
             },
@@ -262,7 +223,7 @@ public sealed class QueryTestScreen : OverviewScreenBase<QueryTestModel>
         return groups;
     }
 
-    private static NavigateScreenAction Navigate(QueryTestQuery q, Action<QueryTestQuery> change)
+    internal static NavigateScreenAction Navigate(QueryTestQuery q, Action<QueryTestQuery> change)
     {
         var next = new QueryTestQuery
         {
@@ -308,5 +269,44 @@ public sealed class QueryTestScreen : OverviewScreenBase<QueryTestModel>
         {
             return string.Empty;
         }
+    }
+}
+
+
+/// <summary>
+/// The report's run switches as toolbar controls: *Set parameters* as a one-click button
+/// (the tool's primary action), then the document count, the per-clause impact and the facet
+/// counts as value-labelled selectors — same treatment as the Price Explainer's context
+/// switches, see <see cref="ToolbarSwitch"/>.
+/// </summary>
+public sealed class QueryTestToolbarInjector : ScreenInjector<QueryTestScreen>
+{
+    public override void OnAfter(QueryTestScreen screen, Dynamicweb.CoreUI.UiComponentBase content)
+    {
+        if (content is not ScreenLayout layout)
+            return;
+
+        if (screen.Query is not QueryTestQuery q || string.IsNullOrEmpty(q.Repository) || string.IsNullOrEmpty(q.Item))
+            return;
+
+        ToolbarSwitch.AddButton(layout, "Set parameters", Icon.SlidersV,
+            OpenDialogAction.To<QueryValuesScreen>()
+                .With(new QueryValuesQuery { Repository = q.Repository, Item = q.Item, Parameters = q.Parameters }));
+
+        ToolbarSwitch.Add(layout, $"{q.Take} docs", Icon.ListUl,
+            QueryTestScreen.TakePresets.Select(take => ToolbarSwitch.Option($"Show {take} documents",
+                active: take == q.Take, QueryTestScreen.Navigate(q, x => x.Take = take))));
+
+        ToolbarSwitch.Add(layout, q.Impact ? "Impact on" : "Impact off", Icon.Comparison,
+        [
+            ToolbarSwitch.Option("Measure the per-clause impact", active: q.Impact, QueryTestScreen.Navigate(q, x => x.Impact = true)),
+            ToolbarSwitch.Option("Skip the per-clause impact", active: !q.Impact, QueryTestScreen.Navigate(q, x => x.Impact = false))
+        ]);
+
+        ToolbarSwitch.Add(layout, q.ShowFacets ? "Facets on" : "Facets off", Icon.ChartBar,
+        [
+            ToolbarSwitch.Option("Show facet counts", active: q.ShowFacets, QueryTestScreen.Navigate(q, x => x.ShowFacets = true)),
+            ToolbarSwitch.Option("Hide facet counts", active: !q.ShowFacets, QueryTestScreen.Navigate(q, x => x.ShowFacets = false))
+        ]);
     }
 }

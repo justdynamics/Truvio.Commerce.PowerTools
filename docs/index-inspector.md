@@ -41,8 +41,8 @@ it. Two states earn a badge:
 - **Unused** — an indexed field that no query, sort or facet ever asks for (dead weight in
   every rebuild).
 
-The toolbar search narrows by field, index or repository name; a screen action switches
-between "all fields" and "only dangling and unused".
+The toolbar search narrows by field, index or repository name; a toolbar selector next to
+the Actions menu switches between "all fields" and "only dangling and unused".
 
 ### Query linter
 

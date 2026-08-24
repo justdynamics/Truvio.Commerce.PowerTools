@@ -193,8 +193,8 @@ public sealed class PriceExplainToolbarInjector : ScreenInjector<PriceExplainScr
         var currencies = SafeList(DwCommerceExplainer.Currencies);
         if (currencies.Count > 1)
         {
-            AddSwitch(layout, string.IsNullOrEmpty(q.CurrencyCode) ? "Currency" : q.CurrencyCode, Icon.Coins,
-                currencies.Select(c => Option($"{c.Code}{(c.Name != c.Code ? $" - {c.Name}" : "")}",
+            ToolbarSwitch.Add(layout, string.IsNullOrEmpty(q.CurrencyCode) ? "Currency" : q.CurrencyCode, Icon.Coins,
+                currencies.Select(c => ToolbarSwitch.Option($"{c.Code}{(c.Name != c.Code ? $" - {c.Name}" : "")}",
                     active: c.Code == q.CurrencyCode, Navigate(q, x => x.CurrencyCode = c.Code))));
         }
 
@@ -202,41 +202,25 @@ public sealed class PriceExplainToolbarInjector : ScreenInjector<PriceExplainScr
         if (shops.Count > 1)
         {
             var current = shops.FirstOrDefault(shop => shop.Id == q.ShopId);
-            AddSwitch(layout, string.IsNullOrEmpty(current.Name) ? "Shop" : current.Name, Icon.ShoppingCart,
-                shops.Select(shop => Option(shop.Name, active: shop.Id == q.ShopId, Navigate(q, x => x.ShopId = shop.Id))));
+            ToolbarSwitch.Add(layout, string.IsNullOrEmpty(current.Name) ? "Shop" : current.Name, Icon.ShoppingCart,
+                shops.Select(shop => ToolbarSwitch.Option(shop.Name, active: shop.Id == q.ShopId, Navigate(q, x => x.ShopId = shop.Id))));
         }
 
         var settings = DwPowerToolsSettings.Current;
 
-        AddSwitch(layout, $"Qty {q.Quantity:0.##}", Icon.Cube,
-            settings.Quantities().Select(qty => Option($"{qty:0.##}", active: Math.Abs(qty - q.Quantity) < 0.0001,
+        ToolbarSwitch.Add(layout, $"Qty {q.Quantity:0.##}", Icon.Cube,
+            settings.Quantities().Select(qty => ToolbarSwitch.Option($"{qty:0.##}", active: Math.Abs(qty - q.Quantity) < 0.0001,
                 Navigate(q, x => x.Quantity = qty))));
 
         var today = DateTime.Today;
-        var dateOptions = new List<ActionNode> { Option("Now", active: string.IsNullOrEmpty(q.Date), Navigate(q, x => x.Date = string.Empty)) };
+        var dateOptions = new List<ActionNode> { ToolbarSwitch.Option("Now", active: string.IsNullOrEmpty(q.Date), Navigate(q, x => x.Date = string.Empty)) };
         dateOptions.AddRange(settings.DateOffsets().Select(days =>
         {
             var date = today.AddDays(days).ToString("yyyy-MM-dd");
-            return Option($"+{days} days ({date})", active: q.Date == date, Navigate(q, x => x.Date = date));
+            return ToolbarSwitch.Option($"+{days} days ({date})", active: q.Date == date, Navigate(q, x => x.Date = date));
         }));
-        AddSwitch(layout, string.IsNullOrEmpty(q.Date) ? "Now" : q.Date, Icon.CalendarAlt, dateOptions);
+        ToolbarSwitch.Add(layout, string.IsNullOrEmpty(q.Date) ? "Now" : q.Date, Icon.CalendarAlt, dateOptions);
     }
-
-    private static void AddSwitch(ScreenLayout layout, string label, Icon icon, IEnumerable<ActionNode> options) =>
-        layout.AddAction(new Button
-        {
-            Name = label,
-            Icon = icon,
-            Type = Button.ButtonType.Secondary,
-            ContextMenu = new ContextMenu { ActionGroups = [new ActionGroup { Nodes = options.ToList() }] }
-        });
-
-    private static ActionNode Option(string name, bool active, ActionBase action) => new()
-    {
-        Name = name,
-        Icon = active ? Icon.Check : null,
-        NodeAction = action
-    };
 
     private static NavigateScreenAction Navigate(PriceExplainQuery q, Action<PriceExplainQuery> change)
     {

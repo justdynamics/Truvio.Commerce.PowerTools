@@ -20,7 +20,7 @@ namespace Truvio.Commerce.PowerTools.AdminUI.Screens;
 /// </summary>
 public sealed class DocumentBrowserScreen : ListScreenBase<DocumentRowModel>
 {
-    private static readonly int[] TakePresets = [10, 25, 50];
+    internal static readonly int[] TakePresets = [10, 25, 50];
 
     private DocumentBrowserQuery Q => Query as DocumentBrowserQuery ?? new DocumentBrowserQuery();
 
@@ -100,38 +100,13 @@ public sealed class DocumentBrowserScreen : ListScreenBase<DocumentRowModel>
                             .With(new IndexDetailQuery { Repository = q.Repository, Item = q.Item })
                     }
                 ]
-            },
-            new()
-            {
-                Nodes = TakePresets.Select(take => new ActionNode
-                {
-                    Name = $"Show {take} documents",
-                    Icon = Icon.ListUl,
-                    NodeAction = Navigate(q, x => x.Take = take)
-                }).ToList()
             }
         };
-
-        if (DocumentBrowserQuery.IsProductIndex(q.Repository, q.Item))
-        {
-            groups.Add(new ActionGroup
-            {
-                Nodes =
-                [
-                    new ActionNode
-                    {
-                        Name = q.Compare ? "Stop comparing with the database" : "Compare with the database",
-                        Icon = Icon.Balance,
-                        NodeAction = Navigate(q, x => x.Compare = !q.Compare)
-                    }
-                ]
-            });
-        }
 
         return groups;
     }
 
-    private static NavigateScreenAction Navigate(DocumentBrowserQuery q, Action<DocumentBrowserQuery> change)
+    internal static NavigateScreenAction Navigate(DocumentBrowserQuery q, Action<DocumentBrowserQuery> change)
     {
         var next = new DocumentBrowserQuery
         {
@@ -228,5 +203,35 @@ public sealed class DocumentDetailScreen : OverviewScreenBase<DocumentDetailMode
                 ]
             }
         ];
+    }
+}
+
+
+/// <summary>
+/// Document count and database comparison as toolbar controls, labelled with the state in
+/// effect - see <see cref="ToolbarSwitch"/>.
+/// </summary>
+public sealed class DocumentBrowserToolbarInjector : ScreenInjector<DocumentBrowserScreen>
+{
+    public override void OnAfter(DocumentBrowserScreen screen, Dynamicweb.CoreUI.UiComponentBase content)
+    {
+        if (content is not Dynamicweb.CoreUI.Layout.ScreenLayout layout)
+            return;
+
+        if (screen.Query is not DocumentBrowserQuery q || string.IsNullOrEmpty(q.Repository) || string.IsNullOrEmpty(q.Item))
+            return;
+
+        ToolbarSwitch.Add(layout, $"{q.Take} docs", Icon.ListUl,
+            DocumentBrowserScreen.TakePresets.Select(take => ToolbarSwitch.Option($"Show {take} documents",
+                active: take == q.Take, DocumentBrowserScreen.Navigate(q, x => x.Take = take))));
+
+        if (DocumentBrowserQuery.IsProductIndex(q.Repository, q.Item))
+        {
+            ToolbarSwitch.Add(layout, q.Compare ? "Compare on" : "Compare off", Icon.Balance,
+            [
+                ToolbarSwitch.Option("Compare with the database", active: q.Compare, DocumentBrowserScreen.Navigate(q, x => x.Compare = true)),
+                ToolbarSwitch.Option("Stop comparing with the database", active: !q.Compare, DocumentBrowserScreen.Navigate(q, x => x.Compare = false))
+            ]);
+        }
     }
 }

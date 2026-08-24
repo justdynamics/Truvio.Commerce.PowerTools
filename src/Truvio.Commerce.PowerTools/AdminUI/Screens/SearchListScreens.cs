@@ -84,33 +84,21 @@ public sealed class FieldUsageScreen : ListScreenBase<FieldUsageModel>
         "'Unused' means an indexed field nothing ever asks for";
 #endif
 
-    protected override IEnumerable<ActionGroup>? GetScreenActions()
-    {
-        var problemsOnly = Q.ProblemsOnly;
-
-        return
-        [
-            new ActionGroup
-            {
-                Nodes =
-                [
-                    new ActionNode
-                    {
-                        Name = problemsOnly ? "Show all fields" : "Show only dangling and unused",
-                        Icon = problemsOnly ? Icon.ListUl : Icon.Filter,
-                        NodeAction = NavigateScreenAction.To<FieldUsageScreen>()
-                            .With(new FieldUsageQuery { ProblemsOnly = !problemsOnly })
-                    },
-                    new ActionNode
-                    {
-                        Name = "Repositories & indexes",
-                        Icon = Icon.Database,
-                        NodeAction = NavigateScreenAction.To<IndexListScreen>().With(new IndexListQuery())
-                    }
-                ]
-            }
-        ];
-    }
+    protected override IEnumerable<ActionGroup>? GetScreenActions() =>
+    [
+        new ActionGroup
+        {
+            Nodes =
+            [
+                new ActionNode
+                {
+                    Name = "Repositories & indexes",
+                    Icon = Icon.Database,
+                    NodeAction = NavigateScreenAction.To<IndexListScreen>().With(new IndexListQuery())
+                }
+            ]
+        }
+    ];
 
     protected override IEnumerable<ListViewMapping> GetViewMappings() =>
     [
@@ -221,4 +209,25 @@ public sealed class IndexPickScreen : ListScreenBase<IndexPickModel>
             ? NavigateScreenAction.To<DocumentBrowserScreen>()
                 .With(new DocumentBrowserQuery { Repository = model.RepositoryName, Item = model.Item })
             : null;
+}
+
+
+/// <summary>The dangling/unused filter as a toolbar control labelled with the view in effect.</summary>
+public sealed class FieldUsageToolbarInjector : ScreenInjector<FieldUsageScreen>
+{
+    public override void OnAfter(FieldUsageScreen screen, Dynamicweb.CoreUI.UiComponentBase content)
+    {
+        if (content is not Dynamicweb.CoreUI.Layout.ScreenLayout layout)
+            return;
+
+        var problemsOnly = (screen.Query as FieldUsageQuery)?.ProblemsOnly ?? false;
+
+        ToolbarSwitch.Add(layout, problemsOnly ? "Problems only" : "All fields", Icon.Filter,
+        [
+            ToolbarSwitch.Option("All fields", active: !problemsOnly,
+                NavigateScreenAction.To<FieldUsageScreen>().With(new FieldUsageQuery())),
+            ToolbarSwitch.Option("Only dangling and unused", active: problemsOnly,
+                NavigateScreenAction.To<FieldUsageScreen>().With(new FieldUsageQuery { ProblemsOnly = true }))
+        ]);
+    }
 }

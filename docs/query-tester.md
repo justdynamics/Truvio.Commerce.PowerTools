@@ -97,7 +97,7 @@ index, and so on.
 - Nothing is written back: `IQueryService.SaveQuery` is never called, and every run reloads the
   query from disk first (see below), so a mutated flag can never leak into another request.
 - The impact measurement costs two queries per active clause, capped at
-  `DwQueryRunner.MaxMeasuredClauses` (20). It can be switched off from the screen actions.
+  `DwQueryRunner.MaxMeasuredClauses` (20). It can be switched off from the Impact toolbar selector.
 - Group `Negate` and full-text expressions are traced but not individually measured.
 
 ## Dynamicweb facts verified for this tool
