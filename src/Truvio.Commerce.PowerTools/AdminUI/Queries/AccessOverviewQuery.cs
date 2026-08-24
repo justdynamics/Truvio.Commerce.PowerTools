@@ -23,10 +23,30 @@ public sealed class AccessOverviewQuery : DataQueryListBase<AccessNodeModel, Acc
     /// <summary>0 = every website; otherwise only that area's pages.</summary>
     public int AreaId { get; set; }
 
+    /// <summary>
+    /// The tool starts directly on this screen: with nothing selected it shows the built-in
+    /// anonymous frontend role across all websites, and the toolbar pickers take it from
+    /// there — no full-screen account list up front.
+    /// </summary>
+    internal static string DefaultAccountKey()
+    {
+        try
+        {
+            return new DwAccountCatalog().GetRoles().FirstOrDefault()?.Key ?? string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
     protected override IEnumerable<AccessNodeModel>? GetListItems()
     {
         if (!string.IsNullOrEmpty(PickToken) && PickStore.Get(PickToken) is { Length: > 0 } picked)
             AccountKey = picked;
+
+        if (string.IsNullOrEmpty(AccountKey))
+            AccountKey = DefaultAccountKey();
 
         var account = new DwAccountCatalog().Resolve(AccountKey);
         if (account is null)

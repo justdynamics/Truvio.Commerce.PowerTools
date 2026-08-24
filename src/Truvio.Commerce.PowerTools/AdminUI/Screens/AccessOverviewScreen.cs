@@ -22,7 +22,7 @@ public sealed class AccessOverviewScreen : ListScreenBase<AccessNodeModel>
     private SecurityAccount? Account => _account ??=
         (Query as AccessOverviewQuery)?.AccountKey is { Length: > 0 } key
             ? new DwAccountCatalog().Resolve(key)
-            : null;
+            : new DwAccountCatalog().Resolve(AccessOverviewQuery.DefaultAccountKey());
 
     protected override string GetScreenName() =>
         Account is null
@@ -33,23 +33,6 @@ public sealed class AccessOverviewScreen : ListScreenBase<AccessNodeModel>
     protected override string? GetScreenExplanation() =>
         Account is null ? null : $"What '{Account.DisplayName}' can see, page by page";
 #endif
-
-    protected override IEnumerable<ActionGroup>? GetScreenActions() =>
-    [
-        new()
-        {
-            Nodes =
-            [
-                new ActionNode
-                {
-                    Name = "Select another user",
-                    Icon = Icon.UserCircle,
-                    NodeAction = NavigateScreenAction.To<AccountListScreen>()
-                        .With(new AccountListQuery())
-                }
-            ]
-        }
-    ];
 
     protected override IEnumerable<ListViewMapping> GetViewMappings() =>
     [
@@ -119,6 +102,9 @@ public sealed class AccessOverviewToolbarInjector : ScreenInjector<AccessOvervie
         var accountKey = q.AccountKey;
         if (string.IsNullOrEmpty(accountKey) && !string.IsNullOrEmpty(q.PickToken))
             accountKey = Queries.PickStore.Get(q.PickToken);
+
+        if (string.IsNullOrEmpty(accountKey))
+            accountKey = AccessOverviewQuery.DefaultAccountKey();
 
         if (string.IsNullOrEmpty(accountKey))
             return;

@@ -29,8 +29,8 @@ public sealed class SecurityNodeProvider : NavigationNodeProvider<SecuritySectio
             Icon = Icon.Shield,
             Sort = 10,
             HasSubNodes = false,
-            NodeAction = NavigateScreenAction.To<AccountListScreen>()
-                .With(new AccountListQuery())
+            NodeAction = NavigateScreenAction.To<AccessOverviewScreen>()
+                .With(new AccessOverviewQuery())
         };
 
         yield return new NavigationNode

@@ -48,13 +48,6 @@ public sealed class PriceExplainNavigationNodePathProvider : NavigationNodePathP
 }
 
 /// <summary>Anchors the account picker (and its drilldowns) under PowerTools > Security > Security Viewer.</summary>
-public sealed class AccountListNavigationNodePathProvider : NavigationNodePathProvider<AccountListModel>
-{
-    public AccountListNavigationNodePathProvider() => AllowNullModel = true;
-
-    protected override NavigationNodePath GetNavigationNodePathInternal(AccountListModel? model) =>
-        PowerToolsNavigationPaths.For(SecurityNodeProvider.SecurityViewerNodeId);
-}
 
 public sealed class AccessNodeNavigationNodePathProvider : NavigationNodePathProvider<AccessNodeModel>
 {

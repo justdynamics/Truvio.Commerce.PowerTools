@@ -57,14 +57,6 @@ public sealed class PageAudienceScreen : ListScreenBase<AudienceItemModel>
                     Sort = 10,
                     NodeAction = NavigateScreenAction.To<AccessOverviewScreen>()
                         .With(new AccessOverviewQuery { AccountKey = AudienceQuery?.AccountKey ?? string.Empty })
-                },
-                new ActionNode
-                {
-                    Name = "Select another user",
-                    Icon = Icon.UserCircle,
-                    Sort = 20,
-                    NodeAction = NavigateScreenAction.To<AccountListScreen>()
-                        .With(new AccountListQuery())
                 }
             ]
         }

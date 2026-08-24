@@ -24,7 +24,7 @@ public sealed class PowerToolsArea : AreaBase
         // Between Apps (90) and Settings (100).
         Sort = 95;
         // Landing screen when the area itself is clicked.
-        SecondaryAction = NavigateScreenAction.To<AccountListScreen>().With(new AccountListQuery());
+        SecondaryAction = NavigateScreenAction.To<AccessOverviewScreen>().With(new AccessOverviewQuery());
     }
 }
 

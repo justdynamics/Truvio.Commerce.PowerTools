@@ -34,8 +34,7 @@ visible only to users with access to the respective tools.
 
 | Screen | What it shows |
 |---|---|
-| Content Access Viewer | Pick the account to inspect (roles, groups, users) — searchable (name, username, e-mail, group name) and paged. |
-| Content Access Viewer | On the overview, switch account (searchable slide-over picker) and website directly from the toolbar. |
+| Content Access Viewer | Opens directly on the overview (anonymous frontend role, all websites); switch account (searchable slide-over picker, covering roles, groups and users) and website from the toolbar. |
 | Content access | Every page with the account's effective level, its origin (set here / inherited / role default), and gating warnings. |
 | Page audience | Drilldown for one page: the page verdict, then each grid row and paragraph with visible/hidden and the winning grant or deny. |
 | Warnings | Install-wide misconfiguration findings (see below). |
