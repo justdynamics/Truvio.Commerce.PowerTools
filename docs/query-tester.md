@@ -62,9 +62,10 @@ scanned first (free); when a value only matched analyzed-only fields (freetext a
 the un-stored descriptions), the product's database texts — name, number, descriptions,
 meta, custom fields — are scanned instead, because that is where the match actually comes
 from. Catch-all fields (freetext, `*_Search`) are hidden when a real field carries the term.
-Each row links **Why?** (re-runs the report with `#expect=<key>`, so the probe section
-explains that document clause by clause) and **Open** (the full stored document in the
-Document browser).
+Each row links **Why?** (a slide-over panel probing that document clause by clause — each
+passing row says where the clause's value occurs, e.g. `'EcoTouch' is in Long description
+(database): "…"`; the same panel appears inline in the report when `#expect` is set) and
+**Open** (the full stored document in the Document browser).
 
 **Clause trace** — every node of the expression tree in tree order, with the value it resolved
 to for this run and a verdict:
