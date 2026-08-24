@@ -280,7 +280,7 @@ public sealed class QueryTestQuery : DataQueryModelBase<QueryTestModel>
         }
         else
         {
-            model.Sections.Add(Results(run));
+            model.Sections.Add(Results(run, query, index, values, traces));
         }
 
         model.Sections.Add(Trace(traces));
@@ -373,7 +373,12 @@ public sealed class QueryTestQuery : DataQueryModelBase<QueryTestModel>
         return new ReportSectionModel { Heading = "Result", Html = html };
     }
 
-    private static ReportSectionModel Results(QueryRunResult run)
+    private ReportSectionModel Results(
+        QueryRunResult run,
+        QuerySpec query,
+        IndexSpec? index,
+        IReadOnlyDictionary<string, string> values,
+        IReadOnlyList<ClauseTrace> traces)
     {
         if (run.Documents.Count == 0)
         {
@@ -385,19 +390,83 @@ public sealed class QueryTestQuery : DataQueryModelBase<QueryTestModel>
             };
         }
 
+        var keyField = DwQueryRunner.KeyFieldFor(index);
+
+        // The bare key-field value per document ("Key" may be a compound like ID/VariantID).
+        string KeyOf(RunDocument d) => d.Value(keyField) is { Length: > 0 } v ? v : d.Key;
+        var keys = run.Documents.Select(KeyOf).Where(k => !string.IsNullOrEmpty(k))
+            .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+
+        // One probe query per measured clause: keyField IN (listed keys) AND clause. A probe
+        // can truncate (several variants may share a key and the runner caps results), in
+        // which case a key that did not come back is UNKNOWN rather than unmatched.
+        var measured = traces.Where(t => t.IsMeasurable).Take(DwQueryRunner.MaxMeasuredClauses).ToList();
+        var matches = new List<(ClauseTrace Trace, HashSet<string>? Keys, bool Complete)>();
+        foreach (var trace in measured)
+        {
+            var probe = DwQueryRunner.RunClauseForKeys(Repository, Item, values, trace.Path, keyField, keys);
+            matches.Add((trace, probe.Ok
+                ? probe.Documents
+                    .Select(d => d.Value(keyField) is { Length: > 0 } v ? v : d.Key)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase)
+                : null,
+                probe.Ok && probe.TotalHits <= probe.Returned));
+        }
+
+        var rows = run.Documents.Select(d =>
+        {
+            var key = KeyOf(d);
+            var matchedBy = QueryDiagnosis.MatchedBy(matches
+                .Select(m => (m.Trace.Label, m.Keys is null
+                    ? (bool?)null
+                    : m.Keys.Contains(key)
+                        ? true
+                        : m.Complete ? (bool?)false : null))
+                .ToList());
+
+            return new object?[]
+            {
+                d.Ordinal.ToString(CultureInfo.InvariantCulture),
+                d.Key,
+                d.Label,
+                new SearchTables.Wrap(matchedBy),
+                new SearchTables.Link("Why?", WhyHref(key)),
+                new SearchTables.Link("Open", OpenHref(query, keyField, key))
+            };
+        });
+
+        var html = SearchTables.Table(["#", "Key", "Label", "Matched by", "", ""], rows);
+
+        if (measured.Count > 0)
+        {
+            html += SearchTables.Note(
+                $"\"Matched by\" is measured with one extra query per active clause ({measured.Count} here): " +
+                $"{keyField} IN (the listed keys) AND that clause. " +
+                "\"Why?\" re-runs the report explaining that document clause by clause; \"Open\" shows the stored document.");
+        }
+
         return new ReportSectionModel
         {
             Heading = $"Documents (first {run.Documents.Count} of {run.TotalHits:N0})",
-            Html = SearchTables.Table(
-                ["#", "Key", "Label"],
-                run.Documents.Select(d => new object?[]
-                {
-                    d.Ordinal.ToString(CultureInfo.InvariantCulture),
-                    d.Key,
-                    d.Label
-                }))
+            Html = html
         };
     }
+
+    private string WhyHref(string key)
+    {
+        var parameters = ParameterValues.Set(Parameters, ParameterValues.ExpectKeyName, key);
+        return "/Admin/UI/PowerTools/QueryTest" +
+               $"?Repository={Uri.EscapeDataString(Repository)}&Item={Uri.EscapeDataString(Item)}" +
+               $"&Parameters={Uri.EscapeDataString(parameters)}" +
+               $"&Take={Take}&Impact={Impact}&ShowFacets={ShowFacets}" +
+               "&Type=QueryTest&QueryContext=Dynamicweb.CoreUI.Data.DataQueryContext";
+    }
+
+    private static string OpenHref(QuerySpec query, string keyField, string key) =>
+        "/Admin/UI/PowerTools/DocumentDetail" +
+        $"?Repository={Uri.EscapeDataString(query.SourceRepository)}&Item={Uri.EscapeDataString(query.SourceItem)}" +
+        $"&Field={Uri.EscapeDataString(keyField)}&Value={Uri.EscapeDataString(key)}" +
+        "&Type=DocumentDetail&QueryContext=Dynamicweb.CoreUI.Data.DataQueryContext";
 
     private static ReportSectionModel Trace(IReadOnlyList<ClauseTrace> traces)
     {
@@ -529,11 +598,20 @@ public sealed class QueryTestQuery : DataQueryModelBase<QueryTestModel>
 
         html += SearchTables.Note(
             $"Each row is a real query: '{keyField} = {expectedKey}' ANDed with that one clause. " +
-            "A failing row is the reason the document is missing from the result.");
+            "A failing MUST clause is the reason a document is missing; a failing row inside an " +
+            "Or group is just an alternative this document does not need.");
 
         var suggestions = QueryDiagnosis.SuggestFromExpectation(traces, expectedKey, true, checks, documentFields);
 
-        var section = new ReportSectionModel { Heading = $"Why not '{expectedKey}'?", Html = html };
+        // Membership = the WHOLE query ANDed with the key, not "all checks pass": in an Or
+        // group a member legitimately fails the alternatives it does not need.
+        var membership = DwQueryRunner.RunClauseForKey(Repository, Item, values, "1", keyField, expectedKey);
+        var inResult = membership.Ok && membership.TotalHits > 0;
+        var section = new ReportSectionModel
+        {
+            Heading = inResult ? $"Why '{expectedKey}'?" : $"Why not '{expectedKey}'?",
+            Html = html
+        };
         return (section, suggestions);
     }
 

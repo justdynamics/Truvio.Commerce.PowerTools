@@ -188,6 +188,32 @@ public static class QueryDiagnosis
     }
 
     /// <summary>What the measured per-clause hit counts say.</summary>
+    /// <summary>
+    /// One document's "Matched by" cell: which of the measured active clauses it satisfies.
+    /// <c>null</c> in a check means the probe for that clause failed — reported as unknown
+    /// rather than guessed. Pure text composition, the probes happen in the caller.
+    /// </summary>
+    public static string MatchedBy(IReadOnlyList<(string Label, bool? Matches)> checks)
+    {
+        if (checks.Count == 0)
+            return "-";
+
+        var known = checks.Where(c => c.Matches is not null).ToList();
+        if (known.Count == 0)
+            return "-";
+
+        var matched = known.Where(c => c.Matches == true).Select(c => Shorten(c.Label, 60)).ToList();
+        var missed = known.Where(c => c.Matches == false).Select(c => Shorten(c.Label, 60)).ToList();
+
+        if (missed.Count == 0)
+            return $"All {known.Count} measured clause(s)";
+
+        if (matched.Count == 0)
+            return $"None of the {known.Count} measured clause(s)";
+
+        return $"{string.Join("; ", matched)} — not: {string.Join("; ", missed)}";
+    }
+
     public static IReadOnlyList<Suggestion> SuggestFromImpact(
         int totalHits,
         int? defaultsOnlyHits,

@@ -55,7 +55,12 @@ An info bar (index, instance, hits, time, verdict) and then:
 
 plus the parameter values used and **the executed Lucene query text** (see "DW facts" below).
 
-**Documents** — the first N (≤ 25) hits: key and label.
+**Documents** — the first N (≤ 25) hits: key, label, and **Matched by** — which of the
+measured active clauses this document satisfies (measured with one extra query per clause:
+`keyField IN (listed keys) AND clause`; a truncated probe reports a key as unknown rather
+than guessed). Each row links **Why?** (re-runs the report with `#expect=<key>`, so the
+probe section explains that document clause by clause) and **Open** (the full stored
+document in the Document browser).
 
 **Clause trace** — every node of the expression tree in tree order, with the value it resolved
 to for this run and a verdict:

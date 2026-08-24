@@ -125,6 +125,33 @@ public static class DwQueryRunner
         }, includeFacets: false);
     }
 
+    /// <summary>
+    /// Which of the given documents pass one clause — a single query per clause:
+    /// <c>keyField IN (keys) AND clause</c>, returning the surviving keys. This is what lets
+    /// the report say per LISTED document which clauses it matches without running a probe
+    /// per document per clause.
+    /// </summary>
+    public static QueryRunResult RunClauseForKeys(
+        string repository,
+        string item,
+        IReadOnlyDictionary<string, string> values,
+        string clausePath,
+        string keyField,
+        IReadOnlyList<string> keys)
+    {
+        // MaxTake, not keys.Count: several index documents (variants) can share one key, so
+        // the probe may legitimately return more rows than there are distinct keys.
+        return Execute(repository, item, values, MaxTake, query =>
+        {
+            var clause = Find(query.Expression, "1", clausePath);
+            var keyExpression = ExpressionHelper.CreateFieldExpression(
+                keyField, keyField, keys.ToArray(), OperatorType.In);
+            return clause is null
+                ? keyExpression
+                : DwExpression.Group(false, OperatorType.And, [keyExpression, clause]);
+        }, includeFacets: false);
+    }
+
     /// <summary>Fetches one document of the query's source index by its key field.</summary>
     public static QueryRunResult FindByKey(string repository, string item, string keyField, string keyValue)
     {

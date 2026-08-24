@@ -25,6 +25,9 @@ internal static class SearchTables
     /// </summary>
     internal readonly record struct Wrap(string Text);
 
+    /// <summary>A cell rendered as a plain link — used for drill-downs out of a report table.</summary>
+    internal readonly record struct Link(string Text, string Href);
+
     /// <summary>Renders a header row plus body rows; the first column hugs its content.</summary>
     public static string Table(IReadOnlyList<string> headers, IEnumerable<IReadOnlyList<object?>> rows)
     {
@@ -84,6 +87,8 @@ internal static class SearchTables
         Pill pill =>
             $"<span style=\"display:inline-block;padding:1px 8px;border-radius:10px;font-size:0.85em;white-space:nowrap;{Style(pill.Kind)}\">{E(pill.Text)}</span>",
         Wrap wrap => E(wrap.Text),
+        Link link =>
+            $"<a href=\"{E(link.Href)}\" style=\"text-decoration:underline;white-space:nowrap\">{E(link.Text)}</a>",
         bool flag => flag ? "Yes" : "No",
         _ => E(value.ToString())
     };

@@ -401,4 +401,63 @@ public class QueryDiagnosisTests
 
         Assert.Contains(suggestions, s => s.Kind == "info" && s.Title.Contains("passes every active clause"));
     }
+
+    // ---- matched-by ----------------------------------------------------------------------
+
+    [Fact]
+    public void MatchedBy_AllClausesMatch_SaysAll()
+    {
+        var text = QueryDiagnosis.MatchedBy(
+        [
+            ("A Equal @a", true),
+            ("B Contains @b", true)
+        ]);
+
+        Assert.Equal("All 2 measured clause(s)", text);
+    }
+
+    [Fact]
+    public void MatchedBy_PartialMatch_ListsBothSides()
+    {
+        var text = QueryDiagnosis.MatchedBy(
+        [
+            ("ProductName_Search Equal @eq", true),
+            ("freetext Contains @q", false)
+        ]);
+
+        Assert.Contains("ProductName_Search Equal @eq", text);
+        Assert.Contains("not: freetext Contains @q", text);
+    }
+
+    [Fact]
+    public void MatchedBy_NoChecks_IsDash()
+    {
+        Assert.Equal("-", QueryDiagnosis.MatchedBy([]));
+    }
+
+    [Fact]
+    public void MatchedBy_AllProbesFailed_IsDash()
+    {
+        Assert.Equal("-", QueryDiagnosis.MatchedBy([("A Equal @a", (bool?)null)]));
+    }
+
+    [Fact]
+    public void MatchedBy_FailedProbeIsIgnoredNotGuessed()
+    {
+        var text = QueryDiagnosis.MatchedBy(
+        [
+            ("A Equal @a", true),
+            ("B Equal @b", (bool?)null)
+        ]);
+
+        Assert.Equal("All 1 measured clause(s)", text);
+    }
+
+    [Fact]
+    public void MatchedBy_NothingMatches_SaysNone()
+    {
+        var text = QueryDiagnosis.MatchedBy([("A Equal @a", false)]);
+
+        Assert.Equal("None of the 1 measured clause(s)", text);
+    }
 }
