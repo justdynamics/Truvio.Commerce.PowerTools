@@ -55,12 +55,16 @@ An info bar (index, instance, hits, time, verdict) and then:
 
 plus the parameter values used and **the executed Lucene query text** (see "DW facts" below).
 
-**Documents** — the first N (≤ 25) hits: key, label, and **Matched by** — which of the
-measured active clauses this document satisfies (measured with one extra query per clause:
-`keyField IN (listed keys) AND clause`; a truncated probe reports a key as unknown rather
-than guessed). Each row links **Why?** (re-runs the report with `#expect=<key>`, so the
-probe section explains that document clause by clause) and **Open** (the full stored
-document in the Document browser).
+**Documents** — the first N (≤ 25) hits: key, label, and **Matches** — search highlighting:
+where the supplied values occur in each document, e.g.
+`Long description (database): Owens Corning …EcoTouch®… insulation`. Stored index fields are
+scanned first (free); when a value only matched analyzed-only fields (freetext aggregates
+the un-stored descriptions), the product's database texts — name, number, descriptions,
+meta, custom fields — are scanned instead, because that is where the match actually comes
+from. Catch-all fields (freetext, `*_Search`) are hidden when a real field carries the term.
+Each row links **Why?** (re-runs the report with `#expect=<key>`, so the probe section
+explains that document clause by clause) and **Open** (the full stored document in the
+Document browser).
 
 **Clause trace** — every node of the expression tree in tree order, with the value it resolved
 to for this run and a verdict:

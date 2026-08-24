@@ -28,6 +28,9 @@ internal static class SearchTables
     /// <summary>A cell rendered as a plain link — used for drill-downs out of a report table.</summary>
     internal readonly record struct Link(string Text, string Href);
 
+    /// <summary>Search-highlighting lines: "Field: …before <mark>term</mark> after…".</summary>
+    internal readonly record struct Snippets(IReadOnlyList<(string Field, string Before, string Match, string After)> Hits);
+
     /// <summary>Renders a header row plus body rows; the first column hugs its content.</summary>
     public static string Table(IReadOnlyList<string> headers, IEnumerable<IReadOnlyList<object?>> rows)
     {
@@ -87,6 +90,10 @@ internal static class SearchTables
         Pill pill =>
             $"<span style=\"display:inline-block;padding:1px 8px;border-radius:10px;font-size:0.85em;white-space:nowrap;{Style(pill.Kind)}\">{E(pill.Text)}</span>",
         Wrap wrap => E(wrap.Text),
+        Snippets snippets => string.Join("<br>", snippets.Hits.Select(h =>
+            $"<span style=\"opacity:.75\">{E(h.Field)}:</span> {E(h.Before)}" +
+            $"<mark style=\"background:rgba(255,193,7,.35);color:inherit;padding:0 1px;border-radius:2px\">{E(h.Match)}</mark>" +
+            E(h.After))),
         Link link =>
             $"<a href=\"{E(link.Href)}\" style=\"text-decoration:underline;white-space:nowrap\">{E(link.Text)}</a>",
         bool flag => flag ? "Yes" : "No",

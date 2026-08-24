@@ -394,56 +394,59 @@ public sealed class QueryTestQuery : DataQueryModelBase<QueryTestModel>
 
         // The bare key-field value per document ("Key" may be a compound like ID/VariantID).
         string KeyOf(RunDocument d) => d.Value(keyField) is { Length: > 0 } v ? v : d.Key;
-        var keys = run.Documents.Select(KeyOf).Where(k => !string.IsNullOrEmpty(k))
-            .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
-        // One probe query per measured clause: keyField IN (listed keys) AND clause. A probe
-        // can truncate (several variants may share a key and the runner caps results), in
-        // which case a key that did not come back is UNKNOWN rather than unmatched.
-        var measured = traces.Where(t => t.IsMeasurable).Take(DwQueryRunner.MaxMeasuredClauses).ToList();
-        var matches = new List<(ClauseTrace Trace, HashSet<string>? Keys, bool Complete)>();
-        foreach (var trace in measured)
-        {
-            var probe = DwQueryRunner.RunClauseForKeys(Repository, Item, values, trace.Path, keyField, keys);
-            matches.Add((trace, probe.Ok
-                ? probe.Documents
-                    .Select(d => d.Value(keyField) is { Length: > 0 } v ? v : d.Key)
-                    .ToHashSet(StringComparer.OrdinalIgnoreCase)
-                : null,
-                probe.Ok && probe.TotalHits <= probe.Returned));
-        }
+        // Search highlighting, not clause mechanics: where do the supplied values occur in
+        // each document? Costs nothing - the stored fields are already in the result. The
+        // clause-by-clause view stays one click away behind "Why?".
+        var showMatches = values.Count > 0;
+        var isProductIndex = index is not null && DwIndexDocuments.IsProductIndex(index);
 
         var rows = run.Documents.Select(d =>
         {
             var key = KeyOf(d);
-            var matchedBy = QueryDiagnosis.MatchedBy(matches
-                .Select(m => (m.Trace.Label, m.Keys is null
-                    ? (bool?)null
-                    : m.Keys.Contains(key)
-                        ? true
-                        : m.Complete ? (bool?)false : null))
-                .ToList());
-
-            return new object?[]
+            var cells = new List<object?>
             {
                 d.Ordinal.ToString(CultureInfo.InvariantCulture),
                 d.Key,
-                d.Label,
-                new SearchTables.Wrap(matchedBy),
-                new SearchTables.Link("Why?", WhyHref(key)),
-                new SearchTables.Link("Open", OpenHref(query, keyField, key))
+                d.Label
             };
+
+            if (showMatches)
+            {
+                // Stored index fields first (free); when the term only lives in analyzed
+                // fields (freetext aggregates the un-stored descriptions), fall back to the
+                // product's database texts - that is where the match actually comes from.
+                var hits = QueryDiagnosis.TermHits(d.AsDictionary(), values.Values);
+                if (hits.Count == 0 && isProductIndex)
+                {
+                    hits = QueryDiagnosis.TermHits(
+                        DwIndexDocuments.ProductTexts(
+                            d.Value("ID") ?? string.Empty,
+                            d.Value("VariantID") ?? string.Empty,
+                            d.Value("LanguageID") ?? string.Empty),
+                        values.Values);
+                }
+
+                cells.Add(hits.Count > 0
+                    ? new SearchTables.Snippets(hits.Select(h => (h.Field, h.Before, h.Match, h.After)).ToList())
+                    : new SearchTables.Wrap("(no text field carries the value - likely matched via an id, category or analyzed-only field)"));
+            }
+
+            cells.Add(new SearchTables.Link("Why?", WhyHref(key)));
+            cells.Add(new SearchTables.Link("Open", OpenHref(query, keyField, key)));
+            return (IReadOnlyList<object?>)cells;
         });
 
-        var html = SearchTables.Table(["#", "Key", "Label", "Matched by", "", ""], rows);
+        var headers = showMatches
+            ? new[] { "#", "Key", "Label", "Matches", "", "" }
+            : new[] { "#", "Key", "Label", "", "" };
+        var html = SearchTables.Table(headers, rows);
 
-        if (measured.Count > 0)
-        {
-            html += SearchTables.Note(
-                $"\"Matched by\" is measured with one extra query per active clause ({measured.Count} here): " +
-                $"{keyField} IN (the listed keys) AND that clause. " +
-                "\"Why?\" re-runs the report explaining that document clause by clause; \"Open\" shows the stored document.");
-        }
+        html += SearchTables.Note(
+            (showMatches
+                ? "\"Matches\" shows where your values occur in each document's stored fields, like search highlighting. "
+                : string.Empty) +
+            "\"Why?\" re-runs the report explaining that document clause by clause; \"Open\" shows the stored document.");
 
         return new ReportSectionModel
         {

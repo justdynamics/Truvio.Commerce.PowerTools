@@ -188,31 +188,68 @@ public static class QueryDiagnosis
     }
 
     /// <summary>What the measured per-clause hit counts say.</summary>
+    /// <summary>One place a supplied search value occurs in a document's stored fields.</summary>
+    public sealed record TermHit(string Term, string Field, string Before, string Match, string After);
+
     /// <summary>
-    /// One document's "Matched by" cell: which of the measured active clauses it satisfies.
-    /// <c>null</c> in a check means the probe for that clause failed — reported as unknown
-    /// rather than guessed. Pure text composition, the probes happen in the caller.
+    /// Search-highlighting for one result row: where do the run's values actually occur in
+    /// this document? Scans the STORED field values (the match itself happened on their
+    /// analyzed counterparts, but the stored siblings hold the same text), so it costs no
+    /// extra query. Catch-all fields (freetext, *_Search) are skipped when a real field also
+    /// carries the term — "EcoTouch appears in the Description" beats "freetext matched".
+    /// A multi-word value is also tried word by word, mirroring the wildcard-per-word
+    /// queries the platform generates.
     /// </summary>
-    public static string MatchedBy(IReadOnlyList<(string Label, bool? Matches)> checks)
+    public static IReadOnlyList<TermHit> TermHits(
+        IReadOnlyDictionary<string, string> documentFields,
+        IEnumerable<string> values,
+        int maxHits = 4)
     {
-        if (checks.Count == 0)
-            return "-";
+        var terms = values
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .SelectMany(v => v.Trim().Contains(' ') ? new[] { v.Trim() }.Concat(v.Split(' ', StringSplitOptions.RemoveEmptyEntries)) : [v.Trim()])
+            .Where(t => t.Length >= 2)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
 
-        var known = checks.Where(c => c.Matches is not null).ToList();
-        if (known.Count == 0)
-            return "-";
+        if (terms.Count == 0)
+            return [];
 
-        var matched = known.Where(c => c.Matches == true).Select(c => Shorten(c.Label, 60)).ToList();
-        var missed = known.Where(c => c.Matches == false).Select(c => Shorten(c.Label, 60)).ToList();
+        var hits = new List<TermHit>();
+        foreach (var term in terms)
+        {
+            var found = new List<TermHit>();
+            foreach (var (field, text) in documentFields)
+            {
+                if (string.IsNullOrEmpty(text))
+                    continue;
 
-        if (missed.Count == 0)
-            return $"All {known.Count} measured clause(s)";
+                var index = text.IndexOf(term, StringComparison.OrdinalIgnoreCase);
+                if (index < 0)
+                    continue;
 
-        if (matched.Count == 0)
-            return $"None of the {known.Count} measured clause(s)";
+                var start = Math.Max(0, index - 35);
+                var end = Math.Min(text.Length, index + term.Length + 35);
+                found.Add(new TermHit(
+                    term,
+                    field,
+                    (start > 0 ? "…" : string.Empty) + text[start..index],
+                    text.Substring(index, term.Length),
+                    text[(index + term.Length)..end] + (end < text.Length ? "…" : string.Empty)));
+            }
 
-        return $"{string.Join("; ", matched)} — not: {string.Join("; ", missed)}";
+            // A hit in a real field makes the catch-all copies of the same text pure noise.
+            var real = found.Where(h => !IsCatchAll(h.Field)).ToList();
+            hits.AddRange((real.Count > 0 ? real : found).Take(2));
+        }
+
+        return hits.Take(maxHits).ToList();
     }
+
+    private static bool IsCatchAll(string field) =>
+        field.Equals("freetext", StringComparison.OrdinalIgnoreCase) ||
+        field.Equals("keywords", StringComparison.OrdinalIgnoreCase) ||
+        field.EndsWith("_Search", StringComparison.OrdinalIgnoreCase);
 
     public static IReadOnlyList<Suggestion> SuggestFromImpact(
         int totalHits,

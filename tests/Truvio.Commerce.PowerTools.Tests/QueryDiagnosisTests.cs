@@ -402,62 +402,87 @@ public class QueryDiagnosisTests
         Assert.Contains(suggestions, s => s.Kind == "info" && s.Title.Contains("passes every active clause"));
     }
 
-    // ---- matched-by ----------------------------------------------------------------------
+    // ---- term hits (search highlighting) -------------------------------------------------
+
+    private static readonly IReadOnlyDictionary<string, string> Prod6 =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["ID"] = "PROD6",
+            ["ProductName"] = "R-13 Kraft-faced batt insulation",
+            ["Description"] = "OwensCorning EcoTouch insulation for wood framing, 15 in x 32 ft.",
+            ["freetext"] = "PROD6 R-13 Kraft-faced batt insulation OwensCorning EcoTouch insulation"
+        };
 
     [Fact]
-    public void MatchedBy_AllClausesMatch_SaysAll()
+    public void TermHits_FindsTermInRealFieldWithContext()
     {
-        var text = QueryDiagnosis.MatchedBy(
-        [
-            ("A Equal @a", true),
-            ("B Contains @b", true)
-        ]);
+        var hits = QueryDiagnosis.TermHits(Prod6, ["EcoTouch"]);
 
-        Assert.Equal("All 2 measured clause(s)", text);
+        var hit = Assert.Single(hits);
+        Assert.Equal("Description", hit.Field);
+        Assert.Equal("EcoTouch", hit.Match);
+        Assert.Contains("OwensCorning", hit.Before);
+        Assert.Contains("insulation", hit.After);
     }
 
     [Fact]
-    public void MatchedBy_PartialMatch_ListsBothSides()
+    public void TermHits_PrefersRealFieldOverCatchAll()
     {
-        var text = QueryDiagnosis.MatchedBy(
-        [
-            ("ProductName_Search Equal @eq", true),
-            ("freetext Contains @q", false)
-        ]);
+        var hits = QueryDiagnosis.TermHits(Prod6, ["EcoTouch"]);
 
-        Assert.Contains("ProductName_Search Equal @eq", text);
-        Assert.Contains("not: freetext Contains @q", text);
+        Assert.DoesNotContain(hits, h => h.Field.Equals("freetext", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
-    public void MatchedBy_NoChecks_IsDash()
+    public void TermHits_FallsBackToCatchAllWhenNothingElseCarriesTheTerm()
     {
-        Assert.Equal("-", QueryDiagnosis.MatchedBy([]));
+        var fields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["ProductName"] = "Something else",
+            ["freetext"] = "hidden gem"
+        };
+
+        var hits = QueryDiagnosis.TermHits(fields, ["gem"]);
+
+        var hit = Assert.Single(hits);
+        Assert.Equal("freetext", hit.Field);
     }
 
     [Fact]
-    public void MatchedBy_AllProbesFailed_IsDash()
+    public void TermHits_MultiWordValueAlsoMatchesPerWord()
     {
-        Assert.Equal("-", QueryDiagnosis.MatchedBy([("A Equal @a", (bool?)null)]));
+        var hits = QueryDiagnosis.TermHits(Prod6, ["batt insulation wool"]);
+
+        Assert.Contains(hits, h => h.Match.Equals("batt", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
-    public void MatchedBy_FailedProbeIsIgnoredNotGuessed()
+    public void TermHits_IsCaseInsensitive()
     {
-        var text = QueryDiagnosis.MatchedBy(
-        [
-            ("A Equal @a", true),
-            ("B Equal @b", (bool?)null)
-        ]);
+        var hits = QueryDiagnosis.TermHits(Prod6, ["ecotouch"]);
 
-        Assert.Equal("All 1 measured clause(s)", text);
+        var hit = Assert.Single(hits);
+        Assert.Equal("EcoTouch", hit.Match);
     }
 
     [Fact]
-    public void MatchedBy_NothingMatches_SaysNone()
+    public void TermHits_NoValues_NoHits()
     {
-        var text = QueryDiagnosis.MatchedBy([("A Equal @a", false)]);
+        Assert.Empty(QueryDiagnosis.TermHits(Prod6, []));
+        Assert.Empty(QueryDiagnosis.TermHits(Prod6, ["", " "]));
+    }
 
-        Assert.Equal("None of the 1 measured clause(s)", text);
+    [Fact]
+    public void TermHits_LongFieldGetsTrimmedContextWithEllipses()
+    {
+        var fields = new Dictionary<string, string>
+        {
+            ["Description"] = new string('a', 100) + " EcoTouch " + new string('b', 100)
+        };
+
+        var hit = Assert.Single(QueryDiagnosis.TermHits(fields, ["EcoTouch"]));
+        Assert.StartsWith("…", hit.Before);
+        Assert.EndsWith("…", hit.After);
+        Assert.True(hit.Before.Length < 45 && hit.After.Length < 45);
     }
 }

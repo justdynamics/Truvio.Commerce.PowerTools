@@ -299,6 +299,68 @@ public static class DwIndexDocuments
     }
 
     /// <summary>
+    /// The database-side texts of one product, for search highlighting: a term often lives
+    /// only in analyzed index fields (freetext aggregates the descriptions un-stored), so the
+    /// index document cannot show WHERE it matched — the product row can. Field names carry a
+    /// "(database)" suffix so the report says where the text was read from.
+    /// </summary>
+    public static IReadOnlyDictionary<string, string> ProductTexts(string productId, string variantId, string languageId)
+    {
+        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (string.IsNullOrEmpty(productId))
+            return result;
+
+        Dynamicweb.Ecommerce.Products.Product? product;
+        try
+        {
+            product = string.IsNullOrEmpty(languageId)
+                ? Dynamicweb.Ecommerce.Services.Products.GetProductById(productId, variantId, true)
+                : Dynamicweb.Ecommerce.Services.Products.GetProductById(productId, variantId, languageId);
+        }
+        catch
+        {
+            return result;
+        }
+
+        if (product is null)
+            return result;
+
+        Add("Name", product.Name);
+        Add("Number", product.Number);
+        Add("Short description", product.ShortDescription);
+        Add("Long description", product.LongDescription);
+        Add("Meta title", product.Meta.Title);
+        Add("Meta keywords", product.Meta.Keywords);
+
+        try
+        {
+            foreach (var fieldValue in product.ProductFieldValues ?? [])
+            {
+                var name = fieldValue?.ProductField?.Name;
+                var text = fieldValue?.Value?.ToString();
+                if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(text))
+                    Add(name!, text);
+            }
+        }
+        catch
+        {
+            // Custom fields are a bonus - the built-in texts above still stand.
+        }
+
+        return result;
+
+        void Add(string field, string? text)
+        {
+            var stripped = StripTags(text);
+            if (!string.IsNullOrEmpty(stripped))
+                result[$"{field} (database)"] = stripped;
+        }
+    }
+
+    private static string StripTags(string? text) =>
+        string.IsNullOrEmpty(text) ? string.Empty : System.Text.RegularExpressions.Regex.Replace(text, "<[^>]+>", " ");
+
+    /// <summary>
     /// Compares an indexed product document with the live product row. The index is a
     /// snapshot: any difference here means the document is stale and the index needs rebuilding.
     /// </summary>
