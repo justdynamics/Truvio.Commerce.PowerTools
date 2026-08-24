@@ -1,4 +1,5 @@
 using System.Net;
+using Dynamicweb.CoreUI;
 using System.Text;
 using Dynamicweb.CoreUI.Actions;
 using Dynamicweb.CoreUI.Actions.Implementations;
@@ -19,7 +20,8 @@ namespace Truvio.Commerce.PowerTools.AdminUI.Screens;
 /// verdicts, then one full-width section per topic (context, visibility, price matrix,
 /// discounts). The list grid is deliberately not used: it splits the width evenly between
 /// columns and clips long text, and explanations are long text. Context switches
-/// (currency, shop, quantity, date) are screen actions that re-navigate with the adjusted
+/// (currency, shop, quantity, date) live as dedicated toolbar buttons next to the Actions
+/// menu — see <see cref="PriceExplainToolbarInjector"/> — and re-navigate with the adjusted
 /// query, so every state is a shareable URL.
 /// </summary>
 public sealed class PriceExplainScreen : OverviewScreenBase<PriceExplainModel>
@@ -127,52 +129,6 @@ public sealed class PriceExplainScreen : OverviewScreenBase<PriceExplainModel>
             }
         };
 
-        var currencies = SafeList(DwCommerceExplainer.Currencies);
-        if (currencies.Count > 1)
-        {
-            groups.Add(new ActionGroup
-            {
-                Nodes = currencies.Select(c => new ActionNode
-                {
-                    Name = $"Currency: {c.Code}{(c.Name != c.Code ? $" - {c.Name}" : "")}",
-                    Icon = Icon.Coins,
-                    NodeAction = Navigate(q, x => x.CurrencyCode = c.Code)
-                }).ToList()
-            });
-        }
-
-        var shops = SafeList(DwCommerceExplainer.Shops);
-        if (shops.Count > 1)
-        {
-            groups.Add(new ActionGroup
-            {
-                Nodes = shops.Select(s => new ActionNode
-                {
-                    Name = $"Shop: {s.Name}",
-                    Icon = Icon.ShoppingCart,
-                    NodeAction = Navigate(q, x => x.ShopId = s.Id)
-                }).ToList()
-            });
-        }
-
-        var settings = DwPowerToolsSettings.Current;
-
-        groups.Add(new ActionGroup
-        {
-            Nodes = settings.Quantities().Select(qty => new ActionNode
-            {
-                Name = $"Quantity: {qty:0.##}",
-                Icon = Icon.Cube,
-                NodeAction = Navigate(q, x => x.Quantity = qty)
-            }).ToList()
-        });
-
-        var today = DateTime.Today;
-        var dateNodes = new List<ActionNode> { DateAction(q, "Date: now", string.Empty) };
-        dateNodes.AddRange(settings.DateOffsets().Select(days =>
-            DateAction(q, $"Date: +{days} days ({today.AddDays(days):yyyy-MM-dd})", today.AddDays(days).ToString("yyyy-MM-dd"))));
-        groups.Add(new ActionGroup { Nodes = dateNodes });
-
         return groups;
     }
 
@@ -181,6 +137,105 @@ public sealed class PriceExplainScreen : OverviewScreenBase<PriceExplainModel>
         Name = name,
         Icon = Icon.CalendarAlt,
         NodeAction = Navigate(q, x => x.Date = date)
+    };
+
+    private static NavigateScreenAction Navigate(PriceExplainQuery q, Action<PriceExplainQuery> change)
+    {
+        var next = new PriceExplainQuery
+        {
+            AccountKey = q.AccountKey,
+            ProductId = q.ProductId,
+            VariantId = q.VariantId,
+            LanguageId = q.LanguageId,
+            CurrencyCode = q.CurrencyCode,
+            CountryCode = q.CountryCode,
+            ShopId = q.ShopId,
+            Quantity = q.Quantity,
+            Date = q.Date
+        };
+        change(next);
+        return NavigateScreenAction.To<PriceExplainScreen>().With(next);
+    }
+
+    private static IReadOnlyList<T> SafeList<T>(Func<IReadOnlyList<T>> source)
+    {
+        try
+        {
+            return source();
+        }
+        catch
+        {
+            return [];
+        }
+    }
+}
+
+
+/// <summary>
+/// Puts the report's context switches in the top bar next to the Actions menu — one button
+/// per dimension, labelled with the value in effect (like the Visual Editor's device
+/// selector, one hop instead of scanning a long mixed menu). An injector because
+/// <c>OverviewScreenBase</c> keeps its <c>ScreenLayout</c> private: <c>AddInManager</c>
+/// discovers <c>ScreenInjector&lt;T&gt;</c> subclasses and <c>OnAfter</c> hands over the
+/// built layout, whose <c>AddAction</c> is the bar (<c>ContextActionGroups</c> is the
+/// Actions dropdown).
+/// </summary>
+public sealed class PriceExplainToolbarInjector : ScreenInjector<PriceExplainScreen>
+{
+    public override void OnAfter(PriceExplainScreen screen, UiComponentBase content)
+    {
+        if (content is not ScreenLayout layout)
+            return;
+
+        if (screen.Query is not PriceExplainQuery q || string.IsNullOrEmpty(q.ProductId))
+            return;
+
+        var currencies = SafeList(DwCommerceExplainer.Currencies);
+        if (currencies.Count > 1)
+        {
+            AddSwitch(layout, string.IsNullOrEmpty(q.CurrencyCode) ? "Currency" : q.CurrencyCode, Icon.Coins,
+                currencies.Select(c => Option($"{c.Code}{(c.Name != c.Code ? $" - {c.Name}" : "")}",
+                    active: c.Code == q.CurrencyCode, Navigate(q, x => x.CurrencyCode = c.Code))));
+        }
+
+        var shops = SafeList(DwCommerceExplainer.Shops);
+        if (shops.Count > 1)
+        {
+            var current = shops.FirstOrDefault(shop => shop.Id == q.ShopId);
+            AddSwitch(layout, string.IsNullOrEmpty(current.Name) ? "Shop" : current.Name, Icon.ShoppingCart,
+                shops.Select(shop => Option(shop.Name, active: shop.Id == q.ShopId, Navigate(q, x => x.ShopId = shop.Id))));
+        }
+
+        var settings = DwPowerToolsSettings.Current;
+
+        AddSwitch(layout, $"Qty {q.Quantity:0.##}", Icon.Cube,
+            settings.Quantities().Select(qty => Option($"{qty:0.##}", active: Math.Abs(qty - q.Quantity) < 0.0001,
+                Navigate(q, x => x.Quantity = qty))));
+
+        var today = DateTime.Today;
+        var dateOptions = new List<ActionNode> { Option("Now", active: string.IsNullOrEmpty(q.Date), Navigate(q, x => x.Date = string.Empty)) };
+        dateOptions.AddRange(settings.DateOffsets().Select(days =>
+        {
+            var date = today.AddDays(days).ToString("yyyy-MM-dd");
+            return Option($"+{days} days ({date})", active: q.Date == date, Navigate(q, x => x.Date = date));
+        }));
+        AddSwitch(layout, string.IsNullOrEmpty(q.Date) ? "Now" : q.Date, Icon.CalendarAlt, dateOptions);
+    }
+
+    private static void AddSwitch(ScreenLayout layout, string label, Icon icon, IEnumerable<ActionNode> options) =>
+        layout.AddAction(new Button
+        {
+            Name = label,
+            Icon = icon,
+            Type = Button.ButtonType.Secondary,
+            ContextMenu = new ContextMenu { ActionGroups = [new ActionGroup { Nodes = options.ToList() }] }
+        });
+
+    private static ActionNode Option(string name, bool active, ActionBase action) => new()
+    {
+        Name = name,
+        Icon = active ? Icon.Check : null,
+        NodeAction = action
     };
 
     private static NavigateScreenAction Navigate(PriceExplainQuery q, Action<PriceExplainQuery> change)
