@@ -4,6 +4,7 @@ using Truvio.Commerce.PowerTools.Core.Diagnostics;
 using Truvio.Commerce.PowerTools.Core.Diagnostics.Rules;
 using Truvio.Commerce.PowerTools.Core.Permissions;
 using Truvio.Commerce.PowerTools.Core.Permissions.Dw;
+using Truvio.Commerce.PowerTools.Core.Principals;
 using Truvio.Commerce.PowerTools.Core.Principals.Dw;
 
 namespace Truvio.Commerce.PowerTools.AdminUI.Queries;
@@ -54,6 +55,7 @@ public sealed class AccessOverviewQuery : DataQueryListBase<AccessNodeModel, Acc
 
         var source = new DwContentSecuritySource();
         var evaluator = new EffectiveAccessEvaluator(source);
+        var ownerName = OwnerNameResolver();
 
         // Per-page gating warnings (the personalisation traps) for the badge column.
         var warningsByPageKey = new BareGroupGrantRule()
@@ -99,7 +101,7 @@ public sealed class AccessOverviewQuery : DataQueryListBase<AccessNodeModel, Acc
                         Name = string.Concat(Enumerable.Repeat(" ", depth)) + page.Name,
                         Visible = access.GrantsRead ? "Yes" : "No",
                         Level = access.LevelName,
-                        Origin = Describe(access, pagesById),
+                        Origin = Explain(account, access, evaluator, pagesById, ownerName),
                         Warning = string.Join("; ", warningsByPageKey[page.Id.ToString()]),
                         VisibleState = access.GrantsRead,
                         LevelValue = access.Level,
@@ -113,27 +115,55 @@ public sealed class AccessOverviewQuery : DataQueryListBase<AccessNodeModel, Acc
         return items;
     }
 
-    internal static string Describe(EffectiveAccess access, IReadOnlyDictionary<int, PageNode> pagesById) =>
-        access.Origin switch
-        {
-            AccessOrigin.Bypass => "Administrator - bypasses permissions",
-            AccessOrigin.ExplicitHere => $"Set here (winner: {DescribeOwner(access.WinningOwnerId)})",
-            AccessOrigin.InheritedFromPage when access.OriginPageId is int pid =>
-                $"Inherited from '{(pagesById.TryGetValue(pid, out var p) ? p.Name : pid.ToString())}' "
-                + $"(winner: {DescribeOwner(access.WinningOwnerId)})",
-            AccessOrigin.RoleDefault => $"Role default ({DescribeOwner(access.WinningOwnerId)})",
-            AccessOrigin.PageFallback => "Follows the page",
-            _ => access.Origin.ToString()
-        };
-
-    internal static string DescribeOwner(string? ownerId) => ownerId switch
+    /// <summary>The page-level explanation: rows come from the page the verdict originated on.</summary>
+    internal static string Explain(
+        SecurityAccount account,
+        EffectiveAccess access,
+        EffectiveAccessEvaluator evaluator,
+        IReadOnlyDictionary<int, PageNode> pagesById,
+        Func<string?, string> ownerName)
     {
-        null => "none",
-        "Anonymous" => "Anonymous role",
-        "AuthenticatedFrontend" => "Authenticated frontend role",
-        _ when int.TryParse(ownerId, out _) => $"group {ownerId}",
-        _ => ownerId
-    };
+        var rows = access.OriginPageId is int pid ? evaluator.GetExplicitPageRows(pid) : [];
+        var originName = access.Origin == AccessOrigin.InheritedFromPage && access.OriginPageId is int origin
+            ? pagesById.TryGetValue(origin, out var p) ? p.Name : origin.ToString()
+            : null;
+        return AccessExplanation.Explain(account, access, rows, originName, ownerName);
+    }
+
+    /// <summary>Owner ids as people know them: role names and actual group names, not "group 60".</summary>
+    internal static Func<string?, string> OwnerNameResolver()
+    {
+        Dictionary<string, string>? groups = null;
+        return ownerId =>
+        {
+            switch (ownerId)
+            {
+                case null:
+                    return "none";
+                case SecurityAccount.AnonymousRole:
+                    return "Anonymous role";
+                case SecurityAccount.AuthenticatedFrontendRole:
+                    return "Authenticated frontend role";
+            }
+
+            if (int.TryParse(ownerId, out _))
+            {
+                try
+                {
+                    groups ??= new DwAccountCatalog().GetGroups()
+                        .GroupBy(g => g.Id).ToDictionary(g => g.Key, g => g.First().DisplayName, StringComparer.Ordinal);
+                }
+                catch
+                {
+                    groups = [];
+                }
+
+                return groups.TryGetValue(ownerId, out var name) ? name : $"group {ownerId}";
+            }
+
+            return ownerId;
+        };
+    }
 
     protected override IEnumerable<AccessNodeModel> MapModels(IEnumerable<AccessNodeModel> items) => items;
 

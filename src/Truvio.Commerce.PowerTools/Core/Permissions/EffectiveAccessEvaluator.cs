@@ -32,6 +32,12 @@ public sealed class EffectiveAccessEvaluator
     public IReadOnlyList<ContentPermissionRow> GetExplicitPageRows(int pageId) =>
         _pageRows[pageId.ToString()].ToList();
 
+    public IReadOnlyList<ContentPermissionRow> GetExplicitGridRowRows(int gridRowId) =>
+        _gridRowRows[gridRowId.ToString()].ToList();
+
+    public IReadOnlyList<ContentPermissionRow> GetExplicitParagraphRows(int paragraphId) =>
+        _paragraphRows[paragraphId.ToString()].ToList();
+
     public EffectiveAccess EvaluatePage(SecurityAccount account, int pageId, IReadOnlyDictionary<int, PageNode> pagesById)
     {
         if (account.BypassesChecks)

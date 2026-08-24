@@ -31,6 +31,7 @@ public sealed class PageAudienceQuery : DataQueryListBase<AudienceItemModel, Aud
 
         var pagesById = source.GetPages(page.AreaId).ToDictionary(p => p.Id);
         var pageAccess = evaluator.EvaluatePage(account, PageId, pagesById);
+        var ownerName = AccessOverviewQuery.OwnerNameResolver();
 
         var items = new List<AudienceItemModel>
         {
@@ -40,7 +41,7 @@ public sealed class PageAudienceQuery : DataQueryListBase<AudienceItemModel, Aud
                 Name = page.GetDisplayName(),
                 Visible = pageAccess.GrantsRead ? "Yes" : "No (page is denied; nothing below renders)",
                 Level = pageAccess.LevelName,
-                Reason = AccessOverviewQuery.Describe(pageAccess, pagesById),
+                Reason = AccessOverviewQuery.Explain(account, pageAccess, evaluator, pagesById, ownerName),
                 VisibleState = pageAccess.GrantsRead,
                 LevelValue = pageAccess.Level,
                 OriginKind = pageAccess.Origin.ToString()
@@ -56,7 +57,9 @@ public sealed class PageAudienceQuery : DataQueryListBase<AudienceItemModel, Aud
                 Name = row.Name,
                 Visible = Verdict(pageAccess, access),
                 Level = access.LevelName,
-                Reason = AccessOverviewQuery.Describe(access, pagesById),
+                Reason = access.Origin == AccessOrigin.ExplicitHere
+                    ? AccessExplanation.Explain(account, access, evaluator.GetExplicitGridRowRows(row.Id), null, ownerName)
+                    : AccessOverviewQuery.Explain(account, access, evaluator, pagesById, ownerName),
                 VisibleState = pageAccess.GrantsRead && access.GrantsRead,
                 LevelValue = access.Level,
                 OriginKind = access.Origin.ToString()
@@ -72,7 +75,9 @@ public sealed class PageAudienceQuery : DataQueryListBase<AudienceItemModel, Aud
                 Name = paragraph.Name,
                 Visible = Verdict(pageAccess, access),
                 Level = access.LevelName,
-                Reason = AccessOverviewQuery.Describe(access, pagesById),
+                Reason = access.Origin == AccessOrigin.ExplicitHere
+                    ? AccessExplanation.Explain(account, access, evaluator.GetExplicitParagraphRows(paragraph.Id), null, ownerName)
+                    : AccessOverviewQuery.Explain(account, access, evaluator, pagesById, ownerName),
                 VisibleState = pageAccess.GrantsRead && access.GrantsRead,
                 LevelValue = access.Level,
                 OriginKind = access.Origin.ToString()
