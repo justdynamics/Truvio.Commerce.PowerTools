@@ -56,6 +56,14 @@ public sealed class QueryValuesModel : DataViewModelBase, IModelWithDynamicField
     }
 }
 
+/// <summary>The "Why 'X'?" panel for one document (slide-over).</summary>
+public sealed class QueryWhyModel : DataViewModelBase
+{
+    public string Heading { get; set; } = string.Empty;
+
+    public string Html { get; set; } = string.Empty;
+}
+
 /// <summary>The Query tester report (overview screen).</summary>
 public sealed class QueryTestModel : DataViewModelBase
 {

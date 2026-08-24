@@ -296,7 +296,7 @@ public sealed class QueryTestQuery : DataQueryModelBase<QueryTestModel>
         var expect = ParameterValues.Reserved(Parameters, ParameterValues.ExpectKeyName);
         if (!string.IsNullOrEmpty(expect) && run.Ok)
         {
-            var (section, expectationSuggestions) = Expectation(expect, index, traces, values);
+            var (section, expectationSuggestions) = Expectation(expect);
             model.Sections.Add(section);
             suggestions.AddRange(expectationSuggestions);
         }
@@ -432,7 +432,7 @@ public sealed class QueryTestQuery : DataQueryModelBase<QueryTestModel>
                     : new SearchTables.Wrap("(no text field carries the value - likely matched via an id, category or analyzed-only field)"));
             }
 
-            cells.Add(new SearchTables.Link("Why?", WhyHref(key)));
+            cells.Add(new SearchTables.ActionLink("Why?", WhyHref(key), WhyAction(key)));
             cells.Add(new SearchTables.Link("Open", OpenHref(query, keyField, key)));
             return (IReadOnlyList<object?>)cells;
         });
@@ -453,6 +453,37 @@ public sealed class QueryTestQuery : DataQueryModelBase<QueryTestModel>
             Heading = $"Documents (first {run.Documents.Count} of {run.TotalHits:N0})",
             Html = html
         };
+    }
+
+    /// <summary>
+    /// Opens the "Why 'X'?" panel as a slide-over — the same JSON the platform's own action
+    /// tag helper emits for <c>OpenSlideOverAction</c>, hand-rendered because this link lives
+    /// inside an HtmlBlock. The href fallback (full navigation with #expect) remains.
+    /// </summary>
+    private string WhyAction(string key)
+    {
+        var action = new Dictionary<string, object?>
+        {
+            ["name"] = "OpenSlideOver",
+            ["parameters"] = new Dictionary<string, object?>
+            {
+                ["ScreenTypeName"] = "QueryWhy",
+                ["ScreenType"] = "slideOver",
+                ["Query"] = new Dictionary<string, object?>
+                {
+                    ["Repository"] = Repository,
+                    ["Item"] = Item,
+                    ["Parameters"] = Parameters,
+                    ["Key"] = key,
+                    ["Type"] = "QueryWhy",
+                    ["QueryContext"] = new Dictionary<string, object?> { ["screenTypeName"] = "QueryWhy" }
+                },
+                ["ForceReload"] = false,
+                ["NavigateByPost"] = false
+            }
+        };
+
+        return System.Text.Json.JsonSerializer.Serialize(action);
     }
 
     private string WhyHref(string key)
@@ -542,80 +573,10 @@ public sealed class QueryTestQuery : DataQueryModelBase<QueryTestModel>
         return new ReportSectionModel { Heading = "Per-clause impact", Html = html };
     }
 
-    private (ReportSectionModel Section, IReadOnlyList<Suggestion> Suggestions) Expectation(
-        string expectedKey,
-        IndexSpec? index,
-        IReadOnlyList<ClauseTrace> traces,
-        IReadOnlyDictionary<string, string> values)
+    private (ReportSectionModel Section, IReadOnlyList<Suggestion> Suggestions) Expectation(string expectedKey)
     {
-        var keyField = DwQueryRunner.KeyFieldFor(index);
-        var lookup = DwQueryRunner.FindByKey(Repository, Item, keyField, expectedKey);
-        var document = lookup.Documents.FirstOrDefault();
-
-        if (!lookup.Ok || document is null)
-        {
-            var fields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            var missing = QueryDiagnosis.SuggestFromExpectation(traces, expectedKey, false, [], fields);
-
-            return (new ReportSectionModel
-            {
-                Heading = $"Why not '{expectedKey}'?",
-                Html = SearchTables.Note(
-                    lookup.Ok
-                        ? $"No document with {keyField} = '{expectedKey}' exists in {index?.Key ?? "the source index"}. " +
-                          "No clause can bring back a document the index does not hold."
-                        : lookup.Error)
-            }, missing);
-        }
-
-        var documentFields = document.AsDictionary();
-        var checks = new List<ExpectationCheck>();
-
-        foreach (var trace in traces.Where(t => t.IsMeasurable).Take(DwQueryRunner.MaxMeasuredClauses))
-        {
-            var probe = DwQueryRunner.RunClauseForKey(Repository, Item, values, trace.Path, keyField, expectedKey);
-            var passes = probe.Ok && probe.TotalHits > 0;
-            var known = documentFields.TryGetValue(trace.Field, out var value);
-            var actual = known ? value! : Unavailable(index, trace.Field);
-
-            checks.Add(new ExpectationCheck(
-                trace.Path,
-                trace.Label,
-                trace.Field,
-                actual,
-                passes,
-                passes ? string.Empty : known ? Note(trace, actual) : Unknown(trace)));
-        }
-
-        var rows = checks.Select(c => new object?[]
-        {
-            new SearchTables.Wrap(c.Label),
-            QueryDiagnosis.Shorten(c.DocumentValue, 90),
-            new SearchTables.Pill(c.Passes ? "Passes" : "Fails", c.Passes ? "ok" : "bad"),
-            c.Note
-        });
-
-        var html = SearchTables.Table(
-            [$"Clause ({keyField} = {expectedKey})", "Value on this document", "Verdict", "Note"],
-            rows);
-
-        html += SearchTables.Note(
-            $"Each row is a real query: '{keyField} = {expectedKey}' ANDed with that one clause. " +
-            "A failing MUST clause is the reason a document is missing; a failing row inside an " +
-            "Or group is just an alternative this document does not need.");
-
-        var suggestions = QueryDiagnosis.SuggestFromExpectation(traces, expectedKey, true, checks, documentFields);
-
-        // Membership = the WHOLE query ANDed with the key, not "all checks pass": in an Or
-        // group a member legitimately fails the alternatives it does not need.
-        var membership = DwQueryRunner.RunClauseForKey(Repository, Item, values, "1", keyField, expectedKey);
-        var inResult = membership.Ok && membership.TotalHits > 0;
-        var section = new ReportSectionModel
-        {
-            Heading = inResult ? $"Why '{expectedKey}'?" : $"Why not '{expectedKey}'?",
-            Html = html
-        };
-        return (section, suggestions);
+        var why = WhyReport.Build(Repository, Item, Parameters, expectedKey);
+        return (new ReportSectionModel { Heading = why.Heading, Html = why.Html }, why.Suggestions);
     }
 
     private static ReportSectionModel Facets(QueryRunResult run)
@@ -756,43 +717,6 @@ public sealed class QueryTestQuery : DataQueryModelBase<QueryTestModel>
     /// but not stored is searchable yet absent from every returned document, so the index
     /// itself cannot show what it holds.
     /// </summary>
-    private static string Unavailable(IndexSpec? index, string field)
-    {
-        var definition = index?.Field(field);
-        if (definition is null)
-            return "(field is not in the schema)";
-
-        if (!definition.Stored)
-        {
-            return definition.Analyzed
-                ? "(indexed and analyzed, not stored - the value cannot be read back)"
-                : "(indexed, not stored - the value cannot be read back)";
-        }
-
-        return "(not on this document)";
-    }
-
-    private static string Unknown(ClauseTrace trace) =>
-        $"Expected {trace.Operator} '{QueryDiagnosis.Shorten(trace.ResolvedValue, 60)}'. " +
-        "The value cannot be read back from the index, so compare it against the stored sibling field instead.";
-
-    private static string Note(ClauseTrace trace, string actual)
-    {
-        if (string.Equals(actual, trace.ResolvedValue, StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(actual, trace.ResolvedValue, StringComparison.Ordinal))
-        {
-            return "Same text, different case - the analyzed term does not match the value you passed.";
-        }
-
-        if (actual.Contains(trace.ResolvedValue, StringComparison.OrdinalIgnoreCase) &&
-            !string.IsNullOrEmpty(trace.ResolvedValue))
-        {
-            return $"The document's value contains '{trace.ResolvedValue}' but is not equal to it - use Contains rather than {trace.Operator}.";
-        }
-
-        return $"Expected {trace.Operator} '{QueryDiagnosis.Shorten(trace.ResolvedValue, 60)}'.";
-    }
-
     private static string Indent(ClauseTrace trace)
     {
         var prefix = string.Concat(Enumerable.Repeat("   ", Math.Min(trace.Depth, 6)));
@@ -825,4 +749,28 @@ public sealed class QueryTestQuery : DataQueryModelBase<QueryTestModel>
 
     private static string Number(int? value) =>
         value.HasValue ? value.Value.ToString("N0", CultureInfo.InvariantCulture) : "?";
+}
+
+
+/// <summary>Feeds the "Why 'X'?" slide-over: one document of one query run, explained.</summary>
+public sealed class QueryWhyQuery : DataQueryModelBase<QueryWhyModel>
+{
+    public string Repository { get; set; } = string.Empty;
+
+    public string Item { get; set; } = string.Empty;
+
+    /// <summary>The run's values, as <c>name=value;...</c> — the panel probes with them.</summary>
+    public string Parameters { get; set; } = string.Empty;
+
+    /// <summary>The document key to explain.</summary>
+    public string Key { get; set; } = string.Empty;
+
+    public override QueryWhyModel? GetModel()
+    {
+        if (string.IsNullOrEmpty(Repository) || string.IsNullOrEmpty(Item) || string.IsNullOrEmpty(Key))
+            return new QueryWhyModel { Heading = "Why?", Html = SearchTables.Note("No document selected.") };
+
+        var why = WhyReport.Build(Repository, Item, Parameters, Key);
+        return new QueryWhyModel { Heading = why.Heading, Html = why.Html };
+    }
 }

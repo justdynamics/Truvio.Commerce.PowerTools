@@ -29,3 +29,11 @@ public sealed class QueryTestNavigationNodePathProvider : NavigationNodePathProv
     protected override NavigationNodePath GetNavigationNodePathInternal(QueryTestModel? model) =>
         PowerToolsNavigationPaths.For<SearchSection>(SearchNodeProvider.QueryTesterNodeId);
 }
+
+public sealed class QueryWhyNavigationNodePathProvider : NavigationNodePathProvider<QueryWhyModel>
+{
+    public QueryWhyNavigationNodePathProvider() => AllowNullModel = true;
+
+    protected override NavigationNodePath GetNavigationNodePathInternal(QueryWhyModel? model) =>
+        PowerToolsNavigationPaths.For<SearchSection>(SearchNodeProvider.QueryTesterNodeId);
+}

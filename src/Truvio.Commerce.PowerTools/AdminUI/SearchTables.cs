@@ -28,6 +28,13 @@ internal static class SearchTables
     /// <summary>A cell rendered as a plain link — used for drill-downs out of a report table.</summary>
     internal readonly record struct Link(string Text, string Href);
 
+    /// <summary>
+    /// A link that ALSO carries a client action (<c>data-dw-action</c> JSON): the admin
+    /// client's delegated handler runs the action (e.g. open a slide-over); the href is the
+    /// full-navigation fallback.
+    /// </summary>
+    internal readonly record struct ActionLink(string Text, string Href, string ActionJson);
+
     /// <summary>Search-highlighting lines: "Field: …before <mark>term</mark> after…".</summary>
     internal readonly record struct Snippets(IReadOnlyList<(string Field, string Before, string Match, string After)> Hits);
 
@@ -90,6 +97,8 @@ internal static class SearchTables
         Pill pill =>
             $"<span style=\"display:inline-block;padding:1px 8px;border-radius:10px;font-size:0.85em;white-space:nowrap;{Style(pill.Kind)}\">{E(pill.Text)}</span>",
         Wrap wrap => E(wrap.Text),
+        ActionLink link =>
+            $"<a href=\"{E(link.Href)}\" data-dw-action=\"{E(link.ActionJson)}\" style=\"text-decoration:underline;white-space:nowrap;cursor:pointer\">{E(link.Text)}</a>",
         Snippets snippets => string.Join("<br>", snippets.Hits.Select(h =>
             $"<span style=\"opacity:.75\">{E(h.Field)}:</span> {E(h.Before)}" +
             $"<mark style=\"background:rgba(255,193,7,.35);color:inherit;padding:0 1px;border-radius:2px\">{E(h.Match)}</mark>" +
