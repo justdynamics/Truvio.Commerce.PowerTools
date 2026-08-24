@@ -65,6 +65,23 @@ public sealed class AudienceItemNavigationNodePathProvider : NavigationNodePathP
         PowerToolsNavigationPaths.For(SecurityNodeProvider.SecurityViewerNodeId);
 }
 
+/// <summary>Anchors the Backend Rights Viewer's screens under PowerTools ▸ Security ▸ Backend Rights.</summary>
+public sealed class BackendUserNavigationNodePathProvider : NavigationNodePathProvider<BackendUserModel>
+{
+    public BackendUserNavigationNodePathProvider() => AllowNullModel = true;
+
+    protected override NavigationNodePath GetNavigationNodePathInternal(BackendUserModel? model) =>
+        PowerToolsNavigationPaths.For(SecurityNodeProvider.BackendRightsNodeId);
+}
+
+public sealed class BackendRightsNavigationNodePathProvider : NavigationNodePathProvider<BackendRightsModel>
+{
+    public BackendRightsNavigationNodePathProvider() => AllowNullModel = true;
+
+    protected override NavigationNodePath GetNavigationNodePathInternal(BackendRightsModel? model) =>
+        PowerToolsNavigationPaths.For(SecurityNodeProvider.BackendRightsNodeId);
+}
+
 public sealed class FindingNavigationNodePathProvider : NavigationNodePathProvider<FindingModel>
 {
     public FindingNavigationNodePathProvider() => AllowNullModel = true;

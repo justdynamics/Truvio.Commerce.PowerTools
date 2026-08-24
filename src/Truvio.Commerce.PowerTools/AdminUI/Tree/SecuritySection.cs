@@ -19,7 +19,11 @@ public sealed class SecuritySection : NavigationSection<PowerToolsArea>
         Sort = 10;
     }
 
-    /// <summary>Visible only with Read on the Security Viewer function grant.</summary>
+    /// <summary>
+    /// Visible with Read on any of the security tools' function grants — the Backend Rights Viewer
+    /// carries its own, so a user granted only that still reaches the section.
+    /// </summary>
     public override bool ShouldShow() =>
-        PowerToolsAccess.CanUseSecurityViewer() && DwPowerToolsSettings.Current.SecuritySectionEnabled;
+        (PowerToolsAccess.CanUseSecurityViewer() || PowerToolsAccess.CanUseBackendRights())
+        && DwPowerToolsSettings.Current.SecuritySectionEnabled;
 }

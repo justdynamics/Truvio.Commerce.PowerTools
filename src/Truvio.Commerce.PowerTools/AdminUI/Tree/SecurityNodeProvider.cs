@@ -16,9 +16,26 @@ public sealed class SecurityNodeProvider : NavigationNodeProvider<SecuritySectio
     // Node IDs cannot contain '/' — DW NavigationNodePath splits on it.
     public const string SecurityViewerNodeId = "PowerTools_SecurityViewer";
     public const string WarningsNodeId = "PowerTools_Warnings";
+    public const string BackendRightsNodeId = "PowerTools_BackendRights";
 
     public override IEnumerable<NavigationNode> GetRootNodes()
     {
+        // Each tool carries its own grant: the backend rights report exposes who-can-do-what across
+        // the whole admin, so it is not implied by access to the content viewer.
+        if (PowerToolsAccess.CanUseBackendRights())
+        {
+            yield return new NavigationNode
+            {
+                Id = BackendRightsNodeId,
+                Name = "Backend Rights Viewer",
+                Icon = Icon.UserCircle,
+                Sort = 30,
+                HasSubNodes = false,
+                NodeAction = NavigateScreenAction.To<BackendRightsListScreen>()
+                    .With(new BackendRightsListQuery())
+            };
+        }
+
         if (!PowerToolsAccess.CanUseSecurityViewer())
             yield break;
 
