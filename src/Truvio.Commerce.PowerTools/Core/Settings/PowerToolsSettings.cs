@@ -59,6 +59,15 @@ public sealed record PowerToolsSettings
     /// <summary>Currency used when the explanation does not name one; blank = the DW default.</summary>
     public string DefaultCurrencyCode { get; init; } = string.Empty;
 
+    /// <summary>Percent a configured exchange rate may deviate from the evidence before CUR-W2/CUR-W3 fire.</summary>
+    public int RateDeviationPercent { get; init; } = Shipped.RateDeviationPercent;
+
+    /// <summary>Compare configured rates against the live reference feed (the suite's only outbound call). Off by default.</summary>
+    public bool LiveRateCheckEnabled { get; init; } = Shipped.LiveRateCheckEnabled;
+
+    /// <summary>Override for the reference feed URL; blank = the ECB daily reference rates.</summary>
+    public string LiveRateFeedUrl { get; init; } = string.Empty;
+
     // ---- Content Access Viewer --------------------------------------------------------------
     public int UserFetchCap { get; init; } = Shipped.UserFetchCap;
 

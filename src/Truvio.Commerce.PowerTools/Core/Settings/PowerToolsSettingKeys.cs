@@ -35,6 +35,9 @@ public static class PowerToolsSettingKeys
     public const string QuantityPresets = Root + "/Commerce/QuantityPresets";
     public const string DatePresetDays = Root + "/Commerce/DatePresetDays";
     public const string DefaultCurrencyCode = Root + "/Commerce/DefaultCurrencyCode";
+    public const string RateDeviationPercent = Root + "/Commerce/RateDeviationPercent";
+    public const string LiveRateCheckEnabled = Root + "/Commerce/LiveRateCheckEnabled";
+    public const string LiveRateFeedUrl = Root + "/Commerce/LiveRateFeedUrl";
 
     // ---- Content Access Viewer ----------------------------------------------------------------
     public const string UserFetchCap = Root + "/Security/UserFetchCap";
@@ -68,6 +71,8 @@ public static class PowerToolsSettingKeys
         public const int PriceRowCap = 100;
         public const string QuantityPresets = "1,5,10,25,50,100,500";
         public const string DatePresetDays = "7,30,90";
+        public const int RateDeviationPercent = 25;
+        public const bool LiveRateCheckEnabled = false;
 
         public const int UserFetchCap = 500;
 

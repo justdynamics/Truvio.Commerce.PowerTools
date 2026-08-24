@@ -1,3 +1,7 @@
+using Truvio.Commerce.PowerTools.Core.Commerce;
+using Truvio.Commerce.PowerTools.Core.Commerce.Dw;
+using Truvio.Commerce.PowerTools.Core.Settings.Dw;
+
 namespace Truvio.Commerce.PowerTools.Core.Operations.Dw;
 
 /// <summary>
@@ -41,6 +45,7 @@ public sealed class DwOperationsSource : IOperationsSource
         var folders = includeStorage ? GetLogFolders() : [];
         var tables = includeStorage ? GetTableSizes() : [];
         var databaseBytes = includeStorage ? DwStorageReader.GetDatabaseBytes() : 0;
+        var settings = DwPowerToolsSettings.Current;
 
         return new OperationsSnapshot(
             tasks,
@@ -49,6 +54,13 @@ public sealed class DwOperationsSource : IOperationsSource
             tables,
             GetRetention(),
             DateTime.Now,
-            databaseBytes);
+            databaseBytes)
+        {
+            Currencies = DwCurrencyReader.GetCurrencies(),
+            PriceSamples = includeStorage ? DwCurrencyReader.GetPriceSamples() : [],
+            // The one optional outbound call in the suite; a failed fetch means "no live
+            // comparison", never a finding.
+            LiveEurRates = settings.LiveRateCheckEnabled ? EcbRateSource.Fetch(settings.LiveRateFeedUrl) : null
+        };
     }
 }

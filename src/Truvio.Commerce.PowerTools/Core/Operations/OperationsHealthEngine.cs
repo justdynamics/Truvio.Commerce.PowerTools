@@ -37,7 +37,8 @@ public sealed class OperationsHealthEngine
     private readonly IReadOnlyList<IOperationsRule> _rules;
 
     public OperationsHealthEngine()
-        : this([new FailingTaskRule(), new StaleTaskRule(), new BrokenActivityLinkRule(), new LogGrowthRule(), new TableBloatRule()])
+        : this([new FailingTaskRule(), new StaleTaskRule(), new BrokenActivityLinkRule(), new LogGrowthRule(), new TableBloatRule(),
+                new CurrencyConfigurationRule(Settings.PowerToolsSettingKeys.Defaults.RateDeviationPercent)])
     {
     }
 
@@ -45,7 +46,8 @@ public sealed class OperationsHealthEngine
 
     /// <summary>Every rule, with the thresholds the admin configured in PowerTools settings.</summary>
     public OperationsHealthEngine(Settings.PowerToolsSettings settings)
-        : this([new FailingTaskRule(), StaleTask(settings), new BrokenActivityLinkRule(), LogGrowth(settings), TableBloat(settings)])
+        : this([new FailingTaskRule(), StaleTask(settings), new BrokenActivityLinkRule(), LogGrowth(settings), TableBloat(settings),
+                CurrencyConfiguration(settings)])
     {
     }
 
@@ -57,6 +59,9 @@ public sealed class OperationsHealthEngine
 
     public static TableBloatRule TableBloat(Settings.PowerToolsSettings settings) =>
         new(settings.TableSharePercent / 100d);
+
+    public static CurrencyConfigurationRule CurrencyConfiguration(Settings.PowerToolsSettings settings) =>
+        new(settings.RateDeviationPercent);
 
     public IReadOnlyList<Finding> Run(OperationsSnapshot snapshot)
     {

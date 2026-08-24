@@ -84,6 +84,9 @@ This is a straight copy of how DW builds its own settings screens (decompiled at
 | Quantity presets | `QuantityPresets` | `1,5,10,25,50,100,500` | The quantity context switches. |
 | Date presets | `DatePresetDays` | `7,30,90` | The `+N days` context switches ("now" is always offered). |
 | Default currency | `DefaultCurrencyCode` | — | Used when an explanation names no currency; blank keeps DW's default. |
+| Rate deviation tolerance | `RateDeviationPercent` | 25 | Percent a configured exchange rate may deviate from the price-matrix evidence (CUR-W2) or the live reference (CUR-W3) before the health screen reports it. |
+| Live currency rate check | `LiveRateCheckEnabled` | off | Compare configured rates against the ECB daily reference rates on the health screen — the suite's only outbound call, so it must be opted into. A failed fetch means "no live comparison", never a finding. |
+| Live rate feed URL | `LiveRateFeedUrl` | — | Override for the reference feed; blank uses `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml`. |
 
 ### Content Access (`…/Security/…`)
 

@@ -27,6 +27,9 @@ public sealed class ExplainReport
 
     public IReadOnlyList<string> Warnings { get; init; } = [];
 
+    /// <summary>How the shown price was converted out of the default currency; null = no conversion.</summary>
+    public ConversionExplanation? Conversion { get; init; }
+
     /// <summary>Quantity price breaks DW reports for the product in this context.</summary>
     public IReadOnlyList<(string Quantity, string Price)> QuantityPrices { get; init; } = [];
 }

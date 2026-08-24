@@ -112,4 +112,5 @@ public static class OperationsEntities
     public const string LogFolder = "LogFolder";
     public const string DatabaseTable = "DatabaseTable";
     public const string Configuration = "Configuration";
+    public const string Currency = "Currency";
 }

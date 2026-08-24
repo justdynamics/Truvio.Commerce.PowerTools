@@ -140,6 +140,18 @@ public sealed class PriceExplainQuery : DataQueryModelBase<PriceExplainModel>
             n > 0 ? "ok" : "", report.DwDiscountTotal, report.DiscountSelectionBehavior);
         Add("Result", "Final unit price", "Pays", "win", report.DwFinalPrice, "DW price before discounts minus the applied product discounts");
 
+        if (report.Conversion is { } conv)
+        {
+            // Transparency first: the implied unit rate makes a nonsense factor obvious even
+            // when no rule fires.
+            Add("Result", "Currency conversion", conv.Broken ? "Broken" : "Applied", conv.Broken ? "reject" : "info",
+                conv.ImpliedRateText, conv.FormulaText);
+            foreach (var f in conv.Findings)
+                Add("Result", "Currency", f.Severity == Core.Diagnostics.FindingSeverity.Critical ? "Broken" : "Check",
+                    f.Severity == Core.Diagnostics.FindingSeverity.Critical ? "reject" : "warn", string.Empty,
+                    $"{f.Title} — {f.Detail}");
+        }
+
         foreach (var warning in report.Warnings)
             Add("Result", "Warning", "Check", "warn", string.Empty, warning);
 

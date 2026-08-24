@@ -168,6 +168,9 @@ public sealed class DwCommerceExplainer
         else if (dwPrice.PriceSource == PriceSource.ProductDefault && matrix.Winner is not null)
             warnings.Add("DW fell back to the product's default price although a matrix row matches — check for a custom provider or notification subscriber");
 
+        // ---- Currency conversion sanity ------------------------------------------------------
+        var conversion = currency is null ? null : SafeConversion(currency.Code);
+
         var quantityPrices = PriceManager.GetQuantityPrices(priceContext, product)
             .OrderBy(kv => kv.Key.Quantity)
             .Select(kv => (kv.Key.Quantity.ToString("0.##"), Format(kv.Value)))
@@ -237,7 +240,8 @@ public sealed class DwCommerceExplainer
             DwDiscountTotal = discountTotal is null ? "—" : Format(discountTotal),
             DwFinalPrice = Format(final),
             QuantityPrices = quantityPrices,
-            Warnings = warnings
+            Warnings = warnings,
+            Conversion = conversion
         };
 
     }
@@ -362,6 +366,19 @@ public sealed class DwCommerceExplainer
         if (groups.Count > 0) bits.Add($"{groups.Count} group(s): {string.Join(", ", groups.Take(3))}{(groups.Count > 3 ? ", …" : "")}");
         if (other > 0) bits.Add($"{other} other selector(s)");
         return bits.Count == 0 ? ids : string.Join("; ", bits);
+    }
+
+    /// <summary>The conversion row must never take the whole explanation down with it.</summary>
+    private static ConversionExplanation? SafeConversion(string contextCurrencyCode)
+    {
+        try
+        {
+            return CurrencyGuard.ExplainConversion(DwCurrencyReader.GetCurrencies(), contextCurrencyCode);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static Currency? ResolveCurrency(string code, User? user)

@@ -62,6 +62,9 @@ public static class DwPowerToolsSettings
             QuantityPresets = Str(Keys.QuantityPresets, d.QuantityPresets),
             DatePresetDays = Str(Keys.DatePresetDays, d.DatePresetDays),
             DefaultCurrencyCode = Str(Keys.DefaultCurrencyCode, d.DefaultCurrencyCode).Trim(),
+            RateDeviationPercent = Int(Keys.RateDeviationPercent, d.RateDeviationPercent),
+            LiveRateCheckEnabled = Bool(Keys.LiveRateCheckEnabled, d.LiveRateCheckEnabled),
+            LiveRateFeedUrl = Str(Keys.LiveRateFeedUrl, d.LiveRateFeedUrl).Trim(),
 
             UserFetchCap = Int(Keys.UserFetchCap, d.UserFetchCap),
             SuppressedWarningRules = Str(Keys.SuppressedWarningRules, d.SuppressedWarningRules),

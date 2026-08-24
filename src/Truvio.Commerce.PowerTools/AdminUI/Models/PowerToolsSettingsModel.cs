@@ -86,6 +86,18 @@ public sealed class PowerToolsSettingsModel : SettingsViewModelBase
     [Settings(Keys.DefaultCurrencyCode)]
     public string DefaultCurrencyCode { get; set; } = string.Empty;
 
+    [ConfigurableProperty("Rate deviation tolerance", "Percent a configured exchange rate may deviate from the price matrix (CUR-W2) or the live reference (CUR-W3) before the health screen reports it.")]
+    [Settings(Keys.RateDeviationPercent, Defaults.RateDeviationPercent)]
+    public int RateDeviationPercent { get; set; } = Defaults.RateDeviationPercent;
+
+    [ConfigurableProperty("Live currency rate check", "Compare configured exchange rates against the ECB daily reference rates on the health screen. The suite's only outbound call, so it is off by default.")]
+    [Settings(Keys.LiveRateCheckEnabled, Defaults.LiveRateCheckEnabled)]
+    public bool LiveRateCheckEnabled { get; set; } = Defaults.LiveRateCheckEnabled;
+
+    [ConfigurableProperty("Live rate feed URL", "Override for the reference feed. Blank uses the ECB daily reference rates (eurofxref-daily.xml).")]
+    [Settings(Keys.LiveRateFeedUrl)]
+    public string LiveRateFeedUrl { get; set; } = string.Empty;
+
     // ---- Content Access Viewer -----------------------------------------------------------------
 
     [ConfigurableProperty("User fetch cap", "Users materialised per request in the account pickers.")]

@@ -44,10 +44,25 @@ window and the run-history depth.
 | OPS-W8 | `TableBloatRule` | One table ≥ 25 % of the database and ≥ 10 MB; Critical from 1 GB | Warning / Critical |
 | OPS-W9 | `TableBloatRule` | Known append-only table ≥ 100 000 rows that database retention does not cover | Warning |
 | OPS-E1 | `OperationsHealthEngine` | A rule threw — one broken reader must not hide the other findings | Info |
+| CUR-C1 | `CurrencyConfigurationRule` | The **default** currency's exchange rate is not 100 — DW converts with `price × default.Rate ÷ currency.Rate` (`PriceCalculator.Exchange`), so every converted price is scaled by Rate/100 (a default seeded with Rate = 1 makes all non-default prices 100× too low) | Critical |
+| CUR-C2 | `CurrencyConfigurationRule` | A currency's rate is zero or negative — DW divides by it | Critical |
+| CUR-C3 | `CurrencyConfigurationRule` | No default currency is defined | Critical |
+| CUR-W1 | `CurrencyConfigurationRule` | A non-default currency's rate is exactly 100 — DW's seed value, implying 1:1 parity with the default; likely never maintained | Warning |
+| CUR-W2 | `CurrencyConfigurationRule` | Products priced explicitly in the default **and** another currency imply an exchange rate whose median contradicts the configured rate by more than the deviation tolerance (3+ row pairs required; wildcard-currency and mixed-VAT rows are never paired) | Warning |
+| CUR-W3 | `CurrencyConfigurationRule` | With the live rate check enabled: the configured rate deviates from the ECB daily reference by more than the tolerance | Warning |
 
 Why 2× the interval for staleness: DW's own `Task.LastRunState` has a `HasNotRunAsItShould` value,
 but it goes true the moment `UpcomingRuntime` slips one second into the past, so it is unusable as an
 alert. The interval-based window fires only on a task that has genuinely stopped.
+
+Why CUR-W2 pairs rows the way it does: a price row with a **blank** currency column is a wildcard —
+DW applies its amount unconverted in whatever currency is asked — so wildcards carry no exchange
+information; and an excl-VAT row against an incl-VAT row would fold the VAT rate into the implied
+exchange rate. Only explicit-currency rows with the same product, variant, quantity and VAT mode are
+compared, the sample is capped at 5 000 rows, and the median (not the mean) absorbs the odd
+promotional row. The same `CurrencyGuard` maths also drives the Price Explainer's inline
+"Currency conversion" row, which shows the applied factor and the implied unit rate
+(`1 USD ≈ 0.1111 SEK` makes a broken table obvious even before a rule fires).
 
 Why the floors on OPS-W8/W9: a share alone makes any small development database look like it has one
 dominant table, and the share is measured against the **whole** database (`GetDatabaseBytes()`), not

@@ -1,3 +1,4 @@
+using Truvio.Commerce.PowerTools.Core.Commerce;
 using Truvio.Commerce.PowerTools.Core.Diagnostics;
 
 namespace Truvio.Commerce.PowerTools.Core.Operations;
@@ -23,6 +24,15 @@ public sealed record OperationsSnapshot(
     long DatabaseBytes = 0)
 {
     public static OperationsSnapshot Empty => new([], [], [], [], RetentionSpec.Unknown, DateTime.Now);
+
+    /// <summary>The configured currencies, for the CUR-* rules.</summary>
+    public IReadOnlyList<CurrencySpec> Currencies { get; init; } = [];
+
+    /// <summary>Explicit-currency price-matrix rows sampled for the CUR-W2 consistency check.</summary>
+    public IReadOnlyList<CurrencyPriceSample> PriceSamples { get; init; } = [];
+
+    /// <summary>"1 EUR = X units" reference rates when the live rate check is enabled; null = no live comparison.</summary>
+    public IReadOnlyDictionary<string, double>? LiveEurRates { get; init; }
 
     /// <summary>Whole-database size, falling back to the sum of the listed tables.</summary>
     public long TotalTableBytes => DatabaseBytes > 0 ? DatabaseBytes : Tables.Sum(t => t.Bytes);
