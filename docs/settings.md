@@ -88,6 +88,15 @@ This is a straight copy of how DW builds its own settings screens (decompiled at
 | Live currency rate check | `LiveRateCheckEnabled` | off | Compare configured rates against the ECB daily reference rates on the health screen — the suite's only outbound call, so it must be opted into. A failed fetch means "no live comparison", never a finding. |
 | Live rate feed URL | `LiveRateFeedUrl` | — | Override for the reference feed; blank uses `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml`. |
 
+### PIM quality (`…/Pim/…`)
+
+| Setting | Key | Default | Effect |
+|---|---|---|---|
+| Product scan cap | `ProductCap` | 200 | Products scored per scan. The bulk completeness call is the expensive part of every PIM screen, so this is the difference between a report and a timeout; the explorer always shows a "N more products not shown" row rather than truncating silently. |
+| Completeness threshold | `CompletenessThreshold` | 60 | Score below which a product is reported (PIM-W1). Also derives PIM-W3's language tolerance: *100 − threshold* points, floored at 5. |
+| Common gap threshold | `CommonGapPercent` | 25 | Share of scanned products missing the same field before it is reported as the field to fix first (PIM-W2). |
+| Suppressed PIM rules | `SuppressedRules` | — | PIM rule ids never shown (trailing `*` works). |
+
 ### Content Access (`…/Security/…`)
 
 | Setting | Key | Default | Effect |
@@ -98,7 +107,7 @@ This is a straight copy of how DW builds its own settings screens (decompiled at
 
 ### General (`…/General/…`)
 
-`SecuritySectionEnabled`, `CommerceSectionEnabled`, `OperationsSectionEnabled`,
+`SecuritySectionEnabled`, `CommerceSectionEnabled`, `PimSectionEnabled`, `OperationsSectionEnabled`,
 `SearchSectionEnabled` (all default true) hide a whole section from the PowerTools area — they are
 ANDed into each section's `ShouldShow()`, so the permission still governs and the toggle only ever
 takes away. `ShowRuleIds` (default true) drops the rule id column from both finding lists.
