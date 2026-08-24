@@ -1,6 +1,8 @@
-using System.Collections.Concurrent;
 using System.Globalization;
 using Dynamicweb.CoreUI.Data;
+using Dynamicweb.CoreUI.Data.DynamicFields;
+using Dynamicweb.CoreUI.Editors;
+using Dynamicweb.CoreUI.Editors.Inputs;
 using Truvio.Commerce.PowerTools.AdminUI.Models;
 using Truvio.Commerce.PowerTools.Core.Search;
 using Truvio.Commerce.PowerTools.Core.Search.Dw;
@@ -50,159 +52,143 @@ public sealed class QueryPickQuery : DataQueryListBase<QueryPickModel, QueryPick
 }
 
 /// <summary>
-/// The "Set parameters" step. An overview screen has no form input, so this list screen turns
-/// its toolbar search box into the input: text containing '=' is read as
-/// <c>name=value;name2=value2</c> and merged into the run's parameter set, anything else
-/// filters the list. The merged set lives on <see cref="Parameters"/>, which round-trips
-/// through the screen URL.
+/// Builds the "Set parameters" dialog: one editable field per declared parameter (plus the
+/// tester's own <c>#expect</c> setting), pre-filled from <see cref="Parameters"/>. A prompt
+/// screen posts its edited model back to the OK command, so this is a real form — no toolbar
+/// search box tricks. The field set differs per query, hence dynamic fields rather than a
+/// fixed model shape.
 /// </summary>
-public sealed class QueryParameterQuery : DataQueryListBase<QueryParameterModel, QueryParameterModel, DataListViewModel<QueryParameterModel>>
+public sealed class QueryValuesQuery : DataQueryModelBase<QueryValuesModel>
 {
     public string Repository { get; set; } = string.Empty;
 
     public string Item { get; set; } = string.Empty;
 
-    /// <summary>The run's values, as <c>name=value;name2=value2</c>.</summary>
+    /// <summary>The values to pre-fill, as <c>name=value;name2=value2</c>.</summary>
     public string Parameters { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Implemented instead of <c>GetListItems</c> on purpose: when this override returns a
-    /// list AND a total count, <c>DataQueryListBase.GetModel</c> takes the "already prepared"
-    /// branch and skips its own filtering, sorting and paging. That is what lets the toolbar
-    /// search box carry a <c>name=value</c> assignment — the base class would otherwise apply
-    /// the same text as a text filter over the rows (it builds its filter settings BEFORE
-    /// calling the query) and every row would disappear.
-    /// </summary>
-    protected override IEnumerable<QueryParameterModel>? GetPreparedListItems(out int? totalCount)
+    public override QueryValuesModel? GetModel()
     {
-        var rows = Rows();
-        totalCount = rows.Count;
-        return rows;
-    }
-
-    private List<QueryParameterModel> Rows()
-    {
+        var model = new QueryValuesModel { Repository = Repository, Item = Item };
         if (string.IsNullOrEmpty(Repository) || string.IsNullOrEmpty(Item))
-            return [];
+            return model;
 
-        // The search box is the input, but the admin client rebuilds the screen URL from the
-        // page URL plus the new Search text — it never learns the merged Parameters. So a
-        // second assignment would arrive with the URL's (stale) Parameters and wipe the first.
-        // The draft below bridges that gap: while the search box is in use, the base is the
-        // last merged set for this user and query; any link navigation (every link on this
-        // screen carries the merged set, and "Clear all" carries an empty one) resets it.
-        var typed = Search ?? string.Empty;
-        var draftKey = DraftKey();
-        if (string.IsNullOrEmpty(typed))
-        {
-            Drafts[draftKey] = Parameters;
-        }
-        else
-        {
-            if (string.IsNullOrEmpty(Parameters) && Drafts.TryGetValue(draftKey, out var draft))
-                Parameters = draft;
-
-            if (typed.Contains('='))
-            {
-                Parameters = ParameterValues.Merge(Parameters, typed);
-                typed = string.Empty;
-            }
-
-            Drafts[draftKey] = Parameters;
-        }
-
-        SearchCatalog catalog;
         try
         {
-            catalog = SearchQueryHelpers.Catalog();
+            model.QueryName = SearchQueryHelpers.Catalog().Query(Repository, Item)?.Name ?? string.Empty;
         }
         catch
         {
-            return [];
+            return model;
         }
 
-        var query = catalog.Query(Repository, Item);
-        if (query is null)
-            return [];
+        model.Fields = BuildFields(Repository, Item, Parameters);
+        return model;
+    }
 
-        var values = ParameterValues.Parse(Parameters);
-        var rows = new List<QueryParameterModel>();
+    /// <summary>Also called by <see cref="QueryValuesModel.FillDynamicFields"/> when the OK command's posted model is rebuilt.</summary>
+    internal static FieldGroupCollection BuildFields(string repository, string item, string parameters)
+    {
+        var fields = new FieldGroupCollection();
+        if (string.IsNullOrEmpty(repository) || string.IsNullOrEmpty(item))
+            return fields;
 
-        var expect = ParameterValues.Reserved(Parameters, ParameterValues.ExpectKeyName);
-        rows.Add(new QueryParameterModel
+        QuerySpec? query;
+        try
         {
-            RepositoryName = Repository,
-            Item = Item,
-            ParameterName = ParameterValues.ExpectKeyName,
-            StateKind = string.IsNullOrEmpty(expect) ? "none" : "set",
-            Name = ParameterValues.ExpectKeyName,
-            Type = "Tester setting",
-            Default = "-",
-            Value = string.IsNullOrEmpty(expect) ? "(not set)" : expect,
-            Effect = "The document key the \"Why not X?\" section explains, e.g. a product ID."
-        });
+            query = SearchQueryHelpers.Catalog().Query(repository, item);
+        }
+        catch
+        {
+            return fields;
+        }
 
+        if (query is null)
+            return fields;
+
+        var provider = new QueryValuesFieldProvider();
+        var values = ParameterValues.Parse(parameters);
+
+        var parameterFields = new List<Field>();
         foreach (var parameter in query.Parameters)
         {
             values.TryGetValue(parameter.Name, out var supplied);
-            var hasValue = !string.IsNullOrEmpty(supplied);
             var used = query.Clauses().Any(c =>
                 c.ValueKind == ClauseValueKind.Parameter &&
                 string.Equals(c.ParameterName, parameter.Name, StringComparison.OrdinalIgnoreCase));
 
-            rows.Add(new QueryParameterModel
+            parameterFields.Add(new Field(parameter)
             {
-                RepositoryName = Repository,
-                Item = Item,
-                ParameterName = parameter.Name,
-                StateKind = hasValue ? "set" : parameter.HasDefault ? "default" : "blank",
                 Name = parameter.Name,
-                Type = IndexFieldSpec.ShortenType(parameter.TypeName),
-                Default = parameter.HasDefault ? parameter.DefaultValue : "(none)",
-                Value = hasValue ? supplied! : parameter.HasDefault ? $"{parameter.DefaultValue} (default)" : "(blank)",
-                Effect = Effect(hasValue, parameter, used)
+                SystemName = parameter.Name,
+                TypeName = "System.String",
+                Value = supplied ?? string.Empty,
+                DefaultValue = parameter.HasDefault ? parameter.DefaultValue : string.Empty,
+                Hint = Hint(parameter, used)
             });
         }
 
-        return rows
-            .Where(row => SearchQueryHelpers.Matches(typed, row.Name, row.Type, row.Value))
-            .ToList();
-    }
-
-    /// <summary>The last merged parameter set per backend user and query, see <see cref="Rows"/>.</summary>
-    private static readonly ConcurrentDictionary<string, string> Drafts = new(StringComparer.Ordinal);
-
-    private string DraftKey()
-    {
-        string user;
-        try
+        var expect = ParameterValues.Reserved(parameters, ParameterValues.ExpectKeyName);
+        var expectField = new Field(query)
         {
-            user = Dynamicweb.Security.UserManagement.User.GetCurrentBackendUser()?.ID.ToString(CultureInfo.InvariantCulture) ?? "-";
-        }
-        catch
-        {
-            user = "-";
-        }
+            Name = "Expected document (#expect)",
+            SystemName = ParameterValues.ExpectKeyName,
+            TypeName = "System.String",
+            Value = expect,
+            Hint = "The document key the \"Why not X?\" section explains, e.g. a product ID."
+        };
 
-        return $"{user}|{Repository}|{Item}";
+        provider.AddGroup("Parameter values", parameterFields);
+        provider.AddGroup("Tester settings", [expectField]);
+        return provider.Collection;
     }
 
-    private static string Effect(bool hasValue, QueryParameterSpec parameter, bool used)
+    private static string Hint(QueryParameterSpec parameter, bool used)
     {
-        if (!used)
-            return "No clause reads this parameter - it can only drive a facet.";
+        var type = IndexFieldSpec.ShortenType(parameter.TypeName);
+        var tail = !used
+            ? "No clause reads this parameter - it can only drive a facet."
+            : parameter.HasDefault
+                ? $"Blank runs the clause with the declared default ({parameter.DefaultValue})."
+                : "Blank makes its clause DISAPPEAR - nothing constrains that field.";
+        return $"{type}. {tail}";
+    }
+}
 
-        if (hasValue)
-            return "Its clause is active for this run.";
+/// <summary>
+/// Renders every parameter as a plain text input. A <see cref="FieldGroup"/> demands a
+/// provider because DW's dynamic-field pipeline asks it for each field's editor; this one has
+/// no persistence side (the OK command reads the posted values itself), so SaveChanges is a
+/// no-op.
+/// </summary>
+internal sealed class QueryValuesFieldProvider : FieldEditorProviderBase
+{
+    private readonly List<FieldGroup> groups = [];
+    private readonly FieldGroupCollection collection = new();
 
-        return parameter.HasDefault
-            ? "Its clause runs with the declared default."
-            : "Its clause DISAPPEARS from the query - nothing constrains that field.";
+    public override FieldGroupCollection Collection => collection;
+
+    public void AddGroup(string name, IEnumerable<Field> fields)
+    {
+        groups.Add(new FieldGroup(this)
+        {
+            Name = name,
+            SystemName = string.Empty,
+            Fields = fields.ToList()
+        });
+        collection.Groups = groups;
     }
 
-    protected override IEnumerable<QueryParameterModel> MapModels(IEnumerable<QueryParameterModel> items) => items;
+    protected override EditorBase? GetEditor(Field field) => new Text
+    {
+        Name = field.SystemName,
+        Label = field.Name,
+        Hint = field.Hint,
+        Value = Convert.ToString(field.Value, CultureInfo.InvariantCulture),
+        Readonly = field.Readonly
+    };
 
-    protected override DataListViewModel<QueryParameterModel> MakeListModel() => new();
+    public override object? SaveChanges(FieldGroupCollection fieldGroupCollection) => null;
 }
 
 /// <summary>
@@ -227,10 +213,22 @@ public sealed class QueryTestQuery : DataQueryModelBase<QueryTestModel>
     /// <summary>Ask the provider for the facet counts of the facet groups that read this query.</summary>
     public bool ShowFacets { get; set; }
 
+    /// <summary>
+    /// Read the run's values from <see cref="ParameterDraftStore"/> instead of the URL. The
+    /// "Set parameters" dialog's OK command saves the typed values there and then navigates
+    /// here with this flag: an action URL is fixed at render time, so the values themselves
+    /// cannot travel in it. The screen mutates <see cref="Parameters"/> to the resolved set
+    /// before actions are built, so every link this report renders is frozen and shareable.
+    /// </summary>
+    public bool UseDraft { get; set; }
+
     public override QueryTestModel? GetModel()
     {
         if (string.IsNullOrEmpty(Repository) || string.IsNullOrEmpty(Item))
             return new QueryTestModel { Error = "No query selected." };
+
+        if (UseDraft && string.IsNullOrEmpty(Parameters))
+            Parameters = ParameterDraftStore.Get(Repository, Item);
 
         SearchCatalog catalog;
         try

@@ -22,30 +22,24 @@ Picking a row runs the query with no values supplied.
 
 ### 2. Set parameters
 
-An overview screen cannot take form input, so this list screen's **toolbar search box doubles
-as the input**:
+A dialog opened from the report's *Set parameters* action: one text input per declared
+parameter, pre-filled with the current run's values, each with its type, its declared default
+and what happens when it stays blank as the field hint. A *Tester settings* group holds
+**Expected document (#expect)** — the document key the "Why not X?" section explains, e.g. a
+product ID. *Run the query* saves the set and re-runs the report; *Cancel* discards.
 
-| You type | What happens |
-| --- | --- |
-| `eq=blue` | sets parameter `eq` to `blue` |
-| `eq=blue;GroupID=SHOP1` | sets both |
-| `eq=` | clears `eq` (the clause goes back to vanishing) |
-| `#expect=PROD27` | sets the document key the "Why not X?" section explains |
-| `colour` | no `=`, so it just filters the parameter list |
+Leaving a field blank clears that value (the clause goes back to using its default, or to
+vanishing). *Use the declared defaults* and *Clear all values* stay on the report's actions.
 
-Clicking a row clears that parameter. Screen actions: *Run the query*, *Use the declared
-defaults*, *Clear all values*, *Select another query*.
-
-Assignments accumulate: typing `eq=blue`, then `q=bike`, leaves both set. (The admin client
-rebuilds the screen URL from the page URL plus the search text, so the server keeps the last
-merged set per backend user and query while the search box is in use; every link on the
-screen — row clicks, *Run the query*, *Clear all values* — carries the merged set and resets
-that draft.)
-
-The accumulated set travels in the screen URL as `Parameters=name=value;name2=value2`, so a
-finished test is a shareable link. Names may contain spaces (`Bike type=Gravel`) and values
-may contain `=`; a value cannot contain `;`. Names beginning with `#` are tester settings
-rather than query parameters and are never handed to the index provider.
+Under the hood the dialog's OK stores the typed set as a per-user draft on the server and
+opens the report with `UseDraft=true` — an action URL is fixed at render time, so the values
+themselves cannot travel in it. The report resolves the draft before it builds its own
+actions, so **every link the report renders carries the resolved values explicitly**
+(`Parameters=name=value;name2=value2`): anything you copy or click from the report is frozen
+and shareable, and two people testing the same query never see each other's draft. Names may
+contain spaces (`Bike type=Gravel`) and values may contain `=`; a value cannot contain `;`.
+Names beginning with `#` are tester settings rather than query parameters and are never
+handed to the index provider.
 
 ### 3. The report
 

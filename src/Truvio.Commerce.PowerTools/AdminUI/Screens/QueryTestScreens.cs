@@ -3,9 +3,11 @@ using Dynamicweb.CoreUI.Actions.Implementations;
 using Dynamicweb.CoreUI.Displays.Information;
 using Dynamicweb.CoreUI.Displays.Widgets;
 using Dynamicweb.CoreUI.Layout;
+using Dynamicweb.CoreUI.Data;
 using Dynamicweb.CoreUI.Lists;
 using Dynamicweb.CoreUI.Lists.ViewMappings;
 using Dynamicweb.CoreUI.Screens;
+using Truvio.Commerce.PowerTools.AdminUI.Commands;
 using Truvio.Commerce.PowerTools.AdminUI.Models;
 using Truvio.Commerce.PowerTools.AdminUI.Queries;
 using Truvio.Commerce.PowerTools.AdminUI.Security;
@@ -87,132 +89,39 @@ public sealed class QueryPickScreen : ListScreenBase<QueryPickModel>
 }
 
 /// <summary>
-/// Step 2, optional: the values for the run. An overview screen cannot take form input, so the
-/// toolbar search box doubles as the input — type <c>name=value</c> and press Enter. The
-/// accumulated set travels on in the screen URL.
+/// Step 2, optional: the values for the run — a dialog with one text input per declared
+/// parameter (a prompt screen, the only CoreUI screen kind whose OK posts edited values back
+/// to a command). OK saves the set as the user's draft and opens the report with
+/// <c>UseDraft=true</c>; the report then renders every link with the resolved values, so
+/// shareability is kept.
 /// </summary>
-public sealed class QueryParameterScreen : ListScreenBase<QueryParameterModel>
+public sealed class QueryValuesScreen : PromptScreenBase<QueryValuesModel>
 {
-    private QueryParameterQuery Q => Query as QueryParameterQuery ?? new QueryParameterQuery();
+    private QueryValuesQuery Q => Query as QueryValuesQuery ?? new QueryValuesQuery();
 
-    protected override string GetScreenName() => "Set parameters";
+    protected override string GetScreenName() =>
+        string.IsNullOrEmpty(Model?.QueryName) ? "Set parameters" : $"Set parameters: {Model.QueryName}";
 
-#if DW_HAS_SCREEN_EXPLANATION
-    protected override string? GetScreenExplanation() =>
-        "Type name=value in the search box and press Enter to set a value; type several as name=a;other=b. Text without '=' just filters this list";
-#endif
+    protected override void BuildPromptScreen() => AddDynamicFields(m => m.Fields);
 
-    protected override IEnumerable<ListViewMapping> GetViewMappings() =>
-    [
-        new RowViewMapping
-        {
-            Columns =
-            [
-                CreateMapping(m => m.Name),
-                CreateMapping(m => m.Type),
-                CreateMapping(m => m.Default),
-                CreateMapping(m => m.Value),
-                CreateMapping(m => m.Effect)
-            ]
-        }
-    ];
+    protected override string GetOkActionName() => "Run the query";
 
-    protected override Cell? GetCell(string propertyName, QueryParameterModel model) =>
-        propertyName == nameof(QueryParameterModel.Value) && model.StateKind is "set" or "blank"
-            ? Cell.MakeCell(new Badge
-            {
-                Value = model.Value,
-                BadgeType = model.StateKind == "set" ? BadgeType.Success : BadgeType.Warning
-            })
+    /// <summary>Null when the user may not run queries: CoreUI then renders no OK button.</summary>
+    protected override CommandBase<QueryValuesModel>? GetOkCommand() =>
+        PowerToolsAccess.CanUseSearchInspector()
+            ? new QueryValuesRunCommand { Repository = Q.Repository, Item = Q.Item }
             : null;
 
-    /// <summary>Clicking a parameter clears it — the only single-click edit a list row can express.</summary>
-    protected override ActionBase? GetListItemPrimaryAction(QueryParameterModel model)
-    {
-        if (!PowerToolsAccess.CanUseSearchInspector())
-            return null;
-
-        var q = Q;
-        return NavigateScreenAction.To<QueryParameterScreen>()
-            .With(new QueryParameterQuery
-            {
-                Repository = q.Repository,
-                Item = q.Item,
-                Parameters = ParameterValues.Set(q.Parameters, model.ParameterName, null)
-            });
-    }
-
-    protected override IEnumerable<ActionGroup>? GetScreenActions()
-    {
-        var q = Q;
-
-        return
-        [
-            new ActionGroup
-            {
-                Nodes =
-                [
-                    new ActionNode
-                    {
-                        Name = "Run the query",
-                        Icon = Icon.Play,
-                        NodeAction = NavigateScreenAction.To<QueryTestScreen>()
-                            .With(new QueryTestQuery { Repository = q.Repository, Item = q.Item, Parameters = q.Parameters })
-                    }
-                ]
-            },
-            new ActionGroup
-            {
-                Nodes =
-                [
-                    new ActionNode
-                    {
-                        Name = "Use the declared defaults",
-                        Icon = Icon.Redo,
-                        NodeAction = NavigateScreenAction.To<QueryParameterScreen>()
-                            .With(new QueryParameterQuery
-                            {
-                                Repository = q.Repository,
-                                Item = q.Item,
-                                Parameters = Defaults(q)
-                            })
-                    },
-                    new ActionNode
-                    {
-                        Name = "Clear all values",
-                        Icon = Icon.TrashAlt,
-                        NodeAction = NavigateScreenAction.To<QueryParameterScreen>()
-                            .With(new QueryParameterQuery { Repository = q.Repository, Item = q.Item })
-                    }
-                ]
-            },
-            new ActionGroup
-            {
-                Nodes =
-                [
-                    new ActionNode
-                    {
-                        Name = "Select another query",
-                        Icon = Icon.ListUl,
-                        NodeAction = NavigateScreenAction.To<QueryPickScreen>().With(new QueryPickQuery())
-                    }
-                ]
-            }
-        ];
-    }
-
-    private static string Defaults(QueryParameterQuery q)
-    {
-        try
-        {
-            var query = SearchQueryHelpers.Catalog().Query(q.Repository, q.Item);
-            return query is null ? string.Empty : ParameterValues.Defaults(query);
-        }
-        catch
-        {
-            return string.Empty;
-        }
-    }
+    /// <summary>
+    /// OK saves the draft, then opens the report reading it. ForceReload matters: rerunning
+    /// from a report that is already at the <c>UseDraft</c> URL navigates to the same URL,
+    /// which the client otherwise treats as a no-op and the old report stays on screen.
+    /// </summary>
+    protected override RunCommandAction ConfigureOkAction(RunCommandAction action) =>
+        action.WithOnSuccess(NavigateScreenAction.To<QueryTestScreen>()
+            .With(new QueryTestQuery { Repository = Q.Repository, Item = Q.Item, UseDraft = true })
+            .WithForceReload()
+            .UpdateParameters(p => p.Replace = true));
 }
 
 /// <summary>
@@ -281,8 +190,8 @@ public sealed class QueryTestScreen : OverviewScreenBase<QueryTestModel>
                     {
                         Name = "Set parameters",
                         Icon = Icon.SlidersV,
-                        NodeAction = NavigateScreenAction.To<QueryParameterScreen>()
-                            .With(new QueryParameterQuery
+                        NodeAction = OpenDialogAction.To<QueryValuesScreen>()
+                            .With(new QueryValuesQuery
                             {
                                 Repository = q.Repository,
                                 Item = q.Item,

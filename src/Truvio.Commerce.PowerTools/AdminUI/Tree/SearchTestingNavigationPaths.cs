@@ -14,11 +14,11 @@ public sealed class QueryPickNavigationNodePathProvider : NavigationNodePathProv
         PowerToolsNavigationPaths.For<SearchSection>(SearchNodeProvider.QueryTesterNodeId);
 }
 
-public sealed class QueryParameterNavigationNodePathProvider : NavigationNodePathProvider<QueryParameterModel>
+public sealed class QueryValuesNavigationNodePathProvider : NavigationNodePathProvider<QueryValuesModel>
 {
-    public QueryParameterNavigationNodePathProvider() => AllowNullModel = true;
+    public QueryValuesNavigationNodePathProvider() => AllowNullModel = true;
 
-    protected override NavigationNodePath GetNavigationNodePathInternal(QueryParameterModel? model) =>
+    protected override NavigationNodePath GetNavigationNodePathInternal(QueryValuesModel? model) =>
         PowerToolsNavigationPaths.For<SearchSection>(SearchNodeProvider.QueryTesterNodeId);
 }
 

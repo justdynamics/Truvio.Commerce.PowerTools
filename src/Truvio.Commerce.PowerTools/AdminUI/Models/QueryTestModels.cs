@@ -1,4 +1,5 @@
 using Dynamicweb.CoreUI.Data;
+using Dynamicweb.CoreUI.Data.DynamicFields;
 
 namespace Truvio.Commerce.PowerTools.AdminUI.Models;
 
@@ -28,31 +29,31 @@ public sealed class QueryPickModel : DataViewModelBase
     public string Status { get; set; } = string.Empty;
 }
 
-/// <summary>One declared parameter (or tester setting) in the "Set parameters" step.</summary>
-public sealed class QueryParameterModel : DataViewModelBase
+/// <summary>
+/// The "Set parameters" dialog: one dynamic field per declared parameter.
+/// <see cref="IModelWithDynamicFields"/> is what makes the round-trip work: when the OK
+/// command is posted, DW's model builder merges standard properties (Repository, Item) first,
+/// then calls <see cref="FillDynamicFields"/> to rebuild the field set server-side, and only
+/// then copies the posted values into those fields — without it the posted values are
+/// silently dropped.
+/// </summary>
+public sealed class QueryValuesModel : DataViewModelBase, IModelWithDynamicFields
 {
-    public string RepositoryName { get; set; } = string.Empty;
+    public string QueryName { get; set; } = string.Empty;
+
+    public string Repository { get; set; } = string.Empty;
 
     public string Item { get; set; } = string.Empty;
 
-    public string ParameterName { get; set; } = string.Empty;
+    public FieldGroupCollection Fields { get; set; } = new();
 
-    public string StateKind { get; set; } = string.Empty;
+    public void FillDynamicFields()
+    {
+        if (Fields.Groups.Any())
+            return;
 
-    [ConfigurableProperty("Parameter", isSearchable: true)]
-    public string Name { get; set; } = string.Empty;
-
-    [ConfigurableProperty("Type", isSearchable: true)]
-    public string Type { get; set; } = string.Empty;
-
-    [ConfigurableProperty("Default", isSearchable: true)]
-    public string Default { get; set; } = string.Empty;
-
-    [ConfigurableProperty("Value for this run", isSearchable: true)]
-    public string Value { get; set; } = string.Empty;
-
-    [ConfigurableProperty("Effect", isSearchable: true)]
-    public string Effect { get; set; } = string.Empty;
+        Fields = Queries.QueryValuesQuery.BuildFields(Repository, Item, string.Empty);
+    }
 }
 
 /// <summary>The Query tester report (overview screen).</summary>
