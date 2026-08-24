@@ -149,3 +149,16 @@ Builds green at both `-p:DynamicwebVersion=10.8.4` (the advertised floor) and `1
 reference. 48 unit tests over hand-built snapshots, no DW host required. **Not yet run against a live
 catalog** — the rules are exercised against fakes, and the DW reads above are verified by decompile,
 not by observation.
+
+
+## Verified live (cabp, DW 10.27.9, 2026-08-24)
+
+All four screens rendered against real data (58 products, 1 completion rule, 2 variant
+groups, 17 languages): the catalog overview produced genuine PIM-W1 findings (products at 33%
+against the 60% threshold) and PIM-W2 common-gap rankings ("missing on 38 of 39 scanned
+products"), the explorer listed 39 family rows worst-first with per-row drill-down, the
+product screen named the real rule behind each missing field, and the governance screen showed
+the rule with its assignments. Open item: `CalculateProductCompletenessForMultipleFamilies`
+has not yet been timed on a large catalog (~12k products) — the marine demo receives the
+released package and is the perf test host; the product cap + trailing "N more" row bound the
+cost until then.

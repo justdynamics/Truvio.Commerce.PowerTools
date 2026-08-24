@@ -148,3 +148,27 @@ holding state the report cannot see (typically a stale capability cache).
 Still to confirm on a live host: verdicts against a genuinely restricted persona; whether
 `CapabilityLimitation` exists on a solution that never enabled the feature; and sub-area gating
 (`AreaBase.SubAreas`, used by Products and Commerce), which this version does not descend into.
+
+
+## Verified live (cabp, DW 10.27.9, 2026-08-24)
+
+Acceptance test against the shell, both flag states, persona `pmerritt` (frontend buyer given
+backend access + a single group grant of Read on section "Users"):
+
+- **Flag OFF**: shell shows exactly one tab (Users); the report says Standard, Users = Yes
+  (Read, explicit via group), every other area No (no grant), and surfaces the stored
+  capability deny as "(not enforced)". 1:1 match.
+- **Flag ON** (+ `/Users` limitation on the user's group): the shell flips to EIGHT areas
+  (Insights, Content, Assets, Products, Commerce, Email, Integration, Apps) and hides Users —
+  the report reproduces every row: capability-declaring areas Yes/"Allowed" with the permission
+  column marked *not consulted*, Users No/"Restricted by <group>" with the user's own Read
+  grant marked *not consulted* (dead config), PowerTools + Settings still permission-gated.
+- The elevated verdict (built-in admin: every row "Bypass") and the full areas → sections →
+  nodes depth render as designed.
+
+Operational gotcha found on the way, worth knowing when demonstrating: the feature's
+GlobalSettings node must be the **space-stripped** name (`<Capabilities><CapabilityControl>`)
+— DW's config reader strips spaces from lookup keys but indexes the file by raw node names, so
+a hand-edited, XML-encoded `Capability_x0020_Control` node is never read, and a Feature
+Management toggle takes effect in-process immediately but the area composition is only fully
+re-evaluated on fresh navigation.
