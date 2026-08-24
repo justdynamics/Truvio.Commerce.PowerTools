@@ -11,19 +11,19 @@
     <!-- NuGet package metadata -->
     <PackageId>Truvio.Commerce.PowerTools</PackageId>
     <!-- Prerelease suffix renders as the BETA flag in the DW10 admin "Available apps" list -->
-    <Version>0.6.0-beta</Version>
-    <AssemblyVersion>0.6.0.0</AssemblyVersion>
+    <Version>0.7.0-beta</Version>
+    <AssemblyVersion>0.7.0.0</AssemblyVersion>
     <Title>Truvio PowerTools</Title>
     <!-- The description lists every tool in the suite — keep it current when a tool ships. -->
     <Description>Truvio PowerTools — a growing suite of admin power tools for Dynamicweb 10 by JustDynamics, in one dedicated "PowerTools" area of the administration.
 
 Included tools:
-• Content Access Viewer — pick any security account (role, group, or user) and see its effective CONTENT access across pages, grid rows, and paragraphs, with origin explanations.
+• Content Access Viewer — opens straight on the overview; pick any security account (role, group, or user - searchable) and a website from the toolbar and see its effective CONTENT access across pages, grid rows, and paragraphs. Denials explain the gate: which rule blocks, and who IS granted.
 • Content Access Warnings — content-permission misconfiguration findings: ineffective group grants, gated sign-in pages, ignored legacy permission columns, orphaned grants.
 • Price Explainer — pick a user (or the anonymous visitor) and a product: can they see it, what do they pay, and why — the assortment that grants or blocks it, the price-matrix row that wins and why every other row lost, the product discounts that apply; switch currency, shop, quantity and date.
 • Operations Console — install health in one place: scheduled tasks (state, runs, who ran them, failing and stale tasks), integration activities (last result, broken task→activity links), logs and storage (log folders and largest tables, retention, growth findings), recent changes.
-• Index &amp; Query Inspector — repositories and indexes with build status and schema, field where-used (dangling and unused fields), a query linter (incl. the blank-parameter leak that returns the whole index), and a live document browser that diffs product documents against the database.
-• Query Tester — run any repository query with your own parameter values and see the hits, the executed Lucene query, a clause-by-clause trace, each clause's impact, why a given document is missing, facet counts, and what to change; a finished test is a shareable link.
+• Index &amp; Query Inspector — repositories and indexes with build status and schema, field where-used (dangling and unused fields), a query linter (incl. the blank-parameter leak that returns the whole index), and a live document browser that searches every schema field, shows where a term hits, and diffs product documents against the database.
+• Query Tester — run any repository query with your own parameter values and see the hits, the executed Lucene query, a clause-by-clause trace, each clause's impact, why a given document is missing, facet counts, and what to change; results carry search highlighting (where each value occurs, database texts included) and a per-document explanation panel; a finished test is a shareable link.
 • Settings — tune every tool: linter suppressions, thresholds, caps, presets, per-section toggles.
 
 Every list has toolbar search.
