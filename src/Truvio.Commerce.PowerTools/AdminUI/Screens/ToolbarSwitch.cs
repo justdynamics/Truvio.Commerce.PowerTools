@@ -33,6 +33,28 @@ internal static class ToolbarSwitch
             NodeAction = action
         });
 
+    /// <summary>
+    /// A toolbar button that opens DW's searchable slide-over selector and, on pick, stores
+    /// the selection under a render-time token and navigates to <paramref name="onPicked"/>
+    /// (whose query must carry the same token) — see <c>PickStore</c>.
+    /// </summary>
+    public static void AddPicker(
+        Dynamicweb.CoreUI.Layout.ScreenLayout layout,
+        string label,
+        Icon icon,
+        Dynamicweb.CoreUI.Editors.Selectors.SelectorProviderBase provider,
+        string token,
+        Dynamicweb.CoreUI.Actions.Implementations.NavigateScreenAction onPicked) =>
+        AddButton(layout, label, icon,
+            Dynamicweb.CoreUI.Actions.Implementations.OpenSlideOverAction
+                .To<Dynamicweb.Application.UI.Screens.SelectorScreen>()
+                .With(new Dynamicweb.Application.UI.Queries.SelectorDataByProviderQuery(provider))
+                .WithOnSelectAction(
+                    Dynamicweb.CoreUI.Actions.Implementations.RunCommandAction
+                        .For(new Commands.ToolbarPickCommand { Token = token })
+                        .WithCommandProperty(nameof(Commands.ToolbarPickCommand.PickedId))
+                        .WithOnSuccess(onPicked.WithForceReload())));
+
     public static ActionNode Option(string name, bool active, ActionBase action) => new()
     {
         Name = name,

@@ -35,6 +35,28 @@ public sealed class PriceExplainQuery : DataQueryModelBase<PriceExplainModel>
     /// <summary>ISO date (yyyy-MM-dd); empty = now.</summary>
     public string Date { get; set; } = string.Empty;
 
+    /// <summary>Resolves a toolbar account pick — see <see cref="PickStore"/>.</summary>
+    public string AccountPickToken { get; set; } = string.Empty;
+
+    /// <summary>Resolves a toolbar product pick (<c>product~variant~language</c>).</summary>
+    public string ProductPickToken { get; set; } = string.Empty;
+
+    /// <summary>A pick token wins over whatever the URL carried for that dimension.</summary>
+    private void ResolvePicks()
+    {
+        if (!string.IsNullOrEmpty(AccountPickToken) && PickStore.Get(AccountPickToken) is { Length: > 0 } account)
+            AccountKey = account;
+
+        if (!string.IsNullOrEmpty(ProductPickToken) && PickStore.Get(ProductPickToken) is { Length: > 0 } picked)
+        {
+            var parts = picked.Split(Selectors.ExplainerProductSelectorProvider.IdSeparator);
+            ProductId = parts[0];
+            VariantId = parts.Length > 1 ? parts[1] : string.Empty;
+            if (parts.Length > 2 && !string.IsNullOrEmpty(parts[2]))
+                LanguageId = parts[2];
+        }
+    }
+
     // Methods, not properties: CoreUI serialises every public property into the screen URL.
     public int? GetUserId() =>
         int.TryParse(AccountKey, NumberStyles.Integer, CultureInfo.InvariantCulture, out var id) ? id : null;
@@ -63,6 +85,8 @@ public sealed class PriceExplainQuery : DataQueryModelBase<PriceExplainModel>
 
     public override PriceExplainModel? GetModel()
     {
+        ResolvePicks();
+
         if (string.IsNullOrEmpty(ProductId))
             return new PriceExplainModel { Title = "Price Explainer", Error = "No product selected" };
 

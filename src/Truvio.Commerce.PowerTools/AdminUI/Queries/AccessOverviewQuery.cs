@@ -17,8 +17,17 @@ public sealed class AccessOverviewQuery : DataQueryListBase<AccessNodeModel, Acc
 {
     public string AccountKey { get; set; } = string.Empty;
 
+    /// <summary>Resolves a toolbar slide-over pick — see <see cref="PickStore"/>.</summary>
+    public string PickToken { get; set; } = string.Empty;
+
+    /// <summary>0 = every website; otherwise only that area's pages.</summary>
+    public int AreaId { get; set; }
+
     protected override IEnumerable<AccessNodeModel>? GetListItems()
     {
+        if (!string.IsNullOrEmpty(PickToken) && PickStore.Get(PickToken) is { Length: > 0 } picked)
+            AccountKey = picked;
+
         var account = new DwAccountCatalog().Resolve(AccountKey);
         if (account is null)
             return [];
@@ -36,6 +45,9 @@ public sealed class AccessOverviewQuery : DataQueryListBase<AccessNodeModel, Acc
 
         foreach (var area in source.GetAreas().OrderBy(a => a.Name, StringComparer.OrdinalIgnoreCase))
         {
+            if (AreaId > 0 && area.Id != AreaId)
+                continue;
+
             var pages = source.GetPages(area.Id);
             var pagesById = pages.ToDictionary(p => p.Id);
             var byParent = pages.ToLookup(p => p.ParentPageId);

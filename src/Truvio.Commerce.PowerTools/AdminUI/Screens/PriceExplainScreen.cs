@@ -132,14 +132,7 @@ public sealed class PriceExplainScreen : OverviewScreenBase<PriceExplainModel>
         return groups;
     }
 
-    private static ActionNode DateAction(PriceExplainQuery q, string name, string date) => new()
-    {
-        Name = name,
-        Icon = Icon.CalendarAlt,
-        NodeAction = Navigate(q, x => x.Date = date)
-    };
-
-    private static NavigateScreenAction Navigate(PriceExplainQuery q, Action<PriceExplainQuery> change)
+    internal static PriceExplainQuery Copy(PriceExplainQuery q, Action<PriceExplainQuery> change)
     {
         var next = new PriceExplainQuery
         {
@@ -154,7 +147,23 @@ public sealed class PriceExplainScreen : OverviewScreenBase<PriceExplainModel>
             Date = q.Date
         };
         change(next);
-        return NavigateScreenAction.To<PriceExplainScreen>().With(next);
+        return next;
+    }
+
+    internal static string AccountLabel(string accountKey)
+    {
+        if (string.IsNullOrEmpty(accountKey))
+            return "Account";
+
+        try
+        {
+            return new Truvio.Commerce.PowerTools.Core.Principals.Dw.DwAccountCatalog()
+                .Resolve(accountKey)?.DisplayName ?? accountKey;
+        }
+        catch
+        {
+            return accountKey;
+        }
     }
 
     private static IReadOnlyList<T> SafeList<T>(Func<IReadOnlyList<T>> source)
@@ -189,6 +198,18 @@ public sealed class PriceExplainToolbarInjector : ScreenInjector<PriceExplainScr
 
         if (screen.Query is not PriceExplainQuery q || string.IsNullOrEmpty(q.ProductId))
             return;
+
+        var accountToken = Guid.NewGuid().ToString("N");
+        ToolbarSwitch.AddPicker(layout, PriceExplainScreen.AccountLabel(q.AccountKey), Icon.UserCircle,
+            new Selectors.AccountSelectorProvider(), accountToken,
+            NavigateScreenAction.To<PriceExplainScreen>()
+                .With(PriceExplainScreen.Copy(q, x => x.AccountPickToken = accountToken)));
+
+        var productToken = Guid.NewGuid().ToString("N");
+        ToolbarSwitch.AddPicker(layout, string.IsNullOrEmpty(q.ProductId) ? "Product" : q.ProductId, Icon.Tag,
+            new Selectors.ExplainerProductSelectorProvider(), productToken,
+            NavigateScreenAction.To<PriceExplainScreen>()
+                .With(PriceExplainScreen.Copy(q, x => x.ProductPickToken = productToken)));
 
         var currencies = SafeList(DwCommerceExplainer.Currencies);
         if (currencies.Count > 1)
