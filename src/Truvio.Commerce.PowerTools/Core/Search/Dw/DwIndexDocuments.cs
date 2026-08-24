@@ -109,7 +109,7 @@ public static class DwIndexDocuments
         Expression? expression;
         try
         {
-            expression = BuildExpression(freeText, fieldName, fieldValue);
+            expression = BuildExpression(index, freeText, fieldName, fieldValue);
         }
         catch (Exception ex)
         {
@@ -211,7 +211,7 @@ public static class DwIndexDocuments
         }
     }
 
-    private static Expression? BuildExpression(string freeText, string fieldName, string fieldValue)
+    private static Expression? BuildExpression(IIndex index, string freeText, string fieldName, string fieldValue)
     {
         if (!string.IsNullOrWhiteSpace(fieldName) && !string.IsNullOrWhiteSpace(fieldValue))
         {
@@ -221,8 +221,26 @@ public static class DwIndexDocuments
 
         if (!string.IsNullOrWhiteSpace(freeText))
         {
-            // Null fields = search every field in the schema (the provider fills them in).
-            return Expression.FullTextSearch(null!, freeText.Trim(), FullTextSearchWildcardTypes.WildCardTrailing);
+            // Pass the schema's fields EXPLICITLY: the provider's null-fields default skips
+            // the analyzed catch-alls (freetext), so a term that only lives in an un-stored
+            // description ("EcoTouch") matched nothing here while matching every real query.
+            string[]? fields = null;
+            try
+            {
+                fields = (index.Schema?.Fields ?? [])
+                    .Select(f => f.SystemName)
+                    .Where(n => !string.IsNullOrEmpty(n))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+                if (fields.Length == 0)
+                    fields = null;
+            }
+            catch
+            {
+                // Schema unreadable: the provider default is still better than no search.
+            }
+
+            return Expression.FullTextSearch(fields!, freeText.Trim(), FullTextSearchWildcardTypes.WildCardTrailing);
         }
 
         // No expression at all: the provider falls back to match-all, i.e. the first N documents.

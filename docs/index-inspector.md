@@ -71,8 +71,12 @@ Every rule below runs over every query, sort, facet group and index in the insta
 ### Document browser
 
 Pick an index, then read what it actually contains. The toolbar search runs as a live
-free-text query against the index; picking a row shows every stored field of that document.
-Results are capped at 50 (`DwIndexDocuments.MaxTake`).
+free-text query against every schema field — including analyzed catch-alls like `freetext`,
+so a term that only lives in an un-stored description ("EcoTouch") still hits. While a
+search is active, the Summary column says where it hit ("Long description (database):
+…EcoTouch…"), and picking a row shows every stored field of that document plus a
+"Where '<term>' matches" section with the occurrence highlighted. Results are capped at 50
+(`DwIndexDocuments.MaxTake`).
 
 For **product indexes** each listed document is compared with the product row the database
 holds right now — `Number`, `Name`, `Active` and `Updated` — and the row is badged

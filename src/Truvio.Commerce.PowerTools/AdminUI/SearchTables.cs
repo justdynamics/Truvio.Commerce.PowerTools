@@ -35,6 +35,9 @@ internal static class SearchTables
     /// </summary>
     internal readonly record struct ActionLink(string Text, string Href, string ActionJson);
 
+    /// <summary>Plain text with every occurrence of a term marked.</summary>
+    internal readonly record struct Highlight(string Text, string Term);
+
     /// <summary>Search-highlighting lines: "Field: …before <mark>term</mark> after…".</summary>
     internal readonly record struct Snippets(IReadOnlyList<(string Field, string Before, string Match, string After)> Hits);
 
@@ -99,6 +102,7 @@ internal static class SearchTables
         Wrap wrap => E(wrap.Text),
         ActionLink link =>
             $"<a href=\"{E(link.Href)}\" data-dw-action=\"{E(link.ActionJson)}\" style=\"text-decoration:underline;white-space:nowrap;cursor:pointer\">{E(link.Text)}</a>",
+        Highlight highlight => HighlightHtml(highlight.Text, highlight.Term),
         Snippets snippets => string.Join("<br>", snippets.Hits.Select(h =>
             $"<span style=\"opacity:.75\">{E(h.Field)}:</span> {E(h.Before)}" +
             $"<mark style=\"background:rgba(255,193,7,.35);color:inherit;padding:0 1px;border-radius:2px\">{E(h.Match)}</mark>" +
@@ -113,6 +117,32 @@ internal static class SearchTables
     /// <summary>A standalone pill outside a table cell — used by stacked (narrow) layouts.</summary>
     public static string PillHtml(string text, string kind) =>
         $"<span style=\"display:inline-block;padding:1px 8px;border-radius:10px;font-size:0.85em;white-space:nowrap;{Style(kind)}\">{E(text)}</span>";
+
+    private static string HighlightHtml(string text, string term)
+    {
+        if (string.IsNullOrEmpty(term))
+            return E(text);
+
+        var sb = new StringBuilder();
+        var position = 0;
+        while (position < text.Length)
+        {
+            var index = text.IndexOf(term, position, StringComparison.OrdinalIgnoreCase);
+            if (index < 0)
+            {
+                sb.Append(E(text[position..]));
+                break;
+            }
+
+            sb.Append(E(text[position..index]));
+            sb.Append("<mark style=\"background:rgba(255,193,7,.35);color:inherit;padding:0 1px;border-radius:2px\">");
+            sb.Append(E(text.Substring(index, term.Length)));
+            sb.Append("</mark>");
+            position = index + term.Length;
+        }
+
+        return sb.ToString();
+    }
 
     public static string Style(string kind) => kind switch
     {

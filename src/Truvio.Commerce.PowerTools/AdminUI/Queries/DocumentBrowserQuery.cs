@@ -3,6 +3,7 @@ using Dynamicweb.CoreUI.Data;
 using Truvio.Commerce.PowerTools.AdminUI.Models;
 using Truvio.Commerce.PowerTools.Core.Search;
 using Truvio.Commerce.PowerTools.Core.Search.Dw;
+using Truvio.Commerce.PowerTools.Core.Search.Testing;
 
 namespace Truvio.Commerce.PowerTools.AdminUI.Queries;
 
@@ -62,6 +63,9 @@ public sealed class DocumentBrowserQuery : DataQueryListBase<DocumentRowModel, D
             ];
         }
 
+        var searching = !string.IsNullOrWhiteSpace(Search);
+        var productIndex = IsProductIndex(Repository, Item);
+
         return result.Documents.Select(document => new DocumentRowModel
         {
             RepositoryName = Repository,
@@ -70,9 +74,33 @@ public sealed class DocumentBrowserQuery : DataQueryListBase<DocumentRowModel, D
             MatchKind = document.Match.ToString(),
             Key = document.Key,
             Label = First(document, LabelFields),
-            Summary = Summarise(document),
+            // While a search is active the summary column answers "where did it hit?"
+            // instead of showing the generic field digest.
+            Summary = searching ? FoundIn(document, Search!, productIndex) : Summarise(document),
             Match = compare ? MatchText(document.Match) : "-"
         }).ToList();
+    }
+
+    /// <summary>"Long description (database): …Owens Corning EcoTouch®…" — same scan as the query tester.</summary>
+    private static string FoundIn(IndexDocumentRow document, string search, bool productIndex)
+    {
+        var fields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var field in document.Fields)
+            fields[field.Name] = field.Value;
+
+        var hits = QueryDiagnosis.TermHits(fields, [search]);
+        if (hits.Count == 0 && productIndex)
+        {
+            string Of(string name) => fields.TryGetValue(name, out var v) ? v : string.Empty;
+            hits = QueryDiagnosis.TermHits(
+                DwIndexDocuments.ProductTexts(Of("ID"), Of("VariantID"), Of("LanguageID")), [search]);
+        }
+
+        if (hits.Count == 0)
+            return "(matched via an analyzed-only field)";
+
+        var hit = hits[0];
+        return $"{hit.Field}: {hit.Before}{hit.Match}{hit.After}";
     }
 
     internal static bool IsProductIndex(string repository, string item)
@@ -225,12 +253,46 @@ public sealed class DocumentDetailQuery : DataQueryModelBase<DocumentDetailModel
             });
         }
 
+        if (!string.IsNullOrWhiteSpace(Text))
+        {
+            var fields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var field in document.Fields)
+                fields[field.Name] = field.Value;
+
+            var hits = QueryDiagnosis.TermHits(fields, [Text]);
+            if (hits.Count == 0 && DocumentBrowserQuery.IsProductIndex(Repository, Item))
+            {
+                string Of(string name) => fields.TryGetValue(name, out var v) ? v : string.Empty;
+                hits = QueryDiagnosis.TermHits(
+                    DwIndexDocuments.ProductTexts(Of("ID"), Of("VariantID"), Of("LanguageID")), [Text]);
+            }
+
+            model.Sections.Add(new ReportSectionModel
+            {
+                Heading = $"Where '{Text}' matches",
+                Html = hits.Count > 0
+                    ? SearchTables.Table([],
+                        hits.Select(h => new object?[]
+                        {
+                            h.Field,
+                            new SearchTables.Snippets([(string.Empty, h.Before, h.Match, h.After)])
+                        }))
+                    : SearchTables.Note("The term does not occur in this document's stored fields or database texts - it matched via an analyzed-only field.")
+            });
+        }
+
         model.Sections.Add(new ReportSectionModel
         {
             Heading = $"Stored fields ({document.Fields.Count})",
             Html = SearchTables.Table(
                 ["Field", "Value"],
-                document.Fields.Select(f => new object?[] { f.Name, DocumentBrowserQuery.Trim(f.Value, 600) }))
+                document.Fields.Select(f => new object?[]
+                {
+                    f.Name,
+                    string.IsNullOrWhiteSpace(Text)
+                        ? DocumentBrowserQuery.Trim(f.Value, 600)
+                        : new SearchTables.Highlight(DocumentBrowserQuery.Trim(f.Value, 600), Text)
+                }))
         });
 
         return model;
