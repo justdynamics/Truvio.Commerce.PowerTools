@@ -66,11 +66,17 @@ public static class DwPowerToolsSettings
             LiveRateCheckEnabled = Bool(Keys.LiveRateCheckEnabled, d.LiveRateCheckEnabled),
             LiveRateFeedUrl = Str(Keys.LiveRateFeedUrl, d.LiveRateFeedUrl).Trim(),
 
+            PimProductCap = Int(Keys.PimProductCap, d.PimProductCap),
+            PimCompletenessThreshold = Int(Keys.PimCompletenessThreshold, d.PimCompletenessThreshold),
+            PimCommonGapPercent = Int(Keys.PimCommonGapPercent, d.PimCommonGapPercent),
+            PimSuppressedRules = Str(Keys.PimSuppressedRules, d.PimSuppressedRules),
+
             UserFetchCap = Int(Keys.UserFetchCap, d.UserFetchCap),
             SuppressedWarningRules = Str(Keys.SuppressedWarningRules, d.SuppressedWarningRules),
             HideAdministrators = Bool(Keys.HideAdministrators, d.HideAdministrators),
 
             SecuritySectionEnabled = Bool(Keys.SecuritySectionEnabled, d.SecuritySectionEnabled),
+            PimSectionEnabled = Bool(Keys.PimSectionEnabled, d.PimSectionEnabled),
             CommerceSectionEnabled = Bool(Keys.CommerceSectionEnabled, d.CommerceSectionEnabled),
             OperationsSectionEnabled = Bool(Keys.OperationsSectionEnabled, d.OperationsSectionEnabled),
             SearchSectionEnabled = Bool(Keys.SearchSectionEnabled, d.SearchSectionEnabled),

@@ -98,6 +98,24 @@ public sealed class PowerToolsSettingsModel : SettingsViewModelBase
     [Settings(Keys.LiveRateFeedUrl)]
     public string LiveRateFeedUrl { get; set; } = string.Empty;
 
+    // ---- PIM quality ---------------------------------------------------------------------------
+
+    [ConfigurableProperty("Product scan cap", "Most products scored per page in the PIM quality screens.")]
+    [Settings(Keys.PimProductCap, Defaults.PimProductCap)]
+    public int PimProductCap { get; set; } = Defaults.PimProductCap;
+
+    [ConfigurableProperty("Completeness threshold", "Score below which a product is reported as incomplete (PIM-W1).")]
+    [Settings(Keys.PimCompletenessThreshold, Defaults.PimCompletenessThreshold)]
+    public int PimCompletenessThreshold { get; set; } = Defaults.PimCompletenessThreshold;
+
+    [ConfigurableProperty("Common gap threshold", "Percent of scanned products missing the same field before it is reported as the field to fix first (PIM-W2).")]
+    [Settings(Keys.PimCommonGapPercent, Defaults.PimCommonGapPercent)]
+    public int PimCommonGapPercent { get; set; } = Defaults.PimCommonGapPercent;
+
+    [ConfigurableProperty("Suppressed PIM rules", "PIM rule ids never shown, one per line. A trailing * matches a prefix.")]
+    [Settings(Keys.PimSuppressedRules)]
+    public string PimSuppressedRules { get; set; } = string.Empty;
+
     // ---- Content Access Viewer -----------------------------------------------------------------
 
     [ConfigurableProperty("User fetch cap", "Users materialised per request in the account pickers.")]
@@ -117,6 +135,10 @@ public sealed class PowerToolsSettingsModel : SettingsViewModelBase
     [ConfigurableProperty("Security section", "Show the Security section in the PowerTools area.")]
     [Settings(Keys.SecuritySectionEnabled, Defaults.SectionEnabled)]
     public bool SecuritySectionEnabled { get; set; } = Defaults.SectionEnabled;
+
+    [ConfigurableProperty("PIM section", "Show the PIM section in the PowerTools area.")]
+    [Settings(Keys.PimSectionEnabled, Defaults.SectionEnabled)]
+    public bool PimSectionEnabled { get; set; } = Defaults.SectionEnabled;
 
     [ConfigurableProperty("Commerce section", "Show the Commerce section in the PowerTools area.")]
     [Settings(Keys.CommerceSectionEnabled, Defaults.SectionEnabled)]

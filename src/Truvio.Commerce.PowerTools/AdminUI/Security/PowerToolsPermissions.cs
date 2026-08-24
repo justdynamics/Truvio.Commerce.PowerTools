@@ -22,14 +22,23 @@ public sealed class PowerToolsPermissionEntity : IPermissionEntity
 
     public const string SearchInspectorKey = "truvio-powertools-search";
 
+    public const string PimKey = "truvio-powertools-pim";
+
+    /// <summary>
+    /// Own grant, deliberately not folded into the Security Viewer key: the backend rights
+    /// report exposes who-can-do-what across the whole admin, which is more sensitive than
+    /// content visibility.
+    /// </summary>
+    public const string BackendRightsKey = "truvio-powertools-backend-rights";
+
     /// <summary>Suite settings: Read to look, Edit to change. Everything else is read-only.</summary>
     public const string SettingsKey = "truvio-powertools-settings";
 
     /// <summary>Every function grant the suite exposes, in display order.</summary>
-    public static readonly IReadOnlyList<string> AllKeys = [SecurityViewerKey, PriceExplainerKey, OperationsKey, SearchInspectorKey, SettingsKey];
+    public static readonly IReadOnlyList<string> AllKeys = [SecurityViewerKey, BackendRightsKey, PriceExplainerKey, PimKey, OperationsKey, SearchInspectorKey, SettingsKey];
 
     /// <summary>The tool grants — every key except the settings grant.</summary>
-    public static readonly IReadOnlyList<string> ToolKeys = [SecurityViewerKey, PriceExplainerKey, OperationsKey, SearchInspectorKey];
+    public static readonly IReadOnlyList<string> ToolKeys = [SecurityViewerKey, BackendRightsKey, PriceExplainerKey, PimKey, OperationsKey, SearchInspectorKey];
 
     private readonly string _key;
 
@@ -66,6 +75,10 @@ public static class PowerToolsAccess
     public static bool CanUseOperations() => HasRead(PowerToolsPermissionEntity.OperationsKey);
 
     public static bool CanUseSearchInspector() => HasRead(PowerToolsPermissionEntity.SearchInspectorKey);
+
+    public static bool CanUsePim() => HasRead(PowerToolsPermissionEntity.PimKey);
+
+    public static bool CanUseBackendRights() => HasRead(PowerToolsPermissionEntity.BackendRightsKey);
 
     /// <summary>Looking at the settings needs nothing beyond access to any one tool.</summary>
     public static bool CanViewSettings() =>

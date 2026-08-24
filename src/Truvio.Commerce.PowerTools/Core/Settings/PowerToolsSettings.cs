@@ -68,6 +68,19 @@ public sealed record PowerToolsSettings
     /// <summary>Override for the reference feed URL; blank = the ECB daily reference rates.</summary>
     public string LiveRateFeedUrl { get; init; } = string.Empty;
 
+    // ---- PIM quality ------------------------------------------------------------------------
+    /// <summary>Most products scored per page in the PIM screens.</summary>
+    public int PimProductCap { get; init; } = Shipped.PimProductCap;
+
+    /// <summary>Completeness score below which PIM-W1 reports a product.</summary>
+    public int PimCompletenessThreshold { get; init; } = Shipped.PimCompletenessThreshold;
+
+    /// <summary>Percent of scanned products missing the same field before PIM-W2 calls it a common gap.</summary>
+    public int PimCommonGapPercent { get; init; } = Shipped.PimCommonGapPercent;
+
+    /// <summary>PIM rule ids never shown, one per line. A trailing '*' matches a prefix.</summary>
+    public string PimSuppressedRules { get; init; } = string.Empty;
+
     // ---- Content Access Viewer --------------------------------------------------------------
     public int UserFetchCap { get; init; } = Shipped.UserFetchCap;
 
@@ -79,6 +92,8 @@ public sealed record PowerToolsSettings
 
     // ---- General ----------------------------------------------------------------------------
     public bool SecuritySectionEnabled { get; init; } = Shipped.SectionEnabled;
+
+    public bool PimSectionEnabled { get; init; } = Shipped.SectionEnabled;
 
     public bool CommerceSectionEnabled { get; init; } = Shipped.SectionEnabled;
 
@@ -193,6 +208,16 @@ public sealed record PowerToolsSettings
     {
         var all = findings as IReadOnlyList<Finding> ?? findings.ToList();
         var visible = all.Where(f => !IsWarningRuleSuppressed(f.RuleId)).ToList();
+        return new FindingFilter(visible, all.Count - visible.Count);
+    }
+
+    public bool IsPimRuleSuppressed(string? ruleId) => AnyMatch(PimSuppressedRules, ruleId);
+
+    /// <summary>Same, for the PIM (PIM-*) findings.</summary>
+    public FindingFilter FilterPimFindings(IEnumerable<Finding> findings)
+    {
+        var all = findings as IReadOnlyList<Finding> ?? findings.ToList();
+        var visible = all.Where(f => !IsPimRuleSuppressed(f.RuleId)).ToList();
         return new FindingFilter(visible, all.Count - visible.Count);
     }
 

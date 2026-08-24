@@ -39,6 +39,12 @@ public static class PowerToolsSettingKeys
     public const string LiveRateCheckEnabled = Root + "/Commerce/LiveRateCheckEnabled";
     public const string LiveRateFeedUrl = Root + "/Commerce/LiveRateFeedUrl";
 
+    // ---- PIM quality ---------------------------------------------------------------------------
+    public const string PimProductCap = Root + "/Pim/ProductCap";
+    public const string PimCompletenessThreshold = Root + "/Pim/CompletenessThreshold";
+    public const string PimCommonGapPercent = Root + "/Pim/CommonGapPercent";
+    public const string PimSuppressedRules = Root + "/Pim/SuppressedRules";
+
     // ---- Content Access Viewer ----------------------------------------------------------------
     public const string UserFetchCap = Root + "/Security/UserFetchCap";
     public const string SuppressedWarningRules = Root + "/Security/SuppressedWarningRules";
@@ -46,6 +52,7 @@ public static class PowerToolsSettingKeys
 
     // ---- General --------------------------------------------------------------------------------
     public const string SecuritySectionEnabled = Root + "/General/SecuritySectionEnabled";
+    public const string PimSectionEnabled = Root + "/General/PimSectionEnabled";
     public const string CommerceSectionEnabled = Root + "/General/CommerceSectionEnabled";
     public const string OperationsSectionEnabled = Root + "/General/OperationsSectionEnabled";
     public const string SearchSectionEnabled = Root + "/General/SearchSectionEnabled";
@@ -75,6 +82,10 @@ public static class PowerToolsSettingKeys
         public const bool LiveRateCheckEnabled = false;
 
         public const int UserFetchCap = 500;
+
+        public const int PimProductCap = 200;
+        public const int PimCompletenessThreshold = 60;
+        public const int PimCommonGapPercent = 25;
 
         public const bool SectionEnabled = true;
         public const bool ShowRuleIds = true;
