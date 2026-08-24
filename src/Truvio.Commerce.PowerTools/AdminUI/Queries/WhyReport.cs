@@ -16,7 +16,7 @@ internal static class WhyReport
 {
     internal sealed record Result(string Heading, string Html, IReadOnlyList<Suggestion> Suggestions);
 
-    public static Result Build(string repository, string item, string parameters, string expectedKey)
+    public static Result Build(string repository, string item, string parameters, string expectedKey, bool compact = false)
     {
         SearchCatalog catalog;
         try
@@ -93,17 +93,9 @@ internal static class WhyReport
             checks.Add(new ExpectationCheck(trace.Path, trace.Label, trace.Field, actual, passes, note));
         }
 
-        var rows = checks.Select(c => new object?[]
-        {
-            new SearchTables.Wrap(c.Label),
-            QueryDiagnosis.Shorten(c.DocumentValue, 90),
-            new SearchTables.Pill(c.Passes ? "Passes" : "Fails", c.Passes ? "ok" : "bad"),
-            new SearchTables.Wrap(c.Note)
-        });
-
-        var html = SearchTables.Table(
-            [$"Clause ({keyField} = {expectedKey})", "Value on this document", "Verdict", "Where / why"],
-            rows);
+        // A slide-over is narrow: the four-column nowrap table overflows it, so the compact
+        // layout stacks each clause as a block whose lines are free to wrap.
+        var html = compact ? StackedHtml(checks) : TableHtml(checks, keyField, expectedKey);
 
         html += SearchTables.Note(
             $"Each row is a real query: '{keyField} = {expectedKey}' ANDed with that one clause. " +
@@ -118,6 +110,46 @@ internal static class WhyReport
         var inResult = membership.Ok && membership.TotalHits > 0;
 
         return new Result(inResult ? $"Why '{expectedKey}'?" : $"Why not '{expectedKey}'?", html, suggestions);
+    }
+
+    private static string TableHtml(IReadOnlyList<ExpectationCheck> checks, string keyField, string expectedKey) =>
+        SearchTables.Table(
+            [$"Clause ({keyField} = {expectedKey})", "Value on this document", "Verdict", "Where / why"],
+            checks.Select(c => new object?[]
+            {
+                new SearchTables.Wrap(c.Label),
+                QueryDiagnosis.Shorten(c.DocumentValue, 90),
+                new SearchTables.Pill(c.Passes ? "Passes" : "Fails", c.Passes ? "ok" : "bad"),
+                new SearchTables.Wrap(c.Note)
+            }));
+
+    private static string StackedHtml(IReadOnlyList<ExpectationCheck> checks)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.Append("<div style=\"padding:0 1.5rem .75rem 1.5rem\">");
+        foreach (var c in checks)
+        {
+            sb.Append("<div style=\"padding:8px 0;border-bottom:1px solid rgba(128,128,128,.18)\">");
+            sb.Append("<div style=\"display:flex;gap:8px;align-items:baseline\">");
+            sb.Append(SearchTables.PillHtml(c.Passes ? "Passes" : "Fails", c.Passes ? "ok" : "bad"));
+            sb.Append($"<span style=\"font-weight:600;word-break:break-word\">{SearchTables.E(c.Label)}</span>");
+            sb.Append("</div>");
+
+            // The value line only earns its place when it says something the note does not.
+            var value = QueryDiagnosis.Shorten(c.DocumentValue, 160);
+            if (!string.IsNullOrEmpty(value) && !value.StartsWith('('))
+                sb.Append($"<div style=\"opacity:.8;word-break:break-word\">Value: {SearchTables.E(value)}</div>");
+            else if (!string.IsNullOrEmpty(value))
+                sb.Append($"<div style=\"opacity:.55;font-size:.85em\">{SearchTables.E(value)}</div>");
+
+            if (!string.IsNullOrEmpty(c.Note))
+                sb.Append($"<div style=\"word-break:break-word\">{SearchTables.E(c.Note)}</div>");
+
+            sb.Append("</div>");
+        }
+
+        sb.Append("</div>");
+        return sb.ToString();
     }
 
     /// <summary>"'EcoTouch' is in Long description (database): "…Owens Corning EcoTouch®…"".</summary>

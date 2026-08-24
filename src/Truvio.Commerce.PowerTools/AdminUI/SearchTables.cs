@@ -110,6 +110,10 @@ internal static class SearchTables
     };
 
     /// <summary>Same colour language as the Price Explainer report.</summary>
+    /// <summary>A standalone pill outside a table cell — used by stacked (narrow) layouts.</summary>
+    public static string PillHtml(string text, string kind) =>
+        $"<span style=\"display:inline-block;padding:1px 8px;border-radius:10px;font-size:0.85em;white-space:nowrap;{Style(kind)}\">{E(text)}</span>";
+
     public static string Style(string kind) => kind switch
     {
         "ok" => "background:#d4edda;color:#155724",

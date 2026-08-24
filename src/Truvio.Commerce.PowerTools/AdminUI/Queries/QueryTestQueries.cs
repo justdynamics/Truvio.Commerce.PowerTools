@@ -770,7 +770,7 @@ public sealed class QueryWhyQuery : DataQueryModelBase<QueryWhyModel>
         if (string.IsNullOrEmpty(Repository) || string.IsNullOrEmpty(Item) || string.IsNullOrEmpty(Key))
             return new QueryWhyModel { Heading = "Why?", Html = SearchTables.Note("No document selected.") };
 
-        var why = WhyReport.Build(Repository, Item, Parameters, Key);
+        var why = WhyReport.Build(Repository, Item, Parameters, Key, compact: true);
         return new QueryWhyModel { Heading = why.Heading, Html = why.Html };
     }
 }
