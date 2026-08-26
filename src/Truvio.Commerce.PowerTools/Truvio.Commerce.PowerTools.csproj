@@ -11,17 +11,20 @@
     <!-- NuGet package metadata -->
     <PackageId>Truvio.Commerce.PowerTools</PackageId>
     <!-- Prerelease suffix renders as the BETA flag in the DW10 admin "Available apps" list -->
-    <Version>0.9.1-beta</Version>
-    <AssemblyVersion>0.9.1.0</AssemblyVersion>
+    <Version>0.10.0-beta</Version>
+    <AssemblyVersion>0.10.0.0</AssemblyVersion>
     <Title>Truvio PowerTools</Title>
     <!-- The description lists every tool in the suite — keep it current when a tool ships. -->
     <Description>Truvio PowerTools — a growing suite of admin power tools for Dynamicweb 10 by JustDynamics, in one dedicated "PowerTools" area of the administration.
 
 Included tools:
 • Content Access Viewer — opens straight on the overview; pick any security account (role, group, or user - searchable) and a website from the toolbar and see its effective CONTENT access across pages, grid rows, and paragraphs. Denials explain the gate: which rule blocks, and who IS granted.
+• Experience Analyzer — review a user or group and see what stands out about their content experience, or compare two accounts side by side: which pages only one of them sees, and why — perfect for verifying role-specific pages behave as configured.
 • Content Access Warnings — content-permission misconfiguration findings: ineffective group grants, gated sign-in pages, ignored legacy permission columns, orphaned grants.
-• Price Explainer — pick a user (or the anonymous visitor) and a product: can they see it, what do they pay, and why — the assortment that grants or blocks it, the price-matrix row that wins and why every other row lost, the product discounts that apply; switch currency, shop, quantity and date.
-• Operations Console — install health in one place: scheduled tasks (state, runs, who ran them, failing and stale tasks), integration activities (last result, broken task→activity links), logs and storage (log folders and largest tables, retention, growth findings), recent changes.
+• Backend Rights Viewer — per backend user, every admin area, section and tree node with the gate that decided it: Permission, Capability, License or Bypass; capability denies with the causing group and cascade, the group-priority chain, and a Why? explanation per verdict.
+• Price Explainer — pick a user (or the anonymous visitor) and a product: can they see it, what do they pay, and why — the assortment that grants or blocks it, the price-matrix row that wins and why every other row lost, the product discounts that apply, and the currency conversion made transparent (broken exchange-rate tables are called out); switch currency, shop, quantity and date from one Context button, and open the storefront PDP with Preview in shop.
+• PIM Quality — the catalog ranked by DW's own completeness scores: a worst-first Completeness explorer, a per-product field × language × rule breakdown, a Catalog quality overview with findings (common gaps, language lag, missing variant combinations, duplicate assets, dead completion rules, broken image paths), and rules &amp; workflows governance. Preview in shop is also injected into DW's own product editor.
+• Operations Console — install health in one place: scheduled tasks (state, runs, who ran them, failing and stale tasks), integration activities (last result, broken task→activity links), logs and storage (log folders and largest tables, retention, growth findings), currency-configuration checks (optionally against the ECB reference rates), recent changes.
 • Index &amp; Query Inspector — repositories and indexes with build status and schema, field where-used (dangling and unused fields), a query linter (incl. the blank-parameter leak that returns the whole index), and a live document browser that searches every schema field, shows where a term hits, and diffs product documents against the database.
 • Query Tester — run any repository query with your own parameter values and see the hits, the executed Lucene query, a clause-by-clause trace, each clause's impact, why a given document is missing, facet counts, and what to change; results carry search highlighting (where each value occurs, database texts included) and a per-document explanation panel; a finished test is a shareable link.
 • Settings — tune every tool: linter suppressions, thresholds, caps, presets, per-section toggles.
