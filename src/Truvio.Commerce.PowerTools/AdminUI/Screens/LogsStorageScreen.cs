@@ -14,7 +14,7 @@ namespace Truvio.Commerce.PowerTools.AdminUI.Screens;
 /// </summary>
 public sealed class LogsStorageScreen : OverviewScreenBase<LogsStorageModel>
 {
-    protected override string GetScreenName() => "Logs & storage";
+    protected override string GetScreenName() => "Overview";
 
     protected override void BuildOverviewScreen()
     {

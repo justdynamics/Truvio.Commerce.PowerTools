@@ -27,7 +27,7 @@ public sealed class PimCompletenessScreen : ListScreenBase<PimCompletenessModel>
 {
     private PimCompletenessQuery Q => Query as PimCompletenessQuery ?? new PimCompletenessQuery();
 
-    protected override string GetScreenName() => "Completeness explorer";
+    protected override string GetScreenName() => "Overview";
 
 #if DW_HAS_SCREEN_EXPLANATION
     protected override string? GetScreenExplanation() =>
@@ -201,7 +201,7 @@ public sealed class PimQualityScreen : OverviewScreenBase<PimQualityModel>
 {
     private PimQualityQuery Q => Query as PimQualityQuery ?? new PimQualityQuery();
 
-    protected override string GetScreenName() => "Catalog quality";
+    protected override string GetScreenName() => "Overview";
 
     protected override void BuildOverviewScreen()
     {
@@ -280,7 +280,7 @@ public sealed class PimQualityScreen : OverviewScreenBase<PimQualityModel>
 /// </summary>
 public sealed class PimGovernanceScreen : ListScreenBase<PimGovernanceModel>
 {
-    protected override string GetScreenName() => "Rules & workflows";
+    protected override string GetScreenName() => "Overview";
 
 #if DW_HAS_SCREEN_EXPLANATION
     protected override string? GetScreenExplanation() =>

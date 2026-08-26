@@ -21,7 +21,7 @@ public sealed class BackendRightsListScreen : ListScreenBase<BackendUserModel>
 {
     private BackendRightsListQuery Q => Query as BackendRightsListQuery ?? new BackendRightsListQuery();
 
-    protected override string GetScreenName() => "Backend Rights Viewer";
+    protected override string GetScreenName() => "Accounts";
 
     protected override IEnumerable<ListViewMapping> GetViewMappings() =>
     [

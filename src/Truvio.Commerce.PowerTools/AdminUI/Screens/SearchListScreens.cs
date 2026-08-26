@@ -14,7 +14,7 @@ namespace Truvio.Commerce.PowerTools.AdminUI.Screens;
 /// <summary>Every index in every repository, with its build health.</summary>
 public sealed class IndexListScreen : ListScreenBase<IndexListModel>
 {
-    protected override string GetScreenName() => "Repositories & indexes";
+    protected override string GetScreenName() => "Overview";
 
 #if DW_HAS_SCREEN_EXPLANATION
     protected override string? GetScreenExplanation() =>
@@ -76,7 +76,7 @@ public sealed class FieldUsageScreen : ListScreenBase<FieldUsageModel>
 {
     private FieldUsageQuery Q => Query as FieldUsageQuery ?? new FieldUsageQuery();
 
-    protected override string GetScreenName() => "Field where-used";
+    protected override string GetScreenName() => "Overview";
 
 #if DW_HAS_SCREEN_EXPLANATION
     protected override string? GetScreenExplanation() =>
@@ -126,7 +126,7 @@ public sealed class FieldUsageScreen : ListScreenBase<FieldUsageModel>
 /// <summary>Lint findings across every query and facet group in the install.</summary>
 public sealed class QueryLintScreen : ListScreenBase<QueryLintModel>
 {
-    protected override string GetScreenName() => "Query linter";
+    protected override string GetScreenName() => "Findings";
 
 #if DW_HAS_SCREEN_EXPLANATION
     protected override string? GetScreenExplanation() =>

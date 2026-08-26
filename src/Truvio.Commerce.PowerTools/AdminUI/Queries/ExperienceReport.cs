@@ -22,7 +22,14 @@ internal static class ExperienceReport
     {
         var model = new ExperienceAnalyzerModel
         {
-            Title = comparing ? $"{Short(account.DisplayName)} vs {Short(other.DisplayName)}" : account.DisplayName,
+            // The toolbar picker already shows the account — the title only repeats it when it
+            // carries information (a picked account, a comparison). The anonymous default gets
+            // a neutral tail instead of doubling the picker's label into the breadcrumb.
+            Title = comparing
+                ? $"{Short(account.DisplayName)} vs {Short(other.DisplayName)}"
+                : string.Equals(account.Key, $"role:{SecurityAccount.AnonymousRole}", StringComparison.OrdinalIgnoreCase)
+                    ? "Overview"
+                    : Short(account.DisplayName),
             AccountName = account.DisplayName,
             CompareName = comparing ? other.DisplayName : string.Empty,
             Comparing = comparing,

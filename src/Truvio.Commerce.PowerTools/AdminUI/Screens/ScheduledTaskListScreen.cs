@@ -12,7 +12,7 @@ namespace Truvio.Commerce.PowerTools.AdminUI.Screens;
 /// <summary>Every scheduled task, with the state the install actually reports.</summary>
 public sealed class ScheduledTaskListScreen : ListScreenBase<ScheduledTaskModel>
 {
-    protected override string GetScreenName() => "Scheduled tasks";
+    protected override string GetScreenName() => "Overview";
 
 #if DW_HAS_SCREEN_EXPLANATION
     protected override string? GetScreenExplanation() =>
