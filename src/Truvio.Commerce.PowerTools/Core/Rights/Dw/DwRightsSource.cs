@@ -138,6 +138,7 @@ public sealed class DwRightsSource
                 var sectionId = $"section:{areaType}:{sectionKey}";
                 var sectionCapability = CapabilityReflection.CapabilityOf(section);
                 var (sectionLicense, sectionLicensed) = License(section.GetType());
+                var sectionLevel = CapabilityReflection.PermissionLevelOf(section) ?? level;
 
                 specs.Add(new RightsNodeSpec(
                     RightsNodeKind.Section,
@@ -149,7 +150,7 @@ public sealed class DwRightsSource
                     // constructor sets PermissionLevelCurrentUser from the area, never from a
                     // section-specific entity.
                     PermissionKey: area.Name ?? string.Empty,
-                    PermissionLevel: CapabilityReflection.PermissionLevelOf(section) ?? level,
+                    PermissionLevel: sectionLevel,
                     Origin: origin,
                     InheritedFrom: inheritedFrom,
                     CapabilityKey: sectionCapability,
@@ -167,7 +168,10 @@ public sealed class DwRightsSource
                         node.Sort,
                         ParentId: sectionId,
                         PermissionKey: area.Name ?? string.Empty,
-                        PermissionLevel: CapabilityReflection.PermissionLevelOf(node),
+                        // Most node types never set PermissionLevelCurrentUser; DW gates a node on
+                        // its PARENT's level (GetNodeResult), so a node without its own level
+                        // carries the section's — leaving it null would read as a denial.
+                        PermissionLevel: CapabilityReflection.PermissionLevelOf(node) ?? sectionLevel,
                         Origin: origin,
                         InheritedFrom: inheritedFrom,
                         CapabilityKey: nodeCapability,

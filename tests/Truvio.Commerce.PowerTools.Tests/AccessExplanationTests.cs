@@ -109,4 +109,41 @@ public class AccessExplanationTests
 
         Assert.Equal("Role default (Authenticated frontend role)", text);
     }
+
+    // ---- The compact label for dense tables ----------------------------------------------------
+
+    [Fact]
+    public void Short_DeniedHere_IsJustGatedHere()
+    {
+        var access = new EffectiveAccess(Levels.None, AccessOrigin.ExplicitHere, 10, SecurityAccount.AuthenticatedFrontendRole);
+
+        Assert.Equal("Gated here", AccessExplanation.Short(access, null));
+    }
+
+    [Fact]
+    public void Short_DeniedByAncestor_NamesThePage()
+    {
+        var access = new EffectiveAccess(Levels.None, AccessOrigin.InheritedFromPage, 10, SecurityAccount.AnonymousRole);
+
+        Assert.Equal("Gated on 'Account'", AccessExplanation.Short(access, "Account"));
+    }
+
+    [Fact]
+    public void Short_Granted_SaysSo()
+    {
+        var access = new EffectiveAccess(Levels.Read, AccessOrigin.ExplicitHere, 10, "55");
+
+        Assert.Equal("Granted here", AccessExplanation.Short(access, null));
+    }
+
+    [Fact]
+    public void Short_NonRowOrigins_KeepTheirOneWordLabels()
+    {
+        Assert.Equal("Role default",
+            AccessExplanation.Short(new EffectiveAccess(Levels.Read, AccessOrigin.RoleDefault, null, null), null));
+        Assert.Equal("Administrator bypass",
+            AccessExplanation.Short(new EffectiveAccess(Levels.All, AccessOrigin.Bypass, null, null), null));
+        Assert.Equal("Follows the page",
+            AccessExplanation.Short(new EffectiveAccess(Levels.Read, AccessOrigin.PageFallback, null, null), null));
+    }
 }

@@ -182,6 +182,21 @@ public sealed class PriceExplainScreen : OverviewScreenBase<PriceExplainModel>
 }
 
 
+/// <summary>The context slide-over: pick a currency, shop, quantity or date to re-explain with.</summary>
+public sealed class PriceContextScreen : OverviewScreenBase<PriceContextModel>
+{
+    protected override string GetScreenName() => Model?.Heading ?? "Context";
+
+    protected override void BuildOverviewScreen()
+    {
+        if (Model is null)
+            return;
+
+        // The heading is already the screen name — an unnamed group avoids showing it twice.
+        AddComponent(new HtmlBlock { Value = Model.Html }, string.Empty, Group.GroupWidth.Col_12);
+    }
+}
+
 /// <summary>
 /// Puts the report's context switches in the top bar next to the Actions menu — one button
 /// per dimension, labelled with the value in effect (like the Visual Editor's device
@@ -213,60 +228,40 @@ public sealed class PriceExplainToolbarInjector : ScreenInjector<PriceExplainScr
             NavigateScreenAction.To<PriceExplainScreen>()
                 .With(PriceExplainScreen.Copy(q, x => x.ProductPickToken = productToken)));
 
-        // One "Context" split button instead of four — currency, shop, quantity and date are
-        // all pick-one-value switches, and four labelled buttons squeezed the breadcrumb out
-        // of its row. The label shows the values in effect; the menu holds one titled group
-        // per dimension, active values check-marked as before.
-        var settings = DwPowerToolsSettings.Current;
-        var groups = new List<ActionGroup>();
+        // One "Context" button labelled with the values in effect. It opens a slide-over with
+        // one titled section per dimension, values click-to-apply — the earlier flat
+        // split-button menu mixed forty options in one scrolling list whose group titles
+        // barely rendered.
         var labelParts = new List<string>();
 
         var currencies = SafeList(DwCommerceExplainer.Currencies);
-        if (currencies.Count > 1)
-        {
-            groups.Add(new ActionGroup
-            {
-                Title = "Currency",
-                Nodes = currencies.Select(c => ToolbarSwitch.Option($"{c.Code}{(c.Name != c.Code ? $" - {c.Name}" : "")}",
-                    active: c.Code == q.CurrencyCode, Navigate(q, x => x.CurrencyCode = c.Code))).ToList()
-            });
-            if (!string.IsNullOrEmpty(q.CurrencyCode))
-                labelParts.Add(q.CurrencyCode);
-        }
+        if (currencies.Count > 1 && !string.IsNullOrEmpty(q.CurrencyCode))
+            labelParts.Add(q.CurrencyCode);
 
         var shops = SafeList(DwCommerceExplainer.Shops);
         if (shops.Count > 1)
         {
-            groups.Add(new ActionGroup
-            {
-                Title = "Shop",
-                Nodes = shops.Select(shop => ToolbarSwitch.Option(shop.Name, active: shop.Id == q.ShopId,
-                    Navigate(q, x => x.ShopId = shop.Id))).ToList()
-            });
             var current = shops.FirstOrDefault(shop => shop.Id == q.ShopId);
             if (!string.IsNullOrEmpty(current.Name))
                 labelParts.Add(Shorten(current.Name));
         }
 
-        groups.Add(new ActionGroup
-        {
-            Title = "Quantity",
-            Nodes = settings.Quantities().Select(qty => ToolbarSwitch.Option($"{qty:0.##}",
-                active: Math.Abs(qty - q.Quantity) < 0.0001, Navigate(q, x => x.Quantity = qty))).ToList()
-        });
         labelParts.Add($"×{q.Quantity:0.##}");
-
-        var today = DateTime.Today;
-        var dateOptions = new List<ActionNode> { ToolbarSwitch.Option("Now", active: string.IsNullOrEmpty(q.Date), Navigate(q, x => x.Date = string.Empty)) };
-        dateOptions.AddRange(settings.DateOffsets().Select(days =>
-        {
-            var date = today.AddDays(days).ToString("yyyy-MM-dd");
-            return ToolbarSwitch.Option($"+{days} days ({date})", active: q.Date == date, Navigate(q, x => x.Date = date));
-        }));
-        groups.Add(new ActionGroup { Title = "Date", Nodes = dateOptions });
         labelParts.Add(string.IsNullOrEmpty(q.Date) ? "Now" : q.Date);
 
-        ToolbarSwitch.AddMenu(layout, string.Join(" · ", labelParts), Icon.SlidersV, groups);
+        ToolbarSwitch.AddButton(layout, string.Join(" · ", labelParts), Icon.SlidersV,
+            OpenSlideOverAction.To<PriceContextScreen>().With(new PriceContextQuery
+            {
+                AccountKey = q.AccountKey,
+                ProductId = q.ProductId,
+                VariantId = q.VariantId,
+                LanguageId = q.LanguageId,
+                CurrencyCode = q.CurrencyCode,
+                CountryCode = q.CountryCode,
+                ShopId = q.ShopId,
+                Quantity = q.Quantity,
+                Date = q.Date
+            }));
 
         // Opens the storefront PDP in a new tab — the mapped (or auto-detected) product page
         // with the product in context. Renders as the browser's own frontend session.
@@ -287,27 +282,9 @@ public sealed class PriceExplainToolbarInjector : ScreenInjector<PriceExplainScr
         }
     }
 
-    /// <summary>A shop name short enough for the context label — the menu shows it in full.</summary>
+    /// <summary>A shop name short enough for the context label — the panel shows it in full.</summary>
     private static string Shorten(string name) =>
         name.Length <= 16 ? name : name[..15].TrimEnd() + "…";
-
-    private static NavigateScreenAction Navigate(PriceExplainQuery q, Action<PriceExplainQuery> change)
-    {
-        var next = new PriceExplainQuery
-        {
-            AccountKey = q.AccountKey,
-            ProductId = q.ProductId,
-            VariantId = q.VariantId,
-            LanguageId = q.LanguageId,
-            CurrencyCode = q.CurrencyCode,
-            CountryCode = q.CountryCode,
-            ShopId = q.ShopId,
-            Quantity = q.Quantity,
-            Date = q.Date
-        };
-        change(next);
-        return NavigateScreenAction.To<PriceExplainScreen>().With(next);
-    }
 
     private static IReadOnlyList<T> SafeList<T>(Func<IReadOnlyList<T>> source)
     {

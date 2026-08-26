@@ -1,13 +1,15 @@
 namespace Truvio.Commerce.PowerTools.Core.Permissions;
 
 /// <summary>One page as one account experiences it: where it sits, whether it is visible, and why.</summary>
+/// <param name="ShortWhy">The compact gate label ("Gated here") for dense tables; empty falls back to the full text.</param>
 public sealed record ExperiencePage(
     int PageId,
     int AreaId,
     string AreaName,
     string Path,
     bool Visible,
-    string Explanation);
+    string Explanation,
+    string ShortWhy = "");
 
 /// <summary>
 /// One page where the two sides disagree — or agree. <paramref name="WhyA"/> and
@@ -21,7 +23,9 @@ public sealed record ExperienceDifference(
     bool VisibleA,
     bool VisibleB,
     string WhyA,
-    string WhyB);
+    string WhyB,
+    string ShortWhyA = "",
+    string ShortWhyB = "");
 
 /// <summary>Per-website totals, so "12 of 40 pages" is visible before any list is read.</summary>
 public sealed record WebsiteTally(int AreaId, string AreaName, int Total, int VisibleA, int VisibleB);
@@ -95,7 +99,8 @@ public static class ExperienceComparer
             var whyB = pageB?.Explanation ?? "Not evaluated for this account.";
 
             Bucket(new ExperienceDifference(
-                pageA.PageId, pageA.AreaName, pageA.Path, pageA.Visible, visibleB, pageA.Explanation, whyB));
+                pageA.PageId, pageA.AreaName, pageA.Path, pageA.Visible, visibleB, pageA.Explanation, whyB,
+                pageA.ShortWhy, pageB?.ShortWhy ?? "Not evaluated"));
 
             Tally(pageA.AreaId, pageA.AreaName, pageA.Visible, visibleB);
         }
@@ -108,7 +113,8 @@ public static class ExperienceComparer
 
             Bucket(new ExperienceDifference(
                 pageB.PageId, pageB.AreaName, pageB.Path, false, pageB.Visible,
-                "Not evaluated for this account.", pageB.Explanation));
+                "Not evaluated for this account.", pageB.Explanation,
+                "Not evaluated", pageB.ShortWhy));
 
             Tally(pageB.AreaId, pageB.AreaName, visibleA: false, pageB.Visible);
         }

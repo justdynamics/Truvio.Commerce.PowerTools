@@ -119,7 +119,7 @@ public static class RightsEvaluator
         // section itself — so with the flag on, capability (render-time) is all that remains.
         var sectionUnderCapabilityControl = node.Kind == RightsNodeKind.Section && snapshot.CapabilityControlActive;
 
-        var permissionGrantsRead = node.PermissionLevel is int level && Levels.GrantsRead(level);
+        var permissionGrantsRead = EffectiveLevel(node, resolved) is int level && Levels.GrantsRead(level);
         var disagreement = Disagreement(snapshot, node, capability);
 
         if (capabilityDecides || sectionUnderCapabilityControl)
@@ -145,6 +145,22 @@ public static class RightsEvaluator
         return new RightsVerdict(node, visibleByPermission,
             !permitted ? RightsGate.Permission : !licensed ? RightsGate.License : RightsGate.Permission,
             capability, CapabilityConsulted: false, PermissionConsulted: true, permissionGrantsRead, disagreement);
+    }
+
+    /// <summary>
+    /// The level the permission gate checks. A row that carries no level of its own is judged by
+    /// its nearest ancestor's: DW resolves <c>PermissionLevelCurrentUser</c> only on some node
+    /// types, and <c>GetNodeResult</c> gates a node on the parent's level — a missing own level is
+    /// not a denial.
+    /// </summary>
+    private static int? EffectiveLevel(RightsNodeSpec node, IReadOnlyDictionary<string, RightsVerdict> resolved)
+    {
+        if (node.PermissionLevel is int own)
+            return own;
+
+        return !string.IsNullOrEmpty(node.ParentId) && resolved.TryGetValue(node.ParentId, out var parent)
+            ? EffectiveLevel(parent.Node, resolved)
+            : null;
     }
 
     /// <summary>A child of something the user cannot see is unreachable regardless of its own gates.</summary>

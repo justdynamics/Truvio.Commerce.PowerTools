@@ -202,6 +202,28 @@ public class ExperienceComparerTests
     }
 
     [Fact]
+    public void ShortWhyLabels_TravelToBothSidesOfTheDifference()
+    {
+        var a = new[] { new ExperiencePage(1, 1, "Site", "Home", true, "full A", "Granted here") };
+        var b = new[] { new ExperiencePage(1, 1, "Site", "Home", false, "full B", "Gated here") };
+
+        var difference = Assert.Single(ExperienceComparer.Compare(Lumber, a, Roofing, b).OnlyA);
+
+        Assert.Equal("Granted here", difference.ShortWhyA);
+        Assert.Equal("Gated here", difference.ShortWhyB);
+    }
+
+    [Fact]
+    public void ShortWhy_ForAnUnknownPage_SaysNotEvaluated()
+    {
+        var a = new[] { new ExperiencePage(1, 1, "Site", "Home", true, "full A", "Granted here") };
+
+        var difference = Assert.Single(ExperienceComparer.Compare(Lumber, a, Roofing, []).OnlyA);
+
+        Assert.Equal("Not evaluated", difference.ShortWhyB);
+    }
+
+    [Fact]
     public void EmptyBothSides_IsIdenticalAndEmpty()
     {
         var result = ExperienceComparer.Compare(Lumber, [], Roofing, []);

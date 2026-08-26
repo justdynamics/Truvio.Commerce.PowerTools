@@ -30,3 +30,11 @@ public sealed class PriceExplainModel : DataViewModelBase
 
     public List<ExplainRowModel> Rows { get; set; } = [];
 }
+
+/// <summary>The context slide-over: currency, shop, quantity and date as click-to-apply lists.</summary>
+public sealed class PriceContextModel : DataViewModelBase
+{
+    public string Heading { get; set; } = "Context";
+
+    public string Html { get; set; } = string.Empty;
+}

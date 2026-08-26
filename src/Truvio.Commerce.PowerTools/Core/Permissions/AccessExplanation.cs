@@ -75,6 +75,23 @@ public static class AccessExplanation
         return $"{reason} Only {listed}{more} can see it.";
     }
 
+    /// <summary>
+    /// The compact one-liner for dense tables — "Gated here", "Gated on 'Account'". The full
+    /// story stays in <see cref="Explain"/>; a report row links to it instead of repeating it.
+    /// </summary>
+    public static string Short(EffectiveAccess access, string? originPageName)
+    {
+        var where = originPageName is null ? "here" : $"on '{originPageName}'";
+
+        return access.Origin switch
+        {
+            AccessOrigin.Bypass => "Administrator bypass",
+            AccessOrigin.RoleDefault => "Role default",
+            AccessOrigin.PageFallback => "Follows the page",
+            _ => access.GrantsRead ? $"Granted {where}" : $"Gated {where}"
+        };
+    }
+
     private static bool IsFrontendRole(string ownerId) =>
         string.Equals(ownerId, SecurityAccount.AnonymousRole, StringComparison.OrdinalIgnoreCase)
         || string.Equals(ownerId, SecurityAccount.AuthenticatedFrontendRole, StringComparison.OrdinalIgnoreCase);

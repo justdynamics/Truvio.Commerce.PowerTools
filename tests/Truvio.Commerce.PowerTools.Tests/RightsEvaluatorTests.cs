@@ -295,6 +295,59 @@ public class TreeDepthTests
     }
 
     [Fact]
+    public void NodeWithoutOwnLevel_IsJudgedByTheParents()
+    {
+        // Most node types never set PermissionLevelCurrentUser; DW gates a node on its parent's
+        // level, so a missing own level is not a denial.
+        var snapshot = Snapshot(
+            nodes:
+            [
+                Area(level: Levels.All),
+                Section(level: Levels.All),
+                Node(level: null)
+            ]);
+
+        var verdict = For(snapshot, "Pages");
+
+        Assert.True(verdict.Visible);
+        Assert.True(verdict.PermissionConsulted);
+    }
+
+    [Fact]
+    public void NodeWithoutOwnLevelOrCapability_UnderCapabilityControl_UsesTheParentsLevel()
+    {
+        // The Administrator screenshot case: Insights children declare no capability and carry no
+        // own level — the role-default All on the area must still let them through.
+        var snapshot = Snapshot(
+            subject: Administrator(),
+            capabilityControlActive: true,
+            nodes:
+            [
+                Area(level: Levels.All, origin: PermissionOrigin.RoleDefault),
+                Section(level: Levels.All, capability: string.Empty),
+                Node(level: null)
+            ]);
+
+        Assert.True(For(snapshot, "Pages").Visible);
+    }
+
+    [Fact]
+    public void NodeWithoutOwnLevel_UnderAParentWithoutRead_StaysHidden()
+    {
+        // The fallback inherits the parent's level, it does not blanket-grant.
+        var snapshot = Snapshot(
+            capabilityControlActive: true,
+            nodes:
+            [
+                Area(level: Levels.None, origin: PermissionOrigin.ContextDefault),
+                Section(level: Levels.None, capability: string.Empty),
+                Node(level: null)
+            ]);
+
+        Assert.False(For(snapshot, "Pages").Visible);
+    }
+
+    [Fact]
     public void AreaCount_CountsAreasOnly()
     {
         var snapshot = Snapshot(

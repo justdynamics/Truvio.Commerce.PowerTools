@@ -88,6 +88,21 @@ public sealed class ExperienceAnalyzerScreen : OverviewScreenBase<ExperienceAnal
     }
 }
 
+/// <summary>The "Why?" slide-over: one page, both sides' full explanations.</summary>
+public sealed class ExperienceWhyScreen : OverviewScreenBase<ExperienceWhyModel>
+{
+    protected override string GetScreenName() => Model?.Heading ?? "Why?";
+
+    protected override void BuildOverviewScreen()
+    {
+        if (Model is null)
+            return;
+
+        // The heading is already the screen name — an unnamed group avoids showing it twice.
+        AddComponent(new HtmlBlock { Value = Model.Html }, string.Empty, Group.GroupWidth.Col_12);
+    }
+}
+
 /// <summary>
 /// The two account pickers and the website switch. Two pickers means two distinct pick tokens:
 /// one store entry per dimension, or the second pick would overwrite the first.

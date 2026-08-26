@@ -130,6 +130,15 @@ public sealed class AccessOverviewQuery : DataQueryListBase<AccessNodeModel, Acc
         return AccessExplanation.Explain(account, access, rows, originName, ownerName);
     }
 
+    /// <summary>The compact gate label ("Gated here", "Gated on 'Account'") for dense tables.</summary>
+    internal static string ShortExplain(EffectiveAccess access, IReadOnlyDictionary<int, PageNode> pagesById)
+    {
+        var originName = access.Origin == AccessOrigin.InheritedFromPage && access.OriginPageId is int origin
+            ? pagesById.TryGetValue(origin, out var p) ? p.Name : origin.ToString()
+            : null;
+        return AccessExplanation.Short(access, originName);
+    }
+
     /// <summary>Owner ids as people know them: role names and actual group names, not "group 60".</summary>
     internal static Func<string?, string> OwnerNameResolver()
     {

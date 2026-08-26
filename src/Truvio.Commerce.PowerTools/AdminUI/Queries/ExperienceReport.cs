@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Truvio.Commerce.PowerTools.AdminUI.Models;
 using Truvio.Commerce.PowerTools.Core.Permissions;
 using Truvio.Commerce.PowerTools.Core.Principals;
@@ -63,11 +64,13 @@ internal static class ExperienceReport
             : "Hidden from this account, public sees it";
 
         model.Sections.Add(Differences(onlyAHeading, comparison.OnlyA, account.Key, other.Key, showWhy: WhySide.B,
+            deniedName: comparing ? other.DisplayName : "Public (anonymous)",
             empty: comparing
                 ? $"No page is visible to {account.DisplayName} alone."
                 : "This account sees nothing the public does not already see."));
 
         model.Sections.Add(Differences(onlyBHeading, comparison.OnlyB, account.Key, other.Key, showWhy: WhySide.A,
+            deniedName: account.DisplayName,
             empty: comparing
                 ? $"No page is visible to {other.DisplayName} alone."
                 : "Nothing public is hidden from this account."));
@@ -153,6 +156,7 @@ internal static class ExperienceReport
         string accountKey,
         string compareKey,
         WhySide showWhy,
+        string deniedName,
         string empty)
     {
         if (differences.Count == 0)
@@ -160,15 +164,29 @@ internal static class ExperienceReport
 
         var (shown, hidden) = ExperienceComparer.Cap(differences);
 
-        var rows = shown.Select(d => new object?[]
+        // The rows are sorted by website, so the website is named once per group — repeating it
+        // on forty rows says nothing new. The full gate explanation lives in the Why? slide-over;
+        // the row keeps only the compact label.
+        var rows = new List<object?[]>();
+        string? currentArea = null;
+        foreach (var d in shown)
         {
-            new SearchTables.Wrap(d.AreaName),
-            new SearchTables.Wrap(d.Path),
-            new SearchTables.Link("Audit", AuditHref(showWhy == WhySide.A ? accountKey : compareKey, d.PageId)),
-            new SearchTables.Wrap(showWhy == WhySide.A ? d.WhyA : d.WhyB)
-        });
+            var area = string.Equals(d.AreaName, currentArea, StringComparison.Ordinal) ? string.Empty : d.AreaName;
+            currentArea = d.AreaName;
 
-        var html = SearchTables.Table(["Website", "Page", string.Empty, "Why the other side does not see it"], rows);
+            var shortWhy = showWhy == WhySide.A ? d.ShortWhyA : d.ShortWhyB;
+            var fullWhy = showWhy == WhySide.A ? d.WhyA : d.WhyB;
+
+            rows.Add(
+            [
+                new SearchTables.Wrap(area),
+                new SearchTables.Wrap(d.Path),
+                new SearchTables.Wrap(string.IsNullOrEmpty(shortWhy) ? fullWhy : shortWhy),
+                WhyLink(accountKey, compareKey, d.PageId)
+            ]);
+        }
+
+        var html = SearchTables.Table(["Website", "Page", $"Why hidden from {deniedName}", string.Empty], rows);
 
         if (hidden > 0)
             html += SearchTables.Note($"{hidden} further page(s) not shown.");
@@ -176,11 +194,93 @@ internal static class ExperienceReport
         return new ReportSectionModel { Heading = $"{heading} ({differences.Count})", Html = html };
     }
 
-    /// <summary>The Content Access Viewer's page drilldown for the account that is denied.</summary>
-    private static string AuditHref(string accountKey, int pageId) =>
-        "/Admin/UI/PowerTools/PageAudience" +
-        $"?AccountKey={Uri.EscapeDataString(accountKey)}&PageId={pageId}" +
-        "&Type=PageAudience&QueryContext=Dynamicweb.CoreUI.Data.DataQueryContext";
+    // ---- The Why? slide-over ------------------------------------------------------------------
+
+    /// <summary>
+    /// The panel body: one page, BOTH sides' full explanations, and the page audit one click away
+    /// as another slide-over — nothing navigates, so the breadcrumb stays intact. Stacked blocks,
+    /// not tables: a slide-over is narrow, and two tables would size their label columns
+    /// independently and misalign.
+    /// </summary>
+    public static string WhyHtml(
+        string pathLine,
+        (string Name, string Key, bool Sees, string Why) sideA,
+        (string Name, string Key, bool Sees, string Why) sideB,
+        int pageId)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.Append(SearchTables.Note(pathLine));
+        sb.Append("<div style=\"padding:0 1.5rem .75rem 1.5rem\">");
+        Side(sideA);
+        Side(sideB);
+        sb.Append("</div>");
+        return sb.ToString();
+
+        void Side((string Name, string Key, bool Sees, string Why) side)
+        {
+            sb.Append("<div style=\"padding:10px 0;border-bottom:1px solid rgba(128,128,128,.18)\">");
+            sb.Append("<div style=\"display:flex;gap:8px;align-items:baseline;flex-wrap:wrap\">");
+            sb.Append($"<span style=\"font-weight:600;word-break:break-word\">{SearchTables.E(side.Name)}</span>");
+            sb.Append(SearchTables.PillHtml(side.Sees ? "Sees it" : "Does not see it", side.Sees ? "ok" : "bad"));
+            sb.Append("</div>");
+            sb.Append($"<div style=\"margin-top:4px;word-break:break-word\">{SearchTables.E(side.Why)}</div>");
+            sb.Append($"<div style=\"margin-top:6px\">{AnchorHtml(AuditPanelLink(side.Key, pageId, "Open page audit"))}</div>");
+            sb.Append("</div>");
+        }
+    }
+
+    /// <summary>An action link as raw HTML, for stacked layouts outside a table cell.</summary>
+    private static string AnchorHtml(SearchTables.ActionLink link) =>
+        $"<a href=\"{SearchTables.E(link.Href)}\" data-dw-action=\"{SearchTables.E(link.ActionJson)}\" " +
+        $"style=\"text-decoration:underline;white-space:nowrap;cursor:pointer\">{SearchTables.E(link.Text)}</a>";
+
+    /// <summary>Opens the Why? panel as a slide-over; the href stays as the full-navigation fallback.</summary>
+    private static SearchTables.ActionLink WhyLink(string accountKey, string compareKey, int pageId)
+    {
+        var href = "/Admin/UI/PowerTools/ExperienceWhy" +
+                   $"?AccountKey={Uri.EscapeDataString(accountKey)}&CompareKey={Uri.EscapeDataString(compareKey)}&PageId={pageId}" +
+                   "&Type=ExperienceWhy&QueryContext=Dynamicweb.CoreUI.Data.DataQueryContext";
+
+        return new SearchTables.ActionLink("Why?", href, SlideOverJson("ExperienceWhy", new Dictionary<string, object?>
+        {
+            ["AccountKey"] = accountKey,
+            ["CompareKey"] = compareKey,
+            ["PageId"] = pageId
+        }));
+    }
+
+    /// <summary>The Content Access Viewer's page drilldown, opened as a slide-over.</summary>
+    private static SearchTables.ActionLink AuditPanelLink(string accountKey, int pageId, string text)
+    {
+        var href = "/Admin/UI/PowerTools/PageAudience" +
+                   $"?AccountKey={Uri.EscapeDataString(accountKey)}&PageId={pageId}" +
+                   "&Type=PageAudience&QueryContext=Dynamicweb.CoreUI.Data.DataQueryContext";
+
+        return new SearchTables.ActionLink(text, href, SlideOverJson("PageAudience", new Dictionary<string, object?>
+        {
+            ["AccountKey"] = accountKey,
+            ["PageId"] = pageId
+        }));
+    }
+
+    private static string SlideOverJson(string screenTypeName, Dictionary<string, object?> query)
+    {
+        query["Type"] = screenTypeName;
+        query["QueryContext"] = new Dictionary<string, object?> { ["screenTypeName"] = screenTypeName };
+
+        return JsonSerializer.Serialize(new Dictionary<string, object?>
+        {
+            ["name"] = "OpenSlideOver",
+            ["parameters"] = new Dictionary<string, object?>
+            {
+                ["ScreenTypeName"] = screenTypeName,
+                ["ScreenType"] = "slideOver",
+                ["Query"] = query,
+                ["ForceReload"] = false,
+                ["NavigateByPost"] = false
+            }
+        });
+    }
 
     /// <summary>Account names can be long; the title has to stay one line.</summary>
     private static string Short(string name) =>
