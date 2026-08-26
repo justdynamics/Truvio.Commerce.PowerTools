@@ -15,6 +15,7 @@ public sealed class SecurityNodeProvider : NavigationNodeProvider<SecuritySectio
 {
     // Node IDs cannot contain '/' — DW NavigationNodePath splits on it.
     public const string SecurityViewerNodeId = "PowerTools_SecurityViewer";
+    public const string ExperienceAnalyzerNodeId = "PowerTools_ExperienceAnalyzer";
     public const string WarningsNodeId = "PowerTools_Warnings";
     public const string BackendRightsNodeId = "PowerTools_BackendRights";
 
@@ -48,6 +49,19 @@ public sealed class SecurityNodeProvider : NavigationNodeProvider<SecuritySectio
             HasSubNodes = false,
             NodeAction = NavigateScreenAction.To<AccessOverviewScreen>()
                 .With(new AccessOverviewQuery())
+        };
+
+        // Sits next to the viewer on purpose: same data, the other question — the viewer walks
+        // one account down the tree, the analyzer says what stands out and how two compare.
+        yield return new NavigationNode
+        {
+            Id = ExperienceAnalyzerNodeId,
+            Name = "Experience Analyzer",
+            Icon = Icon.Balance,
+            Sort = 15,
+            HasSubNodes = false,
+            NodeAction = NavigateScreenAction.To<ExperienceAnalyzerScreen>()
+                .With(new ExperienceAnalyzerQuery())
         };
 
         yield return new NavigationNode
