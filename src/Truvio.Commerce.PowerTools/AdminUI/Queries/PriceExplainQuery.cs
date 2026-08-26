@@ -95,7 +95,7 @@ public sealed class PriceExplainQuery : DataQueryModelBase<PriceExplainModel>
             var report = new DwCommerceExplainer().Explain(ToRequest());
             return new PriceExplainModel
             {
-                Title = $"{ProductId}{(string.IsNullOrEmpty(VariantId) ? "" : $" / {VariantId}")} for {(GetUserId() is int id ? $"user {id}" : "anonymous")}",
+                Title = $"{ProductId}{(string.IsNullOrEmpty(VariantId) ? "" : $" / {VariantId}")} · {(GetUserId() is int id ? $"user {id}" : "anonymous")}",
                 AccountName = report.Context.FirstOrDefault(c => c.Label == "Account").Value ?? string.Empty,
                 ProductName = report.Context.FirstOrDefault(c => c.Label == "Product").Value ?? string.Empty,
                 Visible = report.Visibility.Visible,

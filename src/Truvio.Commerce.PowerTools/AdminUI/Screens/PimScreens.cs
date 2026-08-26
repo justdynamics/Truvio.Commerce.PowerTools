@@ -201,7 +201,7 @@ public sealed class PimQualityScreen : OverviewScreenBase<PimQualityModel>
 {
     private PimQualityQuery Q => Query as PimQualityQuery ?? new PimQualityQuery();
 
-    protected override string GetScreenName() => "PIM - catalog quality";
+    protected override string GetScreenName() => "Catalog quality";
 
     protected override void BuildOverviewScreen()
     {

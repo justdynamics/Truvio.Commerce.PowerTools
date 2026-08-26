@@ -23,6 +23,16 @@ internal static class ToolbarSwitch
             ContextMenu = new ContextMenu { ActionGroups = [new ActionGroup { Nodes = options.ToList() }] }
         });
 
+    /// <summary>A split button whose menu holds several titled groups — one per dimension.</summary>
+    public static void AddMenu(ScreenLayout layout, string label, Icon icon, List<ActionGroup> groups) =>
+        layout.AddAction(new Button
+        {
+            Name = label,
+            Icon = icon,
+            Type = Button.ButtonType.Secondary,
+            ContextMenu = new ContextMenu { ActionGroups = groups }
+        });
+
     /// <summary>A plain one-click toolbar button.</summary>
     public static void AddButton(ScreenLayout layout, string label, Icon icon, ActionBase action) =>
         layout.AddAction(new Button

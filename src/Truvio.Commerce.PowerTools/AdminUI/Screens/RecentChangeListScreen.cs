@@ -19,7 +19,7 @@ public sealed class RecentChangeListScreen : ListScreenBase<RecentChangeModel>
     private RecentChangeListQuery Q => Query as RecentChangeListQuery ?? new RecentChangeListQuery();
 
     protected override string GetScreenName() =>
-        $"Operations - recent changes ({Q.EffectiveDays()} days)";
+        $"Last {Q.EffectiveDays()} days";
 
 #if DW_HAS_SCREEN_EXPLANATION
     protected override string? GetScreenExplanation() =>

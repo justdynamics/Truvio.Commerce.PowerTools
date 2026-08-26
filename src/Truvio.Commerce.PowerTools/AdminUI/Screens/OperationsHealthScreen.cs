@@ -16,7 +16,7 @@ namespace Truvio.Commerce.PowerTools.AdminUI.Screens;
 /// </summary>
 public sealed class OperationsHealthScreen : OverviewScreenBase<OperationsHealthModel>
 {
-    protected override string GetScreenName() => "Operations - health";
+    protected override string GetScreenName() => "Health";
 
     protected override void BuildOverviewScreen()
     {

@@ -136,7 +136,7 @@ public sealed class QueryTestScreen : OverviewScreenBase<QueryTestModel>
     private QueryTestQuery Q => Query as QueryTestQuery ?? new QueryTestQuery();
 
     protected override string GetScreenName() =>
-        Model is null || string.IsNullOrEmpty(Model.QueryName) ? "Query tester" : $"Query tester: {Model.QueryName}";
+        Model is null || string.IsNullOrEmpty(Model.QueryName) ? "Query tester" : Model.QueryName;
 
     protected override void BuildOverviewScreen()
     {

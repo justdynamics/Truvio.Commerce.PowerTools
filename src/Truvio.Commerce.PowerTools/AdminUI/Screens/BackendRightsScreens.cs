@@ -92,7 +92,7 @@ public sealed class BackendRightsListScreen : ListScreenBase<BackendUserModel>
 public sealed class BackendRightsScreen : OverviewScreenBase<BackendRightsModel>
 {
     protected override string GetScreenName() =>
-        Model is null || string.IsNullOrEmpty(Model.Title) ? "Backend rights" : $"Backend rights: {Model.Title}";
+        Model is null || string.IsNullOrEmpty(Model.Title) ? "Backend rights" : Model.Title;
 
     protected override void BuildOverviewScreen()
     {

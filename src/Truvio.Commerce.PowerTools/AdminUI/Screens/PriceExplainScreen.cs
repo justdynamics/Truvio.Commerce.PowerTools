@@ -28,8 +28,10 @@ public sealed class PriceExplainScreen : OverviewScreenBase<PriceExplainModel>
 {
     private PriceExplainQuery Q => Query as PriceExplainQuery ?? new PriceExplainQuery();
 
+    // The breadcrumb already carries "Price Explainer" as the node — repeating it here made
+    // the tail wrap. The title is the context alone; account and product stay in the info bar.
     protected override string GetScreenName() =>
-        Model is null || string.IsNullOrEmpty(Model.Title) ? "Price Explainer" : $"Price Explainer: {Model.Title}";
+        Model is null || string.IsNullOrEmpty(Model.Title) ? "Price Explainer" : Model.Title;
 
     protected override void BuildOverviewScreen()
     {
@@ -211,27 +213,48 @@ public sealed class PriceExplainToolbarInjector : ScreenInjector<PriceExplainScr
             NavigateScreenAction.To<PriceExplainScreen>()
                 .With(PriceExplainScreen.Copy(q, x => x.ProductPickToken = productToken)));
 
+        // One "Context" split button instead of four — currency, shop, quantity and date are
+        // all pick-one-value switches, and four labelled buttons squeezed the breadcrumb out
+        // of its row. The label shows the values in effect; the menu holds one titled group
+        // per dimension, active values check-marked as before.
+        var settings = DwPowerToolsSettings.Current;
+        var groups = new List<ActionGroup>();
+        var labelParts = new List<string>();
+
         var currencies = SafeList(DwCommerceExplainer.Currencies);
         if (currencies.Count > 1)
         {
-            ToolbarSwitch.Add(layout, string.IsNullOrEmpty(q.CurrencyCode) ? "Currency" : q.CurrencyCode, Icon.Coins,
-                currencies.Select(c => ToolbarSwitch.Option($"{c.Code}{(c.Name != c.Code ? $" - {c.Name}" : "")}",
-                    active: c.Code == q.CurrencyCode, Navigate(q, x => x.CurrencyCode = c.Code))));
+            groups.Add(new ActionGroup
+            {
+                Title = "Currency",
+                Nodes = currencies.Select(c => ToolbarSwitch.Option($"{c.Code}{(c.Name != c.Code ? $" - {c.Name}" : "")}",
+                    active: c.Code == q.CurrencyCode, Navigate(q, x => x.CurrencyCode = c.Code))).ToList()
+            });
+            if (!string.IsNullOrEmpty(q.CurrencyCode))
+                labelParts.Add(q.CurrencyCode);
         }
 
         var shops = SafeList(DwCommerceExplainer.Shops);
         if (shops.Count > 1)
         {
+            groups.Add(new ActionGroup
+            {
+                Title = "Shop",
+                Nodes = shops.Select(shop => ToolbarSwitch.Option(shop.Name, active: shop.Id == q.ShopId,
+                    Navigate(q, x => x.ShopId = shop.Id))).ToList()
+            });
             var current = shops.FirstOrDefault(shop => shop.Id == q.ShopId);
-            ToolbarSwitch.Add(layout, string.IsNullOrEmpty(current.Name) ? "Shop" : current.Name, Icon.ShoppingCart,
-                shops.Select(shop => ToolbarSwitch.Option(shop.Name, active: shop.Id == q.ShopId, Navigate(q, x => x.ShopId = shop.Id))));
+            if (!string.IsNullOrEmpty(current.Name))
+                labelParts.Add(Shorten(current.Name));
         }
 
-        var settings = DwPowerToolsSettings.Current;
-
-        ToolbarSwitch.Add(layout, $"Qty {q.Quantity:0.##}", Icon.Cube,
-            settings.Quantities().Select(qty => ToolbarSwitch.Option($"{qty:0.##}", active: Math.Abs(qty - q.Quantity) < 0.0001,
-                Navigate(q, x => x.Quantity = qty))));
+        groups.Add(new ActionGroup
+        {
+            Title = "Quantity",
+            Nodes = settings.Quantities().Select(qty => ToolbarSwitch.Option($"{qty:0.##}",
+                active: Math.Abs(qty - q.Quantity) < 0.0001, Navigate(q, x => x.Quantity = qty))).ToList()
+        });
+        labelParts.Add($"×{q.Quantity:0.##}");
 
         var today = DateTime.Today;
         var dateOptions = new List<ActionNode> { ToolbarSwitch.Option("Now", active: string.IsNullOrEmpty(q.Date), Navigate(q, x => x.Date = string.Empty)) };
@@ -240,7 +263,10 @@ public sealed class PriceExplainToolbarInjector : ScreenInjector<PriceExplainScr
             var date = today.AddDays(days).ToString("yyyy-MM-dd");
             return ToolbarSwitch.Option($"+{days} days ({date})", active: q.Date == date, Navigate(q, x => x.Date = date));
         }));
-        ToolbarSwitch.Add(layout, string.IsNullOrEmpty(q.Date) ? "Now" : q.Date, Icon.CalendarAlt, dateOptions);
+        groups.Add(new ActionGroup { Title = "Date", Nodes = dateOptions });
+        labelParts.Add(string.IsNullOrEmpty(q.Date) ? "Now" : q.Date);
+
+        ToolbarSwitch.AddMenu(layout, string.Join(" · ", labelParts), Icon.SlidersV, groups);
 
         // Opens the storefront PDP in a new tab — the mapped (or auto-detected) product page
         // with the product in context. Renders as the browser's own frontend session.
@@ -260,6 +286,10 @@ public sealed class PriceExplainToolbarInjector : ScreenInjector<PriceExplainScr
             return null;
         }
     }
+
+    /// <summary>A shop name short enough for the context label — the menu shows it in full.</summary>
+    private static string Shorten(string name) =>
+        name.Length <= 16 ? name : name[..15].TrimEnd() + "…";
 
     private static NavigateScreenAction Navigate(PriceExplainQuery q, Action<PriceExplainQuery> change)
     {

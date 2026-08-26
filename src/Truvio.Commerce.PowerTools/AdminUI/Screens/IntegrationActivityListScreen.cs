@@ -15,7 +15,7 @@ namespace Truvio.Commerce.PowerTools.AdminUI.Screens;
 /// </summary>
 public sealed class IntegrationActivityListScreen : ListScreenBase<IntegrationActivityModel>
 {
-    protected override string GetScreenName() => "Operations - integration activities";
+    protected override string GetScreenName() => "Integration activities";
 
 #if DW_HAS_SCREEN_EXPLANATION
     protected override string? GetScreenExplanation() =>

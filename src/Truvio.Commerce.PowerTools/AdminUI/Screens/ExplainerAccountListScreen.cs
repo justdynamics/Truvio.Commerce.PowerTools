@@ -12,7 +12,7 @@ namespace Truvio.Commerce.PowerTools.AdminUI.Screens;
 /// <summary>Step 1 of the Price Explainer: pick the account to explain prices for.</summary>
 public sealed class ExplainerAccountListScreen : ListScreenBase<ExplainerAccountModel>
 {
-    protected override string GetScreenName() => "Price Explainer - accounts";
+    protected override string GetScreenName() => "Accounts";
 
 #if DW_HAS_SCREEN_EXPLANATION
     protected override string? GetScreenExplanation() =>

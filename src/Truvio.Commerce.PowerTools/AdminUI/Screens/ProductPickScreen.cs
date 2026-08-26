@@ -15,7 +15,7 @@ public sealed class ProductPickScreen : ListScreenBase<ProductPickModel>
 {
     private string AccountKey => (Query as ProductPickQuery)?.AccountKey ?? string.Empty;
 
-    protected override string GetScreenName() => "Price Explainer - products";
+    protected override string GetScreenName() => "Products";
 
 #if DW_HAS_SCREEN_EXPLANATION
     protected override string? GetScreenExplanation() =>
