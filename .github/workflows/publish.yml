@@ -18,6 +18,11 @@ on:
       - 'v*'
   workflow_dispatch:
 
+env:
+  # The minimum Dynamicweb version the package binds to. Keep in sync with README ("Requires
+  # Dynamicweb 10.8 or newer") and the floor builds referenced throughout docs/.
+  DW_FLOOR: 10.8.4
+
 jobs:
   publish:
     runs-on: windows-latest
@@ -33,14 +38,29 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      # Everything below builds against the verified minimum platform version (the floor): the
+      # app then installs on any DW 10.8+ host. A DLL compiled against a newer DW version is
+      # silently skipped by older hosts (AddInManager logs "Could not load file or assembly
+      # 'Dynamicweb.CoreUI, Version=10.28.1.0'" and the PowerTools area never appears).
+      # Hosts 10.23-/10.24- get solid badges / no screen subtitles via feature gates.
+      #
+      # Test and Pack MUST use the same DynamicwebVersion: MSBuild's incremental build reuses the
+      # Release DLL the Test step produced, so a Test at the default (newest) version followed by
+      # a Pack at the floor ships a newest-version DLL inside a floor-labelled package. That is
+      # exactly what happened for 0.9.1-beta .. 0.11.1-beta. The Verify step is the backstop.
       - name: Test
-        run: dotnet test tests/Truvio.Commerce.PowerTools.Tests --configuration Release
+        run: dotnet test tests/Truvio.Commerce.PowerTools.Tests --configuration Release -p:DynamicwebVersion=${{ env.DW_FLOOR }}
 
-      # Packed against the verified minimum platform version — the app then installs on any
-      # DW 10.8+ host (a DLL compiled against a newer DW version is silently skipped by older
-      # hosts). Hosts 10.23-/10.24- get solid badges / no screen subtitles via feature gates.
       - name: Pack
-        run: dotnet pack src/Truvio.Commerce.PowerTools/Truvio.Commerce.PowerTools.csproj --configuration Release -p:DynamicwebVersion=10.8.4 --output artifacts
+        run: dotnet pack src/Truvio.Commerce.PowerTools/Truvio.Commerce.PowerTools.csproj --configuration Release -p:DynamicwebVersion=${{ env.DW_FLOOR }} --output artifacts
+
+      # Reads the assembly references out of the packed DLL and fails the run unless every
+      # Dynamicweb.* reference binds to the floor. Never ship a package this step did not pass.
+      - name: Verify floor binding
+        shell: pwsh
+        run: |
+          $pkg = Get-ChildItem artifacts -Filter '*.nupkg' | Select-Object -First 1
+          ./.github/scripts/verify-floor-binding.ps1 -Package $pkg.FullName -Floor ${{ env.DW_FLOOR }}
 
       # Exchanges the GitHub OIDC token for a short-lived nuget.org API key.
       - name: NuGet login (trusted publishing)

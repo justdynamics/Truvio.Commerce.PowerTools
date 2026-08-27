@@ -97,5 +97,8 @@ dotnet build
 dotnet test
 ```
 
-Pack happens on build (`GeneratePackageOnBuild`). Publishing: tag `v*` → GitHub Actions
-tests, packs, and pushes to NuGet via Trusted Publishing.
+Pack happens on build (`GeneratePackageOnBuild`). A local build binds to the newest platform
+version (`DynamicwebVersion` in the csproj); pass `-p:DynamicwebVersion=10.27.9` to build for a
+specific host. Publishing: tag `v*` → GitHub Actions tests and packs at the 10.8.4 floor, verifies
+that every `Dynamicweb.*` reference in the packed DLL binds to that floor
+(`.github/scripts/verify-floor-binding.ps1`), and pushes to NuGet via Trusted Publishing.
