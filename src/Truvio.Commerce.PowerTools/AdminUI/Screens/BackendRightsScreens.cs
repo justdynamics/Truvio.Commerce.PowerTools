@@ -55,13 +55,7 @@ public sealed class BackendRightsListScreen : ListScreenBase<BackendUserModel>
         {
             nameof(BackendUserModel.BackendAccess) when !string.IsNullOrEmpty(model.BackendAccess) =>
                 Badges.Visible(model.BackendAccess == "Yes", model.BackendAccess),
-            nameof(BackendUserModel.Status) =>
-                Badges.AccountKind(model.Status switch
-                {
-                    "Elevated" => "Role",
-                    "Administrator" => "Group",
-                    _ => "User"
-                }) is { } cell && model.Status is "Elevated" or "Administrator" ? cell : null,
+            nameof(BackendUserModel.Status) => Badges.BackendStatus(model.Status),
             _ => null
         };
     }

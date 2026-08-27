@@ -85,6 +85,18 @@ internal static class Badges
             }
         });
 
+    /// <summary>
+    /// The backend account's effective STATUS, not its kind: an Administrator is a user, never a
+    /// group, so this renders the status word itself. Amber for the accounts that bypass every
+    /// check, primary for the Administrator user type, plain text for the unremarkable rest.
+    /// </summary>
+    public static Cell? BackendStatus(string status) => status switch
+    {
+        "Elevated" => Cell.MakeCell(new Badge { Value = status, BadgeType = BadgeType.Warning }),
+        "Administrator" => Cell.MakeCell(new Badge { Value = status, BadgeType = BadgeType.Primary }),
+        _ => null
+    };
+
     public static Cell AccountKind(string kind) =>
         Cell.MakeCell(new Badge
         {
