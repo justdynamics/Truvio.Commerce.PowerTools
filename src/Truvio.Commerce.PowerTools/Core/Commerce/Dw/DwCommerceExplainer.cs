@@ -147,7 +147,11 @@ public sealed class DwCommerceExplainer
             warnings.Add("Two or more matching price rows share the lowest amount — DW takes whichever the database returns first, so the winning row is order-dependent");
 
         // ---- DW's own price -----------------------------------------------------------------
-        var dwPrice = PriceManager.GetPrice(priceContext, product, product.DefaultUnitId, 0);
+        // Not PriceManager.GetPrice: that overload builds a PriceProductSelection without a
+        // quantity (so DW prices at quantity 1, and price providers see Quantity = 1) and caches
+        // the result under a key that ignores quantity. FindPrice with an explicit selection runs
+        // the same provider chain for the requested quantity (issue #1).
+        var dwPrice = FindDwPrice(priceContext, product, quantity);
         var providers = InstalledPriceProviders();
         var exclusive = providers.Where(p => p.Exclusive).Select(p => p.Name).ToList();
         var dwSource = dwPrice.PriceSource switch
@@ -299,6 +303,29 @@ public sealed class DwCommerceExplainer
         catch
         {
             return [];
+        }
+    }
+
+    /// <summary>
+    /// DW's price for the requested quantity, with the price source preserved. Mirrors the
+    /// private PriceManager.CalculatePrice: a provider may return a finished PriceInfo
+    /// (IPriceInfoProvider) or a PriceRaw that still needs VAT and rounding applied.
+    /// </summary>
+    private static PriceInfo FindDwPrice(PriceContext priceContext, Product product, double quantity)
+    {
+        var selection = new PriceProductSelection(product, product.DefaultUnitId, 0, quantity, 0);
+        var found = PriceManager.FindPrice(priceContext, selection, isInformative: false);
+        switch (found)
+        {
+            case PriceInfo info:
+                return info;
+            case PriceRaw raw:
+                var calculated = PriceCalculated.Create(priceContext, raw, product);
+                calculated.IsInformative = false;
+                calculated.Calculate();
+                return calculated;
+            default:
+                return new PriceInfo(priceContext.Currency);
         }
     }
 
