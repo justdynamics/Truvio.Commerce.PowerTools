@@ -29,7 +29,7 @@ public interface IContentSecuritySource
     IReadOnlyList<int> GetPagesWithLegacyPermissionValues();
 
     /// <summary>
-    /// Paragraph ids whose legacy EcomParagraph.ParagraphPermission column is non-empty.
+    /// Paragraph ids whose legacy Paragraph.ParagraphPermission column is non-empty.
     /// </summary>
     IReadOnlyList<int> GetParagraphsWithLegacyPermissionValues();
 }

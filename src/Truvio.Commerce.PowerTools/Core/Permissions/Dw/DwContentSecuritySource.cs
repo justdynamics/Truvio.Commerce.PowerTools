@@ -48,15 +48,37 @@ public sealed class DwContentSecuritySource : IContentSecuritySource
             .ToHashSet(StringComparer.Ordinal);
 
     public IReadOnlyList<int> GetPagesWithLegacyPermissionValues() =>
-        ReadIds("SELECT PageID FROM [Page] WHERE PagePermission IS NOT NULL AND PagePermission <> ''");
+        ReadLegacyIds("Page", "PageID", "PagePermission");
 
-    public IReadOnlyList<int> GetParagraphsWithLegacyPermissionValues()
+    public IReadOnlyList<int> GetParagraphsWithLegacyPermissionValues() =>
+        ReadLegacyIds("Paragraph", "ParagraphID", "ParagraphPermission");
+
+    /// <summary>
+    /// Reads the ids whose legacy permission column is populated. The column is checked in
+    /// INFORMATION_SCHEMA first: a schema without it yields no findings instead of a failed
+    /// query, because DW logs every failed SQL statement to the event log before throwing.
+    /// </summary>
+    private static List<int> ReadLegacyIds(string table, string idColumn, string permissionColumn)
     {
-        // The paragraph table name has differed across installs; probe both known shapes.
-        var ids = ReadIds("SELECT ParagraphID FROM [Paragraph] WHERE ParagraphPermission IS NOT NULL AND ParagraphPermission <> ''");
-        return ids.Count > 0
-            ? ids
-            : ReadIds("SELECT ParagraphID FROM [EcomParagraph] WHERE ParagraphPermission IS NOT NULL AND ParagraphPermission <> ''");
+        if (!ColumnExists(table, permissionColumn))
+            return new List<int>();
+        return ReadIds($"SELECT [{idColumn}] FROM [{table}] WHERE [{permissionColumn}] IS NOT NULL AND [{permissionColumn}] <> ''");
+    }
+
+    private static bool ColumnExists(string table, string column)
+    {
+        try
+        {
+            var sql = CommandBuilder.Create(
+                "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = {0} AND COLUMN_NAME = {1}",
+                table,
+                column);
+            return Convert.ToInt32(Database.ExecuteScalar(sql)) > 0;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static List<int> ReadIds(string sql)
@@ -70,7 +92,7 @@ public sealed class DwContentSecuritySource : IContentSecuritySource
         }
         catch
         {
-            // Legacy columns can be absent on newer schemas; a failed probe simply yields no findings.
+            // Defensive only: the column existence check above keeps this from being reached on a known schema.
         }
         return ids;
     }

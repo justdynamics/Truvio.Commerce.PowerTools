@@ -4,7 +4,7 @@ namespace Truvio.Commerce.PowerTools.Core.Diagnostics.Rules;
 
 /// <summary>
 /// The DW10 runtime resolves render-time permissions from the permission entity store only;
-/// the legacy Page.PagePermission / EcomParagraph.ParagraphPermission columns are ignored.
+/// the legacy Page.PagePermission / Paragraph.ParagraphPermission columns are ignored.
 /// A populated legacy value means someone believes content is gated when it is not.
 /// </summary>
 public sealed class LegacyPermissionColumnRule : IWarningRule
