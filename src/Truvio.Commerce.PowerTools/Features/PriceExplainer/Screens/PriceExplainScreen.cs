@@ -1,5 +1,4 @@
 using System.Net;
-using Dynamicweb.CoreUI;
 using System.Text;
 using Dynamicweb.CoreUI.Actions;
 using Dynamicweb.CoreUI.Actions.Implementations;

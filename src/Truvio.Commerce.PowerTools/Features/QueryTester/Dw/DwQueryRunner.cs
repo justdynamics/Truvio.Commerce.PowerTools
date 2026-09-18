@@ -25,7 +25,7 @@ namespace Truvio.Commerce.PowerTools.Features.QueryTester.Dw;
 /// </para>
 /// <para>
 /// Clause paths are the same strings <see cref="DwSearchSource.MapExpression"/> produces
-/// ("1", "1.2", "1.2.3"), so a <see cref="Testing.ClauseTrace"/> and the live expression tree
+/// ("1", "1.2", "1.2.3"), so a <see cref="ClauseTrace"/> and the live expression tree
 /// address the same node.
 /// </para>
 /// </summary>

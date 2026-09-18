@@ -1,11 +1,4 @@
-using Dynamicweb.CoreUI;
-using Dynamicweb.CoreUI.Actions.Implementations.Components.Selector;
 using Dynamicweb.CoreUI.Data;
-using Dynamicweb.CoreUI.Data.Filtering;
-using Dynamicweb.CoreUI.Editors.Selectors;
-using Dynamicweb.CoreUI.Lists;
-using Dynamicweb.CoreUI.Lists.ViewMappings;
-using Dynamicweb.CoreUI.Screens;
 
 namespace Truvio.Commerce.PowerTools.Features.PimQuality.Selectors;
 

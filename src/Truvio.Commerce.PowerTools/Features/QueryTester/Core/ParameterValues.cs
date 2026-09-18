@@ -1,6 +1,5 @@
 using System.Text;
 using Truvio.Commerce.PowerTools.Features.IndexInspector.Core;
-using Truvio.Commerce.PowerTools.Features.PimQuality.Core.Rules;
 
 namespace Truvio.Commerce.PowerTools.Features.QueryTester.Core;
 

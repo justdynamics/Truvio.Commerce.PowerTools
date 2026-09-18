@@ -1,4 +1,3 @@
-using System.Globalization;
 using Dynamicweb.CoreUI.Data;
 using Truvio.Commerce.PowerTools.Features.PimQuality.Core;
 using Truvio.Commerce.PowerTools.Features.PimQuality.Models;

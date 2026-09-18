@@ -1,12 +1,3 @@
-using Dynamicweb.Configuration;
-using Dynamicweb.Ecommerce;
-using Dynamicweb.Ecommerce.International;
-using Dynamicweb.Ecommerce.Orders.Discounts;
-using Dynamicweb.Ecommerce.Prices;
-using Dynamicweb.Ecommerce.Products;
-using Dynamicweb.Ecommerce.Shops;
-using Dynamicweb.Security.UserManagement;
-
 namespace Truvio.Commerce.PowerTools.Features.PriceExplainer.Dw;
 
 /// <summary>The inputs of one explanation: who, what, and under which commercial context.</summary>

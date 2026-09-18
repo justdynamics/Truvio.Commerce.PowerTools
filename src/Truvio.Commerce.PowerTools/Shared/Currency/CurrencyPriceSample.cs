@@ -1,5 +1,3 @@
-using System.Globalization;
-
 namespace Truvio.Commerce.PowerTools.Shared.Currency;
 
 /// <summary>

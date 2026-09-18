@@ -43,7 +43,7 @@ language switch, both in the top bar next to Actions. Every scope is a shareable
 
 ## Rules
 
-Pure, in `Core/Pim/Rules/`, unit-tested against hand-built snapshots. Ids are stable.
+Pure, in `Features/PimQuality/Core/Rules/`, unit-tested against hand-built snapshots. Ids are stable.
 
 The thresholds below are the shipped defaults; PIM-W1's 60 %, PIM-W2's 25 % share and the product scan
 cap are all configurable under **PowerTools ▸ Settings**.

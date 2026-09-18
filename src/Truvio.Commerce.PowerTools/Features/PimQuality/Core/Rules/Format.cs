@@ -1,5 +1,4 @@
 using System.Globalization;
-using Truvio.Commerce.PowerTools.Features.PimQuality.Core;
 
 namespace Truvio.Commerce.PowerTools.Features.PimQuality.Core.Rules;
 

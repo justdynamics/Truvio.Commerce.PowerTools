@@ -12,12 +12,12 @@ Permission: **any** PowerTools function grant with Read opens the screen; **Edit
 
 | Piece | Type | What it does |
 |---|---|---|
-| `AdminUI/Models/PowerToolsSettingsModel.cs` | `SettingsViewModelBase` | Every property carries `[Settings(path, default)]` + `[ConfigurableProperty(label, hint)]`. The base constructor calls `SettingsService.Load(this)`, which fills the properties from GlobalSettings. |
-| `AdminUI/Queries/PowerToolsSettingsQuery.cs` | `DataQueryModelBase<…>` | `GetModel()` is just `new PowerToolsSettingsModel()` — constructing it *is* the load. It also sets `PermissionLevelCurrentUser`. |
-| `AdminUI/Screens/PowerToolsSettingsScreen.cs` | `EditScreenBase<…>` | Groups the editors into five tabs; `GetEditor` swaps in `Textarea` / `Number` (with an `Append` unit) where the default editor is wrong. |
-| `AdminUI/Commands/PowerToolsSettingsSaveCommand.cs` | `CommandBase<…>` | Re-checks Edit, then `SettingsService.Persist(model)`. |
-| `Core/Settings/PowerToolsSettingKeys.cs` | — | Every key path and every shipped default, as `const`s (attributes need compile-time constants). |
-| `Core/Settings/PowerToolsSettings.cs` | pure record | What the tools actually read: parsing, matching and finding-suppression rules, unit-tested. |
+| `Features/Settings/Models/PowerToolsSettingsModel.cs` | `SettingsViewModelBase` | Every property carries `[Settings(path, default)]` + `[ConfigurableProperty(label, hint)]`. The base constructor calls `SettingsService.Load(this)`, which fills the properties from GlobalSettings. |
+| `Features/Settings/Queries/PowerToolsSettingsQuery.cs` | `DataQueryModelBase<…>` | `GetModel()` is just `new PowerToolsSettingsModel()` — constructing it *is* the load. It also sets `PermissionLevelCurrentUser`. |
+| `Features/Settings/Screens/PowerToolsSettingsScreen.cs` | `EditScreenBase<…>` | Groups the editors into five tabs; `GetEditor` swaps in `Textarea` / `Number` (with an `Append` unit) where the default editor is wrong. |
+| `Features/Settings/Commands/PowerToolsSettingsSaveCommand.cs` | `CommandBase<…>` | Re-checks Edit, then `SettingsService.Persist(model)`. |
+| `Features/Settings/Core/PowerToolsSettingKeys.cs` | — | Every key path and every shipped default, as `const`s (attributes need compile-time constants). |
+| `Features/Settings/Core/PowerToolsSettings.cs` | pure record | What the tools actually read: parsing, matching and finding-suppression rules, unit-tested. |
 | `Core/Settings/Dw/DwPowerToolsSettings.cs` | Dw adapter | `Current` — reads the keys out of `SystemConfiguration.Instance`, defaults in memory. |
 
 This is a straight copy of how DW builds its own settings screens (decompiled at 10.8.4:

@@ -1,6 +1,3 @@
-using System.Globalization;
-using Truvio.Commerce.PowerTools.Features.IndexInspector.Core;
-
 namespace Truvio.Commerce.PowerTools.Features.IndexInspector.Core.Rules;
 
 /// <summary>The rule set the linter runs, in rule-id order.</summary>

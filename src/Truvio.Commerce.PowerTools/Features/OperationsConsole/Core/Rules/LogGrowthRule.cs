@@ -1,4 +1,3 @@
-using Truvio.Commerce.PowerTools.Features.OperationsConsole.Core;
 using Truvio.Commerce.PowerTools.Shared.Diagnostics;
 
 namespace Truvio.Commerce.PowerTools.Features.OperationsConsole.Core.Rules;

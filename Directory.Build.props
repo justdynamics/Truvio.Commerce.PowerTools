@@ -1,0 +1,23 @@
+<Project>
+
+  <!-- Repository-wide build rules. Applies to every project under this folder. -->
+
+  <PropertyGroup>
+    <!-- Run the IDE style analyzers (IDE0130 namespace-matches-folder, IDE0005 unused usings)
+         as part of the build so the layout rules below are enforced in CI, not only in the editor. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- IDE0005 (unused usings) is only reported at build time when documentation is generated. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- Public members without XML docs are fine (CS1591), and a record may document only some of
+         its positional parameters (CS1573). -->
+    <NoWarn>$(NoWarn);CS1591;CS1573</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Only two rules are enabled (see .editorconfig): one type per file (SA1402) and file name
+         matches the type name (SA1649). -->
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" PrivateAssets="all" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="stylecop.json" Visible="false" />
+  </ItemGroup>
+
+</Project>

@@ -1,4 +1,3 @@
-using Truvio.Commerce.PowerTools.Features.OperationsConsole.Core;
 using Truvio.Commerce.PowerTools.Shared.Currency;
 using Truvio.Commerce.PowerTools.Shared.Diagnostics;
 

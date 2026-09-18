@@ -1,16 +1,10 @@
-using System.Net;
 using Dynamicweb.CoreUI;
-using System.Text;
-using Dynamicweb.CoreUI.Actions;
 using Dynamicweb.CoreUI.Actions.Implementations;
-using Dynamicweb.CoreUI.Displays.Information;
-using Dynamicweb.CoreUI.Displays.Widgets;
 using Dynamicweb.CoreUI.Layout;
 using Dynamicweb.CoreUI.Screens;
 using Icon = Dynamicweb.CoreUI.Icons.Icon;
 using Truvio.Commerce.PowerTools.Features.PriceExplainer.Dw;
 using Truvio.Commerce.PowerTools.Features.PriceExplainer.Queries;
-using Truvio.Commerce.PowerTools.Features.PriceExplainer.Selectors;
 using Truvio.Commerce.PowerTools.Features.ProductPreview.Dw;
 using Truvio.Commerce.PowerTools.Shared.AdminUI;
 

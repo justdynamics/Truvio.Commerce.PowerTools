@@ -1,7 +1,6 @@
 using Dynamicweb.CoreUI.Data;
 using Dynamicweb.Ecommerce;
 using Dynamicweb.Ecommerce.Products;
-using Truvio.Commerce.PowerTools.Features.PimQuality.Core.Rules;
 using Truvio.Commerce.PowerTools.Features.PriceExplainer.Models;
 using Truvio.Commerce.PowerTools.Features.Settings.Core;
 using Truvio.Commerce.PowerTools.Features.Settings.Dw;

@@ -1,5 +1,3 @@
-using Dynamicweb.CoreUI.Data;
-
 namespace Truvio.Commerce.PowerTools.Features.OperationsConsole.Models;
 
 /// <summary>

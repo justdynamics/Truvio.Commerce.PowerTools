@@ -1,5 +1,4 @@
 using Truvio.Commerce.PowerTools.Features.ContentAccess.Core;
-using Truvio.Commerce.PowerTools.Features.ContentWarnings.Core;
 using Truvio.Commerce.PowerTools.Shared.Diagnostics;
 
 namespace Truvio.Commerce.PowerTools.Features.ContentWarnings.Core.Rules;

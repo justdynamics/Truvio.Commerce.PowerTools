@@ -1,5 +1,3 @@
-using Truvio.Commerce.PowerTools.Features.PimQuality.Dw;
-
 namespace Truvio.Commerce.PowerTools.Features.PimQuality.Core;
 
 /// <summary>

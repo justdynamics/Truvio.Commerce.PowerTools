@@ -1,5 +1,3 @@
-using Truvio.Commerce.PowerTools.Features.ContentAccess.Dw;
-
 namespace Truvio.Commerce.PowerTools.Features.ContentAccess.Core;
 
 /// <summary>

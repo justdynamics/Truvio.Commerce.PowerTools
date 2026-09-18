@@ -3,7 +3,6 @@ using Dynamicweb.CoreUI.Data;
 using Truvio.Commerce.PowerTools.Features.PriceExplainer.Core;
 using Truvio.Commerce.PowerTools.Features.PriceExplainer.Dw;
 using Truvio.Commerce.PowerTools.Features.PriceExplainer.Models;
-using Truvio.Commerce.PowerTools.Features.PriceExplainer.Selectors;
 using Truvio.Commerce.PowerTools.Features.Settings.Core;
 using Truvio.Commerce.PowerTools.Features.Settings.Dw;
 using Truvio.Commerce.PowerTools.Shared.AdminUI;

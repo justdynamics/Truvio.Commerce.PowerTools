@@ -196,14 +196,13 @@ All read out of the shipped assemblies with `ilspycmd`; the package is `Dynamicw
 
 ## Code layout
 
-- `Core/Search/Testing/ParameterValues.cs` — the `name=value;name2=value` URL syntax, the
+- `Features/QueryTester/Core/ParameterValues.cs` — the `name=value;name2=value` URL syntax, the
   `#`-prefixed tester settings, and the "empty means omit" rule.
-- `Core/Search/Testing/ClauseTrace.cs` — `ClauseVerdict`, `ValueOrigin`, `ClauseTrace`,
+- `Features/QueryTester/Core/ClauseTrace.cs` — `ClauseVerdict`, `ValueOrigin`, `ClauseTrace`,
   `Suggestion`, `RunInputs`, `ClauseImpact`, `ExpectationCheck`.
-- `Core/Search/Testing/QueryDiagnosis.cs` — pure: specs + values → trace + suggestions, and the
+- `Features/QueryTester/Core/QueryDiagnosis.cs` — pure: specs + values → trace + suggestions, and the
   measured/expectation suggestion sets.
-- `Core/Search/Dw/DwQueryRunner.cs` — the live runs (whole query, one clause off, one clause
+- `Features/QueryTester/Dw/DwQueryRunner.cs` — the live runs (whole query, one clause off, one clause
   alone, one clause against one key), macro resolution, and facet counts.
-- `AdminUI/Queries/QueryTestQueries.cs`, `AdminUI/Screens/QueryTestScreens.cs`,
-  `AdminUI/Models/QueryTestModels.cs`, `AdminUI/Tree/SearchTestingNavigationPaths.cs`.
-- `tests/…/QueryDiagnosisTests.cs`, `tests/…/ParameterValuesTests.cs`.
+- `Features/QueryTester/{Queries,Screens,Models,Navigation}/` — the admin UI, one type per file.
+- `tests/…/Features/QueryTester/QueryDiagnosisTests.cs`, `ParameterValuesTests.cs`.

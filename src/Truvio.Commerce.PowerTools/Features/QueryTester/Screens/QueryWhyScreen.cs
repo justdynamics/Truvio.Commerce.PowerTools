@@ -1,13 +1,6 @@
-using Dynamicweb.CoreUI.Actions;
-using Dynamicweb.CoreUI.Actions.Implementations;
 using Dynamicweb.CoreUI.Displays.Information;
-using Dynamicweb.CoreUI.Displays.Widgets;
 using Dynamicweb.CoreUI.Layout;
-using Dynamicweb.CoreUI.Data;
-using Dynamicweb.CoreUI.Lists;
-using Dynamicweb.CoreUI.Lists.ViewMappings;
 using Dynamicweb.CoreUI.Screens;
-using Icon = Dynamicweb.CoreUI.Icons.Icon;
 using Truvio.Commerce.PowerTools.Features.QueryTester.Models;
 
 namespace Truvio.Commerce.PowerTools.Features.QueryTester.Screens;

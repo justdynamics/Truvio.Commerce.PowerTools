@@ -6,7 +6,6 @@ using Dynamicweb.Ecommerce.Prices;
 using Dynamicweb.Ecommerce.Products;
 using Dynamicweb.Ecommerce.Shops;
 using Dynamicweb.Security.UserManagement;
-using Truvio.Commerce.PowerTools.Features.PimQuality.Core.Rules;
 using Truvio.Commerce.PowerTools.Features.PriceExplainer.Core;
 using Truvio.Commerce.PowerTools.Shared.Currency;
 

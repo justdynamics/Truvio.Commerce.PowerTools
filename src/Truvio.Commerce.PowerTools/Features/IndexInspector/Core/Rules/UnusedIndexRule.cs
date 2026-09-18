@@ -1,5 +1,3 @@
-using System.Globalization;
-using Truvio.Commerce.PowerTools.Features.IndexInspector.Core;
 using Truvio.Commerce.PowerTools.Shared.Diagnostics;
 
 namespace Truvio.Commerce.PowerTools.Features.IndexInspector.Core.Rules;

@@ -1,5 +1,4 @@
 using Dynamicweb.CoreUI.Data;
-using Truvio.Commerce.PowerTools.Features.PimQuality.Core.Rules;
 using Truvio.Commerce.PowerTools.Features.QueryTester.Core;
 using Truvio.Commerce.PowerTools.Features.QueryTester.Models;
 using Truvio.Commerce.PowerTools.Features.QueryTester.Queries;

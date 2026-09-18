@@ -1,5 +1,4 @@
 using Dynamicweb.CoreUI;
-using Dynamicweb.CoreUI.Actions;
 using Dynamicweb.CoreUI.Actions.Implementations.Components.Selector;
 using Dynamicweb.CoreUI.Data;
 using Dynamicweb.CoreUI.Data.Filtering;

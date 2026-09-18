@@ -1,8 +1,5 @@
-using Dynamicweb.CoreUI.Actions;
 using Dynamicweb.CoreUI.Actions.Implementations;
 using Dynamicweb.CoreUI.Icons;
-using Dynamicweb.CoreUI.Lists;
-using Dynamicweb.CoreUI.Lists.ViewMappings;
 using Dynamicweb.CoreUI.Screens;
 using Truvio.Commerce.PowerTools.Features.OperationsConsole.Queries;
 using Truvio.Commerce.PowerTools.Shared.AdminUI;

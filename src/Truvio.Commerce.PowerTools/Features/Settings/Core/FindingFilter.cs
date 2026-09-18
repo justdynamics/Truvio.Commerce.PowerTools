@@ -1,5 +1,3 @@
-using System.Globalization;
-using Shipped = Truvio.Commerce.PowerTools.Features.Settings.Core.PowerToolsSettingKeys.Defaults;
 using Truvio.Commerce.PowerTools.Shared.Diagnostics;
 
 namespace Truvio.Commerce.PowerTools.Features.Settings.Core;

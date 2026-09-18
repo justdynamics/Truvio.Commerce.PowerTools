@@ -1,6 +1,3 @@
-using Dynamicweb.CoreUI.Actions.Implementations;
-using Dynamicweb.CoreUI.Application;
-using Dynamicweb.CoreUI.Icons;
 using Dynamicweb.CoreUI.Navigation;
 
 namespace Truvio.Commerce.PowerTools.Shared.Navigation;

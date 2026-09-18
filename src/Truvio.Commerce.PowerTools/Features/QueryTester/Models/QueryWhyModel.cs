@@ -1,5 +1,4 @@
 using Dynamicweb.CoreUI.Data;
-using Dynamicweb.CoreUI.Data.DynamicFields;
 
 namespace Truvio.Commerce.PowerTools.Features.QueryTester.Models;
 

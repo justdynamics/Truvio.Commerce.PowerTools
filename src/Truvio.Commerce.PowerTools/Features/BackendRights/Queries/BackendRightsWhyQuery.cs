@@ -1,4 +1,3 @@
-using System.Globalization;
 using Dynamicweb.CoreUI.Data;
 using Truvio.Commerce.PowerTools.Features.BackendRights.Core;
 using Truvio.Commerce.PowerTools.Features.BackendRights.Dw;

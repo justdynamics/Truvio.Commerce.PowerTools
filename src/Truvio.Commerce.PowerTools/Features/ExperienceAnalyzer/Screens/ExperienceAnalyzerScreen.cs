@@ -1,4 +1,3 @@
-using Dynamicweb.CoreUI;
 using Dynamicweb.CoreUI.Actions;
 using Dynamicweb.CoreUI.Actions.Implementations;
 using Dynamicweb.CoreUI.Displays.Information;

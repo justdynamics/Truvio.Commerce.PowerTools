@@ -1,6 +1,3 @@
-using System.Globalization;
-using Dynamicweb.CoreUI.Data;
-
 namespace Truvio.Commerce.PowerTools.Features.PimQuality.Queries;
 
 /// <summary>Sentinel ids used by the PIM toolbar pickers.</summary>

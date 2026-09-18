@@ -3,7 +3,6 @@ using Dynamicweb.CoreUI.Data;
 using Truvio.Commerce.PowerTools.Features.IndexInspector.Core;
 using Truvio.Commerce.PowerTools.Features.IndexInspector.Dw;
 using Truvio.Commerce.PowerTools.Features.IndexInspector.Models;
-using Truvio.Commerce.PowerTools.Features.PimQuality.Core.Rules;
 using Truvio.Commerce.PowerTools.Shared.AdminUI;
 
 namespace Truvio.Commerce.PowerTools.Features.IndexInspector.Queries;
