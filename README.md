@@ -9,6 +9,8 @@ Compatible with **Dynamicweb 10.8 and newer** (the published package is compiled
 the 10.8 API; hosts below 10.23/10.24 get solid instead of outlined badges and no screen
 subtitles — everything else is identical).
 
+Proven on Dynamicweb release ring R1 (milestone 10.28, .NET 10); installs on 10.8.4 or newer.
+
 Found a problem or have an idea? [Report it on GitHub](https://github.com/justdynamics/Truvio.Commerce.PowerTools/issues).
 
 ## Tools
