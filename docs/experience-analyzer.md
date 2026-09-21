@@ -90,7 +90,7 @@ cannot stand out against itself.
   Viewer, so a verdict here and a verdict there can never disagree.
 - Explanations come from `AccessExplanation`, so the wording matches the viewer's ("Gated here: …
   Only 'X' can see it").
-- Comparison and bucketing live in `Core/Permissions/ExperienceComparison.cs` — pure, no Dynamicweb
+- Comparison and bucketing live in `Features/ExperienceAnalyzer/Core/ExperienceComparer.cs` — pure, no Dynamicweb
   types, unit-tested against hand-built page sets including the baseline cases and the row cap.
 - Accounts resolve through `SecurityAccount` keys (`role:Anonymous`, `group:42`, `user:17`), so every
   state of the screen is a shareable URL.

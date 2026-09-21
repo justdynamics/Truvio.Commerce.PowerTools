@@ -26,7 +26,7 @@ short columns for the same reason.
 
 ## Rules
 
-Pure, in `Core/Operations/Rules/`, unit-tested against hand-built snapshots. Ids are stable.
+Pure, in `Features/OperationsConsole/Core/Rules/`, unit-tested against hand-built snapshots. Ids are stable.
 
 The thresholds below are the shipped defaults; OPS-W2's 2×, OPS-W6's sizes and OPS-W8's share are
 configurable under **PowerTools ▸ Settings** (see `docs/settings.md`), as are the recent-changes

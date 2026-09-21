@@ -159,13 +159,16 @@ rather than dropping the clause — so IDX-W1 leaves `IsEmpty` clauses alone.
 
 ## Code layout
 
-- `Core/Search/SearchSpecs.cs` — the DW-free records (`RepositorySpec`, `IndexSpec`,
+All under `Features/IndexInspector/`:
+
+- `Core/` — the DW-free records, one per file (`RepositorySpec`, `IndexSpec`,
   `IndexFieldSpec`, `IndexInstanceSpec`, `QuerySpec`, `QueryGroupSpec`/`QueryClauseSpec`,
   `FacetGroupSpec`) and `ISearchSource`.
-- `Core/Search/SearchCatalog.cs` — resolves queries and facet groups onto their index.
-- `Core/Search/LuceneSemantics.cs` — the drop/collapse semantics above, in one place.
-- `Core/Search/Rules/*.cs` — `IQueryLintRule` implementations IDX-W1..IDX-W17.
-- `Core/Search/FieldUsageMap.cs` — the where-used report.
-- `Core/Search/Dw/DwSearchSource.cs` — reads the repositories through DW's public API.
-- `Core/Search/Dw/DwIndexDocuments.cs` — the live document read and the product comparison.
-- `tests/…/QueryLintRuleTests.cs`, `FieldUsageMapTests.cs` — the rules, over hand-built specs.
+- `Core/SearchCatalog.cs` — resolves queries and facet groups onto their index.
+- `Core/LuceneSemantics.cs` — the drop/collapse semantics above, in one place.
+- `Core/Rules/*.cs` — `IQueryLintRule` implementations IDX-W1..IDX-W17.
+- `Core/FieldUsageMap.cs` — the where-used report.
+- `Dw/DwSearchSource.cs` — reads the repositories through DW's public API.
+- `Dw/DwIndexDocuments.cs` — the live document read and the product comparison.
+- `tests/…/Features/IndexInspector/QueryLintRuleTests.cs`, `FieldUsageMapTests.cs` — the rules,
+  over hand-built specs.

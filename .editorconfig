@@ -1,0 +1,31 @@
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+
+[*.cs]
+indent_style = space
+indent_size = 4
+
+# ---- Code layout rules (enforced at build time via Directory.Build.props) -----------------
+# One top-level type per file, and the file is named after that type.
+dotnet_diagnostic.SA1402.severity = error
+dotnet_diagnostic.SA1649.severity = error
+# Namespace follows the folder: Truvio.Commerce.PowerTools.Features.<Feature>.<Layer>.
+dotnet_style_namespace_match_folder = true
+dotnet_diagnostic.IDE0130.severity = error
+# Unused usings.
+dotnet_diagnostic.IDE0005.severity = warning
+
+# ---- Every other StyleCop rule is off; StyleCop is here only for the two rules above. -----
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.SpecialRules.severity = none
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.SpacingRules.severity = none
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.ReadabilityRules.severity = none
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.OrderingRules.severity = none
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.NamingRules.severity = none
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.MaintainabilityRules.severity = none
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.LayoutRules.severity = none
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.DocumentationRules.severity = none
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.AlternativeRules.severity = none

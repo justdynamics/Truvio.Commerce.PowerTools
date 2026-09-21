@@ -28,6 +28,28 @@ Found a problem or have an idea? [Report it on GitHub](https://github.com/justdy
 
 More tools are planned; each lands in its own section of the PowerTools area.
 
+## Repository layout
+
+The source is organised per feature, one type per file (enforced at build time by
+`.editorconfig` + `Directory.Build.props`: StyleCop SA1402/SA1649 and IDE0130 are errors).
+
+```
+src/Truvio.Commerce.PowerTools/
+  Features/<Feature>/        one folder per tool, e.g. PriceExplainer, IndexInspector
+    Core/                    DW-free logic: specs, evaluators, rules (unit-tested)
+    Dw/                      the Dynamicweb-backed readers behind the Core interfaces
+    Screens/  Queries/  Models/  Commands/  Selectors/  Navigation/
+                             the admin UI of the feature (CoreUI screens, data queries,
+                             view models, commands, pickers, breadcrumb path providers)
+  Shared/                    used by more than one feature: Diagnostics (Finding),
+                             Principals (accounts), Currency, Navigation (area + sections),
+                             Security (permission entity), AdminUI (badges, toolbar, pickers)
+tests/Truvio.Commerce.PowerTools.Tests/
+  Features/<Feature>/        mirrors the feature folders
+```
+
+Namespaces follow the folders: `Truvio.Commerce.PowerTools.Features.<Feature>.<Layer>`.
+
 ## Screens
 
 All screens live in the dedicated **PowerTools** area of the admin navigation (between

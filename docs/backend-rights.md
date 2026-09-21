@@ -92,7 +92,7 @@ column equal width and never wraps, and these are explanations.
 
 ## Rules
 
-Pure over a `RightsSnapshot`, in `Core/Rights/Rules/`. They also surface on **Content Access
+Pure over a `RightsSnapshot`, in `Features/BackendRights/Core/Rules/`. They also surface on **Content Access
 Warnings** beside the `SECOPS-W` rules, minus `SECOPS-B5` which is per-user and belongs on the report.
 
 | Rule | Severity | Catches |
