@@ -1,19 +1,40 @@
 # Price Explainer isolated-host verification
 
-Use disposable hosts only. This is a verification recipe, not evidence that the hosts passed.
-Build the three packages with `.github/scripts/build-line.ps1`; install Base on 10.8.4,
-Discount on 10.28.17, and Groups on 10.30.6 or 10.30.8. Use these exact package names:
+## Recorded results
+
+Release **0.13.0-beta**, checked 2026-11-20. These results belong to that release;
+they are not host proof for the current patch. Amounts below exclude VAT.
+
+| Check | Dynamicweb 10.28.17, Discount line | Dynamicweb 10.30.8, Groups line |
+|---|---|---|
+| App list offers and loads the line | 0.13.1-beta | 0.13.2-beta |
+| Ladder + 15% row + 5% campaign, line totals at 1/10/50 | 80 / 640 / 2400, equal to the cart | 80 / 640 / 2400, equal to the cart |
+| Priority row with own 5% | 99 per unit, equal to the cart | 88 per unit, equal to the cart |
+| Order-line discounts disallowed | 110 per unit, equal to the cart | not run |
+| Fixed campaign, accumulate / highest / lowest, 10 units | 920 / 975 / 990, equal to the cart | not run |
+| Campaign amount including VAT, 10 units | 934, equal to the cart | not run |
+| Converted currency, 10 units | 684, equal to the cart | not run |
+| New Discount Experience on | campaign and final "Not explained" | not run |
+| Base package on this host | no winner claimed, found discount unavailable | not run |
+
+The screen rendered in a browser on both hosts. On 10.30.8, 322,225 price rows gave a
+4.2-second cold explanation and 0.15–0.21 seconds warm, with bounded rejection details.
+Still unverified: Base on a 10.8.4–10.25.4 host, maximum limits and
+`RoundDiscountPerQuantity`, extender discounts, a custom price provider, toolbar/URL
+state by hand, and query counts and memory at volume.
+
+## Repeat the verification
+
+Use disposable hosts only. Build with `.github/scripts/build-line.ps1`; install Base on
+10.8.4, Discount on 10.28.17, and Groups on 10.30.6 or 10.30.8:
 
 | Line | Package |
 |---|---|
-| Base | `Truvio.Commerce.PowerTools.0.13.0-beta.nupkg` |
-| Discount | `Truvio.Commerce.PowerTools.0.13.1-beta.nupkg` |
-| Groups | `Truvio.Commerce.PowerTools.0.13.2-beta.nupkg` |
+| Base | `Truvio.Commerce.PowerTools.0.13.10-beta.nupkg` |
+| Discount | `Truvio.Commerce.PowerTools.0.13.11-beta.nupkg` |
+| Groups | `Truvio.Commerce.PowerTools.0.13.12-beta.nupkg` |
 
-Do not install the superseded four-part-version packages. An installation success response
-does not prove the add-in loaded: verify `AddinInstalled` lists PowerTools and its queries
-resolve. A four-part folder version can cause discovery to skip the DLL without a
-PowerTools entry in TypeLoadErrors. Check AddInManager TypeLoadErrors,
+Verify `AddinInstalled` lists PowerTools and its queries resolve. Check AddInManager TypeLoadErrors,
 open PowerTools > Commerce > Price Explainer, and inspect GeneralLog errors after rendering.
 Keep screenshots of the complete Price and Price steps sections, with the host version visible.
 

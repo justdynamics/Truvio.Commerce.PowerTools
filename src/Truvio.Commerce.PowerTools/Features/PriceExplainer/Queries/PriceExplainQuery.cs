@@ -101,14 +101,7 @@ public sealed class PriceExplainQuery : DataQueryModelBase<PriceExplainModel>
                 AccountName = report.Context.FirstOrDefault(c => c.Label == "Account").Value ?? string.Empty,
                 ProductName = report.Context.FirstOrDefault(c => c.Label == "Product").Value ?? string.Empty,
                 Visible = report.Visibility.Visible,
-                VisibilitySummary = report.Visibility.Summary,
-                PriceBeforeDiscount = report.DwPriceBeforeDiscount,
-                PriceSource = report.DwPriceSource,
-                FoundDiscount = report.FoundDiscount,
                 Steps = report.Steps,
-                DiscountTotal = report.DwDiscountTotal,
-                AppliedDiscountCount = report.Discounts.Count(d => d.AppliedByDw),
-                FinalPrice = report.DwFinalPrice,
                 Rows = ToRows(report, PowerToolsSettings.Positive(DwPowerToolsSettings.Current.PriceRowCap, DefaultPriceRowCap))
             };
         }
@@ -183,7 +176,7 @@ public sealed class PriceExplainQuery : DataQueryModelBase<PriceExplainModel>
         // ---- Price matrix ---------------------------------------------------------------------
         Header("Price matrix");
         Add("Price matrix", "Product default price", "Fallback", "info", report.ProductDefaultPrice,
-            "Used only when no matrix row matches");
+            "Stored amount in the default currency, before conversion; used only when no matrix row matches");
         var matrixRows = report.PriceMatrix.Rows
             .Where(r => r.Matches || r.NeedsHigherQuantity)
             .OrderByDescending(r => r.IsWinner).ThenBy(r => r.Row.TargetKind).ThenBy(r => r.Row.Quantity).ToList();

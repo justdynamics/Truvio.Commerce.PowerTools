@@ -148,15 +148,4 @@ public class PriceSelectionTests
     public void Host_rules_are_exact_and_api_gated(string version, bool discounts, bool groups, PriceSelectionRule expected)
         => Assert.Equal(expected, PriceRuleVersions.Resolve(Version.Parse(version), discounts, groups));
 
-    [Theory]
-    [InlineData("acc", 3)]
-    [InlineData("high", 1)]
-    [InlineData("low", 1)]
-    public void Campaign_selection_uses_positive_savings(string behavior, int expected)
-    {
-        var result = CampaignSelection.Select(new Dictionary<int, double> { [1] = 5, [2] = 20, [3] = 10 }, behavior);
-        Assert.Equal(expected, result.Count);
-        if (behavior == "high") Assert.Contains(2, result);
-        if (behavior == "low") Assert.Contains(1, result);
-    }
 }

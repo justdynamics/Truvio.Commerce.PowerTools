@@ -11,24 +11,9 @@ public sealed class PriceExplainModel : DataViewModelBase
 
     public string ProductName { get; set; } = string.Empty;
 
-    /// <summary>"Yes"/"No" plus the summary sentence.</summary>
     public bool Visible { get; set; }
 
-    public string VisibilitySummary { get; set; } = string.Empty;
-
-    public string PriceBeforeDiscount { get; set; } = string.Empty;
-
-    public string FoundDiscount { get; set; } = string.Empty;
-
     public IReadOnlyList<Core.PriceStep> Steps { get; set; } = [];
-
-    public string PriceSource { get; set; } = string.Empty;
-
-    public string DiscountTotal { get; set; } = string.Empty;
-
-    public int AppliedDiscountCount { get; set; }
-
-    public string FinalPrice { get; set; } = string.Empty;
 
     public string Error { get; set; } = string.Empty;
 
