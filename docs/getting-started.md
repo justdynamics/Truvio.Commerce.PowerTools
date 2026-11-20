@@ -1,5 +1,7 @@
 # Getting started
 
+Package compatibility: 10.8.4 is the Base floor. See [the three package lines](price-explainer.md#package-lines) for newer-floor capabilities and build commands.
+
 ## Install into a Dynamicweb 10 host
 
 Pick one:
@@ -7,7 +9,7 @@ Pick one:
 1. **App store** — DW10 admin → Apps → Available apps → search "PowerTools" → install → restart.
 2. **Package reference** — in `Dynamicweb.Host.Suite.csproj`:
    ```xml
-   <PackageReference Include="Truvio.Commerce.PowerTools" Version="0.2.0-beta" />
+   <PackageReference Include="Truvio.Commerce.PowerTools" Version="0.13.0-beta" />
    ```
 3. **Manual (development)** — `dotnet build`, copy
    `src/Truvio.Commerce.PowerTools/bin/Debug/net8.0/Truvio.Commerce.PowerTools.dll`

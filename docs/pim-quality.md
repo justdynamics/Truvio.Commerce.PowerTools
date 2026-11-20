@@ -1,5 +1,7 @@
 # PIM Quality
 
+Package compatibility: 10.8.4 is the Base floor. See [the three package lines](price-explainer.md#package-lines) for newer-floor capabilities and build commands.
+
 **PowerTools ▸ PIM** — read-only. One place that answers *how complete is this catalog, which single
 field should we fill first, and which completion rules govern nothing?*
 

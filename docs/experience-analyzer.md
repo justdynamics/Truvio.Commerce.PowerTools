@@ -1,5 +1,7 @@
 # Experience Analyzer
 
+Package compatibility: 10.8.4 is the Base floor. See [the three package lines](price-explainer.md#package-lines) for newer-floor capabilities and build commands.
+
 **PowerTools ▸ Security ▸ Experience Analyzer** — read-only. Answers *what stands out about what
 this account can see, and where do two accounts differ?*
 

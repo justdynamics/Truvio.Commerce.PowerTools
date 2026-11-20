@@ -1,5 +1,7 @@
 # Operations Console
 
+Package compatibility: 10.8.4 is the Base floor. See [the three package lines](price-explainer.md#package-lines) for newer-floor capabilities and build commands.
+
 **PowerTools ▸ Operations** — read-only. One place that answers *is this install healthy, what ran,
 what failed, what is growing, and who changed what?*
 

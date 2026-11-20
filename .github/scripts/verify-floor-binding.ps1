@@ -31,10 +31,27 @@ try {
     Copy-Item -LiteralPath $Package -Destination $zip
     Expand-Archive -LiteralPath $zip -DestinationPath $work -Force
 
+    $framework = if ([Version]$Floor -ge [Version]'10.30.0') { 'net10.0' } else { 'net8.0' }
+    $libDirectories = @(Get-ChildItem -LiteralPath (Join-Path $work 'lib') -Directory)
+    if ($libDirectories.Count -ne 1 -or $libDirectories[0].Name -ne $framework) {
+        throw "Expected exactly lib/$framework for floor $Floor"
+    }
+    $nuspec = Get-ChildItem -LiteralPath $work -Filter '*.nuspec' | Select-Object -First 1
+    [xml]$manifest = Get-Content -LiteralPath $nuspec.FullName
+    $dependencies = @($manifest.SelectNodes('//*[local-name()="dependency"]') | Where-Object { $_.id -like 'Dynamicweb*' })
+    if ($dependencies.Count -lt 5) { throw 'Missing direct Dynamicweb dependency constraints' }
+    foreach ($dependency in $dependencies) {
+        # NuGet accepts a bare version as a minimum, or serializes it as [floor, ).
+        if ($dependency.version -ne $Floor -and $dependency.version -notmatch ('^\[' + [regex]::Escape($Floor) + ',\s*\)$')) {
+            throw "Unexpected dependency range: $($dependency.id) $($dependency.version); expected minimum $Floor"
+        }
+    }
+
     $dlls = Get-ChildItem -Path (Join-Path $work 'lib') -Recurse -Filter '*.dll'
     if (-not $dlls) { throw "No lib/**/*.dll found in $Package" }
 
     $bad = @()
+    $references = 0
     foreach ($dll in $dlls) {
         $fs = [IO.File]::OpenRead($dll.FullName)
         try {
@@ -44,14 +61,16 @@ try {
                 $ref  = $md.GetAssemblyReference($handle)
                 $name = $md.GetString($ref.Name)
                 if ($name -notlike 'Dynamicweb*') { continue }
+                $references++
                 $line = "$($dll.Name): $name $($ref.Version)"
                 Write-Host $line
                 if ($ref.Version -ne $expected) { $bad += $line }
             }
         }
-        finally { $fs.Dispose() }
+        finally { if ($pe) { $pe.Dispose() }; $fs.Dispose() }
     }
 
+    if ($references -eq 0) { throw 'Packed DLL has no Dynamicweb references' }
     if ($bad.Count -gt 0) {
         Write-Host "::error::Packed DLL is not bound to the $Floor floor:"
         $bad | ForEach-Object { Write-Host "::error::  $_" }
@@ -60,5 +79,9 @@ try {
     Write-Host "OK: every Dynamicweb.* reference binds to $expected"
 }
 finally {
+    $resolvedWork = [IO.Path]::GetFullPath($work)
+    $tempRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
+    if (-not $resolvedWork.StartsWith($tempRoot, [StringComparison]::OrdinalIgnoreCase) -or
+        [IO.Path]::GetFileName($resolvedWork) -notlike 'floor-check-*') { throw "Unsafe cleanup target: $resolvedWork" }
     Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue
 }

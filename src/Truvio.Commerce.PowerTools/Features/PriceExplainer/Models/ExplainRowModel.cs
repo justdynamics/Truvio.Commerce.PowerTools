@@ -14,6 +14,8 @@ public sealed class ExplainRowModel : DataViewModelBase
     [ConfigurableProperty("Section")]
     public string Section { get; set; } = string.Empty;
 
+    public List<ExplainRowModel> DetailRows { get; set; } = [];
+
     public string Item { get; set; } = string.Empty;
 
     [ConfigurableProperty("Verdict")]

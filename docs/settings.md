@@ -1,5 +1,7 @@
 # PowerTools settings
 
+Package compatibility: 10.8.4 is the Base floor. See [the three package lines](price-explainer.md#package-lines) for newer-floor capabilities and build commands.
+
 **PowerTools ▸ Settings ▸ PowerTools settings** — the one screen in the suite that writes.
 Every other tool is strictly read-only; this screen writes nothing but its own keys, all of them
 under `/Globalsettings/Truvio/PowerTools/`. Deleting that single node from

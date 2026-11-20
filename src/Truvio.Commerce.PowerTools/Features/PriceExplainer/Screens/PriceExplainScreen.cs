@@ -51,14 +51,17 @@ public sealed class PriceExplainScreen : OverviewScreenBase<PriceExplainModel>
                 ["Account"] = new(model.AccountName),
                 ["Product"] = new(model.ProductName),
                 ["Sees it"] = new(new Badge { Value = model.Visible ? "Yes" : "No", BadgeType = model.Visible ? BadgeType.Success : BadgeType.Danger }),
-                ["Pays"] = new(model.FinalPrice)
+                ["Found price"] = new(model.PriceBeforeDiscount),
+                ["Found discount"] = new(model.FoundDiscount),
+                ["Campaign discounts"] = new(model.DiscountTotal),
+                ["Final price"] = new(model.FinalPrice)
             }
         });
 
         foreach (var section in model.Rows.Where(r => r.IsHeader).Select(r => r.Section))
         {
             var rows = model.Rows.Where(r => !r.IsHeader && r.Section == section).ToList();
-            AddComponent(new HtmlBlock { Value = RenderTable(rows) }, section, Group.GroupWidth.Col_12);
+            AddComponent(new HtmlBlock { Value = section == "Price steps" ? RenderSteps(model.Steps) : RenderTable(rows) }, section, Group.GroupWidth.Col_12);
         }
     }
 
@@ -80,6 +83,8 @@ public sealed class PriceExplainScreen : OverviewScreenBase<PriceExplainModel>
                 ("", _) => E(r.Why),
                 _ => $"<strong>{E(r.Value)}</strong> <span style=\"opacity:.8\">&mdash; {E(r.Why)}</span>"
             };
+            if (r.DetailRows.Count > 0)
+                detail += $"<details><summary>Show rows</summary>{RenderTable(r.DetailRows)}</details>";
             sb.Append("<tr style=\"border-bottom:1px solid rgba(0,0,0,.06)\">")
               .Append($"<td style=\"padding:6px 8px 6px 0;vertical-align:top;white-space:nowrap;width:1%\">{E(r.Item)}</td>")
               .Append($"<td style=\"padding:6px 8px;vertical-align:top;white-space:nowrap;width:1%\">{badge}</td>")
@@ -88,6 +93,22 @@ public sealed class PriceExplainScreen : OverviewScreenBase<PriceExplainModel>
         }
         sb.Append("</table></div>");
         return sb.ToString();
+    }
+
+    internal static string RenderSteps(IReadOnlyList<Core.PriceStep> steps)
+    {
+        var sb = new StringBuilder("<div style=\"overflow-x:auto;padding:0 1.5rem\"><table style=\"width:100%;border-collapse:collapse\"><thead><tr>");
+        foreach (var label in new[] { "Quantity", "Found price", "Found discount", "Campaign discounts", "Final unit price", "Source" })
+            sb.Append($"<th style=\"text-align:left;padding:8px\">{E(label)}</th>");
+        sb.Append("</tr></thead><tbody>");
+        foreach (var step in steps)
+        {
+            sb.Append("<tr>");
+            foreach (var value in new[] { step.Quantity.ToString("0.##"), step.FoundPrice, step.FoundDiscount, step.CampaignDiscounts, step.FinalPrice, step.Source })
+                sb.Append($"<td style=\"padding:8px;vertical-align:top\">{E(value)}</td>");
+            sb.Append("</tr>");
+        }
+        return sb.Append("</tbody></table></div>").ToString();
     }
 
     private static string BadgeStyle(string kind) => kind switch

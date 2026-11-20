@@ -18,6 +18,10 @@ public sealed class PriceExplainModel : DataViewModelBase
 
     public string PriceBeforeDiscount { get; set; } = string.Empty;
 
+    public string FoundDiscount { get; set; } = string.Empty;
+
+    public IReadOnlyList<Core.PriceStep> Steps { get; set; } = [];
+
     public string PriceSource { get; set; } = string.Empty;
 
     public string DiscountTotal { get; set; } = string.Empty;

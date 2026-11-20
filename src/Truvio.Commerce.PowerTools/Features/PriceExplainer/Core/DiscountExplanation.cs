@@ -4,9 +4,10 @@ public sealed class DiscountExplanation
 {
     public required DiscountVerdict Verdict { get; init; }
 
-    /// <summary>True when DW's DiscountInfoCollection actually applied the discount to this product.</summary>
+    /// <summary>True when a DW-valid discount survives allow flags and the configured selection behavior.</summary>
     public bool AppliedByDw { get; init; }
 
     /// <summary>Discount amount DW computed (formatted), when applied.</summary>
     public string Amount { get; init; } = string.Empty;
+    public string CalculationNote { get; init; } = string.Empty;
 }

@@ -1,5 +1,7 @@
 # Index & Query Inspector
 
+Package compatibility: 10.8.4 is the Base floor. See [the three package lines](price-explainer.md#package-lines) for newer-floor capabilities and build commands.
+
 PowerTools ▸ **Search**. Read-only. Answers: *what is in my indexes and queries, what is
 stale, and which query will misbehave?*
 

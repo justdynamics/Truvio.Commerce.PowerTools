@@ -104,6 +104,8 @@ public sealed class PriceExplainQuery : DataQueryModelBase<PriceExplainModel>
                 VisibilitySummary = report.Visibility.Summary,
                 PriceBeforeDiscount = report.DwPriceBeforeDiscount,
                 PriceSource = report.DwPriceSource,
+                FoundDiscount = report.FoundDiscount,
+                Steps = report.Steps,
                 DiscountTotal = report.DwDiscountTotal,
                 AppliedDiscountCount = report.Discounts.Count(d => d.AppliedByDw),
                 FinalPrice = report.DwFinalPrice,
@@ -129,18 +131,19 @@ public sealed class PriceExplainQuery : DataQueryModelBase<PriceExplainModel>
         var rows = new List<ExplainRowModel>();
 
         // ---- Result first: the answer, then the reasoning. ----------------------------------
+        Header("Price");
+        Add("Price", "Found price", report.DwPriceSource, "info", report.DwPriceBeforeDiscount,
+            report.PriceMatrix.Winner is { } winner
+                ? $"Winning matrix row {winner.Row.Id}{Restrictions(winner)}"
+                : "DW's returned price; no matrix winner is claimed");
+        Add("Price", "Found discount", "Price-line %", "info", report.FoundDiscount, report.FoundDiscountReason);
+        Add("Price", "Campaign discounts", "Selected", "info", report.DwDiscountTotal, report.DiscountSelectionBehavior);
+        Add("Price", "Final unit price", "Pays", "win", report.DwFinalPrice, "Found price minus price-line discount and campaign savings; see limitations below");
+        Add("Price", "Line total", "Chosen quantity", "info", report.LineTotal, report.AllowFlags);
+        Header("Price steps");
         Header("Result");
         Add("Result", "Sees the product", report.Visibility.Visible ? "Yes" : "No",
             report.Visibility.Visible ? "ok" : "hidden", string.Empty, report.Visibility.Summary);
-        Add("Result", "Price before discounts", report.DwPriceSource, "info", report.DwPriceBeforeDiscount,
-            report.PriceMatrix.Winner is { } winner
-                ? $"Winning matrix row {winner.Row.Id}{Restrictions(winner)}"
-                : report.PriceMatrix.Rows.Count == 0
-                    ? "No price-matrix rows exist for this product"
-                    : $"None of the {report.PriceMatrix.Rows.Count} matrix row(s) match this context{OtherCurrenciesHint(report)}");
-        Add("Result", "Discounts", report.Discounts.Count(d => d.AppliedByDw) is var n && n > 0 ? $"{n} applied" : "none",
-            n > 0 ? "ok" : "", report.DwDiscountTotal, report.DiscountSelectionBehavior);
-        Add("Result", "Final unit price", "Pays", "win", report.DwFinalPrice, "DW price before discounts minus the applied product discounts");
 
         if (report.Conversion is { } conv)
         {
@@ -182,42 +185,34 @@ public sealed class PriceExplainQuery : DataQueryModelBase<PriceExplainModel>
         Add("Price matrix", "Product default price", "Fallback", "info", report.ProductDefaultPrice,
             "Used only when no matrix row matches");
         var matrixRows = report.PriceMatrix.Rows
-            .OrderByDescending(r => r.IsWinner).ThenByDescending(r => r.Matches).ThenBy(r => r.ComparableAmount)
-            .ToList();
-        foreach (var v in matrixRows.Take(rowCap))
-        {
-            var row = v.Row;
-            var amount = $"{row.Amount.ToString("0.00", CultureInfo.InvariantCulture)} {row.CurrencyCode}{(row.IsWithVat ? " incl. VAT" : "")}";
-            string verdict, kind, why;
-            if (v.IsWinner)
-            {
-                verdict = "Wins"; kind = "win";
-                why = $"Cheapest matching row{Restrictions(v)}";
-            }
-            else if (v.Matches)
-            {
-                verdict = "Shadowed"; kind = "match";
-                why = $"Matches but is {v.ShadowedBy?.ToString("0.00", CultureInfo.InvariantCulture)} more expensive than the winner{Restrictions(v)}";
-            }
-            else
-            {
-                verdict = "Rejected"; kind = "reject";
-                why = string.Join("; ", v.FailedChecks);
-            }
-            Add("Price matrix", $"Row {row.Id}", verdict, kind, amount, why);
-        }
+            .Where(r => r.Matches || r.NeedsHigherQuantity)
+            .OrderByDescending(r => r.IsWinner).ThenBy(r => r.Row.TargetKind).ThenBy(r => r.Row.Quantity).ToList();
+        foreach (var v in matrixRows.Take(rowCap)) AddPriceRow(v, rows);
         if (matrixRows.Count > rowCap)
-            Add("Price matrix", "…", "Truncated", "warn", string.Empty,
-                $"{matrixRows.Count - rowCap} further row(s) not shown — raise the price row cap in PowerTools settings");
-
-        foreach (var (qty, price) in report.QuantityPrices)
-            Add("Price matrix", $"Quantity break ≥ {qty}", "Tier", "info", price, "DW quantity price for this context");
+            Add("Price matrix", "More applicable rows", "Truncated", "warn", $"{matrixRows.Count - rowCap}",
+                "Raise the price row cap in PowerTools settings to see more rows");
+        foreach (var group in report.PriceMatrix.Rows.Where(r => !r.Matches && !r.NeedsHigherQuantity).GroupBy(r => r.RejectionReason))
+        {
+            var detail = new List<ExplainRowModel>();
+            foreach (var v in group.Take(rowCap)) AddPriceRow(v, detail);
+            rows.Add(new ExplainRowModel
+            {
+                Section = "Price matrix", Item = group.Key, Verdict = "Rejected", VerdictKind = "reject",
+                Value = $"{group.Count()} rows", Why = $"Open for evidence (up to {rowCap} rows)", DetailRows = detail
+            });
+        }
+        Header("DW raw quantity list");
+        foreach (var (qty, price) in report.QuantityPrices.Take(rowCap))
+            Add("DW raw quantity list", $"Quantity break >= {qty}", "Raw", "info", price,
+                "Storefront quantity list: may contain duplicate breaks; does not select the winning net price");
+        if (report.QuantityPrices.Count > rowCap)
+            Add("DW raw quantity list", "More rows", "Truncated", "warn", $"{report.QuantityPrices.Count - rowCap}", "Raise the price row cap to see more");
 
         // ---- Discounts ------------------------------------------------------------------------
         Header("Discounts");
         if (report.Discounts.Count == 0)
-            Add("Discounts", "Product discounts", "none", "", string.Empty, "No active order-line discounts exist");
-        foreach (var d in report.Discounts)
+            Add("Discounts", "Product discounts", "none", "", string.Empty, "No in-scope discounts are listed; see excluded counts below");
+        foreach (var d in report.Discounts.Take(rowCap))
         {
             var s = d.Verdict.Discount;
             var item = $"{s.Name} (#{s.Id}, prio {s.Priority})";
@@ -236,10 +231,26 @@ public sealed class PriceExplainQuery : DataQueryModelBase<PriceExplainModel>
             else
             {
                 verdict = "Not applied"; kind = "match";
-                why = $"Base conditions pass but DW did not apply it — product scope ({s.ProductScope}){(s.OnlyApplyToNonDiscountedItems ? ", 'only non-discounted items'" : "")} or an extender excluded this product";
+                why = !string.IsNullOrEmpty(d.CalculationNote) ? d.CalculationNote : s.NeedsOrder ? $"Needs cart: {s.NeedsOrderReason}" : $"Base conditions pass but DW did not select it — product scope ({s.ProductScope}){(s.OnlyApplyToNonDiscountedItems ? ", 'only non-discounted items'" : "")} or an extender excluded this product";
             }
-            Add("Discounts", item, verdict, kind, value, why);
+            Add("Discounts", item, verdict, kind, value, why + (string.IsNullOrEmpty(d.CalculationNote) || why.Contains(d.CalculationNote) ? "" : $"; {d.CalculationNote}"));
         }
+
+        if (report.ApplicableDiscountCount > rowCap)
+            Add("Discounts", "More in-scope discounts", "Truncated", "warn", $"{report.ApplicableDiscountCount - rowCap}", "Raise the price row cap to see more");
+        foreach (var (reason, count) in report.DiscountRejectedCounts)
+            rows.Add(new ExplainRowModel
+            {
+                Section = "Discounts", Item = reason, Verdict = "Excluded", VerdictKind = "reject",
+                Value = $"{count} discounts", Why = $"Open for evidence (up to {rowCap} rows)",
+                DetailRows = report.DiscountRejectedSamples.TryGetValue(reason, out var sample)
+                    ? sample.Take(rowCap).Select(d => new ExplainRowModel
+                    {
+                        Item = $"{d.Verdict.Discount.Name} (#{d.Verdict.Discount.Id})",
+                        Verdict = "Excluded", VerdictKind = "reject", Value = d.Verdict.Discount.TypeDescription,
+                        Why = $"{d.CalculationNote}; {d.Verdict.Discount.ProductScope}; {string.Join("; ", d.Verdict.FailedChecks)}"
+                    }).ToList() : []
+            });
 
         return rows;
 
@@ -267,17 +278,22 @@ public sealed class PriceExplainQuery : DataQueryModelBase<PriceExplainModel>
                 Details = Line(item, value, why)
             });
 
-        static string OtherCurrenciesHint(ExplainReport report)
+        void AddPriceRow(PriceRowVerdict v, List<ExplainRowModel> target)
         {
-            var currencies = report.PriceMatrix.Rows
-                .Where(r => !r.Matches && r.FailedChecks.Any(f => f.StartsWith("Currency ")))
-                .Select(r => r.Row.CurrencyCode)
-                .Where(c => !string.IsNullOrEmpty(c))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-            return currencies.Count == 0
-                ? string.Empty
-                : $" — rows exist in {string.Join(", ", currencies)}; switch the currency via Actions to compare";
+            var row = v.Row;
+            var verdict = v.IsWinner ? "Wins" : v.IsOutranked ? "Outranked" : v.IsDiscountLine ? "Discount line"
+                : v.Matches ? report.PriceMatrix.Rule == PriceSelectionRule.Unknown ? "Applies" : "Shadowed"
+                : v.NeedsHigherQuantity ? "Higher quantity" : "Rejected";
+            var why = !v.Matches ? string.Join("; ", v.FailedChecks)
+                : $"{row.TargetKind}; priority {row.Priority}" +
+                    (report.DiscountDetailsAvailable ? $"; own {row.DiscountPercentage:0.##}%; allow order: {row.AllowOrderDiscounts}; allow line: {row.AllowOrderLineDiscounts}" +
+                        (report.PriceMatrix.Rule != PriceSelectionRule.Unknown ? $"; effective {v.EffectiveDiscountPercentage:0.##}%; comparable net {v.NetAmount:0.00}" : "") : "; discount % unavailable in Base line") + Restrictions(v);
+            target.Add(new ExplainRowModel
+            {
+                Section = "Price matrix", Item = $"Row {row.Id} (qty >= {row.Quantity:0.##})",
+                Verdict = verdict, VerdictKind = v.IsWinner ? "win" : v.Matches ? "match" : "reject",
+                Value = $"{row.Amount.ToString("0.00", CultureInfo.InvariantCulture)} {row.CurrencyCode}{(row.IsWithVat ? " incl. VAT" : "")}", Why = why
+            });
         }
 
         static string Restrictions(PriceRowVerdict v) =>
