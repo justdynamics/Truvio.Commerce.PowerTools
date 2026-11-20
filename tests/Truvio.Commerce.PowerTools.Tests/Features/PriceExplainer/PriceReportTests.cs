@@ -7,6 +7,38 @@ namespace Truvio.Commerce.PowerTools.Tests.Features.PriceExplainer;
 
 public class PriceReportTests
 {
+    [Theory]
+    [InlineData(int.MaxValue, 0)]
+    [InlineData(0, 0)]
+    [InlineData(10, 10)]
+    [InlineData(int.MaxValue - 1, int.MaxValue - 1)]
+    public void Discount_priority_displays_configured_value_without_changing_sort_priority(int priority, int displayed)
+    {
+        var discount = new DiscountSpec { Id = 7, Name = "Campaign", Priority = priority };
+        var report = new ExplainReport
+        {
+            Discounts = [new DiscountExplanation { Verdict = new DiscountVerdict { Discount = discount } }]
+        };
+        var rows = PriceExplainQuery.ToRows(report);
+        var row = Assert.Single(rows, r => r.Section == "Discounts" && r.Item.StartsWith("Campaign"));
+        Assert.Equal($"Campaign (#7, prio {displayed})", row.Item);
+        Assert.Equal(priority, report.Discounts[0].Verdict.Discount.Priority);
+    }
+
+    [Theory]
+    [InlineData(PriceSelectionRule.LowestAmount, "Lowest matching price")]
+    [InlineData(PriceSelectionRule.LowestNet, "Lowest net price after found discount")]
+    [InlineData(PriceSelectionRule.PriorityThenLowestNet, "Highest priority, then lowest net price")]
+    [InlineData(PriceSelectionRule.GroupsPriorityThenLowestNet, "Highest priority, then lowest net price (including price and discount groups)")]
+    [InlineData(PriceSelectionRule.Unknown, "Unverified price selection")]
+    [InlineData((PriceSelectionRule)999, "Unverified price selection")]
+    public void Selection_rule_description_uses_readable_text_including_unknown_rules(PriceSelectionRule rule, string expected)
+    {
+        var description = PriceRuleDescriptions.Describe(rule);
+        Assert.Equal(expected, description);
+        Assert.DoesNotContain(rule.ToString(), description);
+    }
+
     [Fact]
     public void Applicable_rows_precede_collapsible_rejections_and_each_list_is_bounded()
     {

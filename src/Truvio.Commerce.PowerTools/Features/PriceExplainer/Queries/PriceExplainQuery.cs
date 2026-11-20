@@ -215,7 +215,9 @@ public sealed class PriceExplainQuery : DataQueryModelBase<PriceExplainModel>
         foreach (var d in report.Discounts.Take(rowCap))
         {
             var s = d.Verdict.Discount;
-            var item = $"{s.Name} (#{s.Id}, prio {s.Priority})";
+            // DW stores an unprioritized discount (0) as MaxValue so it sorts last.
+            var displayPriority = s.Priority == int.MaxValue ? 0 : s.Priority;
+            var item = $"{s.Name} (#{s.Id}, prio {displayPriority})";
             var value = string.IsNullOrEmpty(d.Amount) ? s.TypeDescription : $"{s.TypeDescription} → {d.Amount}";
             string verdict, kind, why;
             if (d.AppliedByDw)
