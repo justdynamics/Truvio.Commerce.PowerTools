@@ -1,5 +1,7 @@
 # Backend Rights Viewer
 
+Package compatibility: 10.8.4 is the Base floor. See [the three package lines](price-explainer.md#package-lines) for newer-floor capabilities and build commands.
+
 **PowerTools ▸ Security ▸ Backend Rights Viewer** — read-only. One place that answers *what can this
 backend user actually see in the administration, and which gate decided it?*
 

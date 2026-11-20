@@ -1,5 +1,7 @@
 # Query tester
 
+Package compatibility: 10.8.4 is the Base floor. See [the three package lines](price-explainer.md#package-lines) for newer-floor capabilities and build commands.
+
 PowerTools ▸ **Search** ▸ *Query tester*. Read-only. Answers: *I ran this query — is the
 result what I expect, if not why not, and what do I change?*
 

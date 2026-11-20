@@ -1,38 +1,55 @@
 namespace Truvio.Commerce.PowerTools.Features.PriceExplainer.Core;
 
-/// <summary>
-/// Mirrors DW's DefaultPriceProvider: the twelve PriceFilters of PriceService.FindPrices decide
-/// which matrix rows apply, then the CHEAPEST applicable row wins (MinBy on the comparable
-/// amount) — Priority is not consulted. No applicable row means the product's default price.
-/// </summary>
+/// <summary>Explains matching rows using an explicit, version-verified selection rule.</summary>
 public static class PriceRowEvaluator
 {
     public const string AnyVariant = "Any";
 
-    public static PriceMatrixVerdict Evaluate(IEnumerable<PriceRowSpec> rows, PriceLookupContext context)
+    public static PriceMatrixVerdict Evaluate(IEnumerable<PriceRowSpec> rows, PriceLookupContext context,
+        PriceSelectionRule rule = PriceSelectionRule.LowestAmount, IReadOnlySet<string>? matchingIds = null)
     {
         var verdicts = rows.Select(r => Evaluate(r, context)).ToList();
-
+        if (matchingIds is not null)
+            verdicts = verdicts.Select(v => new PriceRowVerdict
+            {
+                Row = v.Row,
+                FailedChecks = matchingIds.Contains(v.Row.Id) ? [] : v.FailedChecks.Count > 0 ? v.FailedChecks : ["DW rejected this row"],
+                SatisfiedRestrictions = v.SatisfiedRestrictions,
+                ComparableAmount = v.Row.IsWithVat && !context.PricesInDatabaseIncludeVat && context.VatPercent > 0
+                    ? v.Row.Amount / (1 + context.VatPercent / 100) : v.Row.Amount
+            }).ToList();
         var matching = verdicts.Where(v => v.Matches).ToList();
-        PriceRowVerdict? winner = null;
-        var hasTie = false;
-
-        if (matching.Count > 0)
+        var hasDiscounts = rule is PriceSelectionRule.LowestNet or PriceSelectionRule.PriorityThenLowestNet or PriceSelectionRule.GroupsPriorityThenLowestNet;
+        var fallback = hasDiscounts ? matching
+            .Where(v => rule == PriceSelectionRule.GroupsPriorityThenLowestNet || v.ComparableAmount == 0)
+            .Select(v => v.Row.DiscountPercentage).DefaultIfEmpty(0).Max() : 0;
+        foreach (var v in matching)
         {
-            // MinBy returns the first minimum in enumeration order — same as DW.
-            winner = matching.MinBy(v => v.ComparableAmount)!;
-            winner.IsWinner = true;
-            hasTie = matching.Count(v => v.ComparableAmount == winner.ComparableAmount) > 1;
-
-            foreach (var loser in matching.Where(v => !ReferenceEquals(v, winner)))
-                loser.ShadowedBy = loser.ComparableAmount - winner.ComparableAmount;
+            v.IsDiscountLine = hasDiscounts && v.ComparableAmount == 0;
+            v.EffectiveDiscountPercentage = !hasDiscounts || !v.Row.AllowOrderLineDiscounts ? 0
+                : rule == PriceSelectionRule.GroupsPriorityThenLowestNet ? Math.Max(v.Row.DiscountPercentage, fallback)
+                : v.Row.DiscountPercentage > 0 ? v.Row.DiscountPercentage : fallback;
         }
-
+        var candidates = matching.Where(v => !hasDiscounts || v.ComparableAmount > 0).ToList();
+        if (rule is PriceSelectionRule.PriorityThenLowestNet or PriceSelectionRule.GroupsPriorityThenLowestNet)
+        {
+            var priority = candidates.Select(v => v.Row.Priority).DefaultIfEmpty(0).Max();
+            if (priority > 0)
+            {
+                foreach (var v in candidates.Where(v => v.Row.Priority != priority)) v.IsOutranked = true;
+                candidates = candidates.Where(v => !v.IsOutranked).ToList();
+            }
+        }
+        var winner = rule == PriceSelectionRule.Unknown ? null : candidates.MinBy(v => v.NetAmount);
+        if (winner is not null)
+        {
+            winner.IsWinner = true;
+            foreach (var v in candidates.Where(v => !ReferenceEquals(v, winner))) v.ShadowedBy = v.NetAmount - winner.NetAmount;
+        }
         return new PriceMatrixVerdict
         {
-            Rows = verdicts,
-            Winner = winner,
-            HasTie = hasTie
+            Rows = verdicts, Winner = winner, Rule = rule, FallbackDiscountPercentage = fallback,
+            HasTie = winner is not null && candidates.Count(v => v.NetAmount == winner.NetAmount) > 1
         };
     }
 
@@ -50,6 +67,16 @@ public static class PriceRowEvaluator
             else
                 failed.Add(failure);
         }
+
+        Check(!row.HasValidConfiguration, false, "", "Invalid price configuration");
+        Check(!string.IsNullOrEmpty(row.ProductId), Eq(row.ProductId, ctx.ProductId),
+            $"product {row.ProductId}", $"Product {row.ProductId} differs");
+        Check(!string.IsNullOrEmpty(row.CustomerPriceGroupId), Eq(row.CustomerPriceGroupId, ctx.CustomerPriceGroupId),
+            $"customer price group {row.CustomerPriceGroupId}", $"Customer price group {row.CustomerPriceGroupId} differs");
+        Check(!string.IsNullOrEmpty(row.CustomerDiscountGroupId), Eq(row.CustomerDiscountGroupId, ctx.CustomerDiscountGroupId),
+            $"customer discount group {row.CustomerDiscountGroupId}", $"Customer discount group {row.CustomerDiscountGroupId} differs");
+        Check(!string.IsNullOrEmpty(row.ProductDiscountGroupId), Eq(row.ProductDiscountGroupId, ctx.ProductDiscountGroupId),
+            $"product discount group {row.ProductDiscountGroupId}", $"Product discount group {row.ProductDiscountGroupId} differs");
 
         // IsInformativePriceFilter — the explainer always looks at real (non-informative) prices.
         Check(row.IsInformative, false, "", "Informative price (not used for selling)");

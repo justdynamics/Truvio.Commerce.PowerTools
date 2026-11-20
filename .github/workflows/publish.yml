@@ -1,123 +1,87 @@
-name: Publish to NuGet.org
-
-# Publishes via NuGet Trusted Publishing (OIDC) — no long-lived API key stored in the repo.
-# https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing
-#
-# One-time setup on nuget.org (profile -> Trusted Publishing -> Create):
-#   Repository owner: justdynamics
-#   Repository:       Truvio.Commerce.PowerTools
-#   Workflow file:    publish.yml
-# and a repository secret NUGET_USER holding the nuget.org profile name that CREATED the policy.
-# The policy is bound to GitHub environment "production"; the job below declares it.
-#
-# Release flow: bump <Version> in the csproj, then push a matching tag (e.g. v0.1.0-beta).
-# The Version guard fails the run before anything is packed when the tag and <Version> differ.
-# After a successful push the release job creates the GitHub release for the tag (prerelease
-# for a -beta/-alpha tag) with the .nupkg attached, so nuget.org, the tag and the GitHub
-# release cannot drift apart.
+name: Build and publish package lines
 
 on:
+  pull_request:
   push:
-    tags:
-      - 'v*'
+    branches: [main, 'feature/**']
+    tags: ['v*']
   workflow_dispatch:
 
-env:
-  # The minimum Dynamicweb version the package binds to. Keep in sync with README ("Requires
-  # Dynamicweb 10.8 or newer") and the floor builds referenced throughout docs/.
-  DW_FLOOR: 10.8.4
-
 jobs:
-  publish:
+  build:
     runs-on: windows-latest
-    environment: production # must match the environment on the nuget.org trusted-publishing policy
     permissions:
       contents: read
-      id-token: write # required for OIDC token exchange with nuget.org
-
+    strategy:
+      fail-fast: false
+      matrix:
+        line: [Base, Discount, Groups]
     steps:
       - uses: actions/checkout@v4
-
-      # Version guard: on a tag push the tag (minus its leading v) must equal the csproj <Version>.
-      # A mismatch would publish a package whose version no tag or release describes.
-      - name: Version guard (tag equals csproj Version)
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+      - name: Verify release tag
         if: github.ref_type == 'tag'
         shell: pwsh
         env:
           TAG: ${{ github.ref_name }}
         run: |
-          $tagVersion = $env:TAG -replace '^v', ''
-          [xml]$proj = Get-Content -Raw 'src/Truvio.Commerce.PowerTools/Truvio.Commerce.PowerTools.csproj'
-          $node = $proj.SelectSingleNode('/Project/PropertyGroup/Version')
-          if (-not $node) { Write-Host '::error::No <Version> in src/Truvio.Commerce.PowerTools/Truvio.Commerce.PowerTools.csproj'; exit 1 }
-          $csprojVersion = $node.InnerText.Trim()
-          if ($csprojVersion -ne $tagVersion) {
-            Write-Host "::error::Tag $env:TAG does not match csproj <Version>$csprojVersion</Version>. Bump the csproj or move the tag."
-            exit 1
-          }
-          Write-Host "Tag $env:TAG matches csproj <Version>$csprojVersion</Version>"
-
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
-
-      # Everything below builds against the verified minimum platform version (the floor): the
-      # app then installs on any DW 10.8+ host. A DLL compiled against a newer DW version is
-      # silently skipped by older hosts (AddInManager logs "Could not load file or assembly
-      # 'Dynamicweb.CoreUI, Version=10.28.1.0'" and the PowerTools area never appears).
-      # Hosts 10.23-/10.24- get solid badges / no screen subtitles via feature gates.
-      #
-      # Test and Pack MUST use the same DynamicwebVersion: MSBuild's incremental build reuses the
-      # Release DLL the Test step produced, so a Test at the default (newest) version followed by
-      # a Pack at the floor ships a newest-version DLL inside a floor-labelled package. That is
-      # exactly what happened for 0.9.1-beta .. 0.11.1-beta. The Verify step is the backstop.
-      - name: Test
-        run: dotnet test tests/Truvio.Commerce.PowerTools.Tests --configuration Release -p:DynamicwebVersion=${{ env.DW_FLOOR }}
-
-      - name: Pack
-        run: dotnet pack src/Truvio.Commerce.PowerTools/Truvio.Commerce.PowerTools.csproj --configuration Release -p:DynamicwebVersion=${{ env.DW_FLOOR }} --output artifacts
-
-      # Reads the assembly references out of the packed DLL and fails the run unless every
-      # Dynamicweb.* reference binds to the floor. Never ship a package this step did not pass.
-      - name: Verify floor binding
+          . ./.github/scripts/package-version.ps1
+          [xml]$project = Get-Content 'src/Truvio.Commerce.PowerTools/Truvio.Commerce.PowerTools.csproj'
+          $version = Get-LinePackageVersion -Release $project.SelectSingleNode('/Project/PropertyGroup/Version').InnerText -Line Base
+          if ($env:TAG -ne "v$version") { throw "Tag must be v$version" }
+      - name: Test package version guard
         shell: pwsh
-        run: |
-          $pkg = Get-ChildItem artifacts -Filter '*.nupkg' | Select-Object -First 1
-          ./.github/scripts/verify-floor-binding.ps1 -Package $pkg.FullName -Floor ${{ env.DW_FLOOR }}
-
-      - name: Upload package for the release job
-        uses: actions/upload-artifact@v4
+        run: ./.github/scripts/test-package-version.ps1
+      - name: Build, test, pack and verify floor and add-in version
+        shell: pwsh
+        run: ./.github/scripts/build-line.ps1 -Line ${{ matrix.line }}
+      - uses: actions/upload-artifact@v4
         with:
-          name: nupkg
+          name: nupkg-${{ matrix.line }}
           path: artifacts/*.nupkg
           if-no-files-found: error
 
-      # Exchanges the GitHub OIDC token for a short-lived nuget.org API key.
+  publish:
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: windows-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: nupkg-*
+          merge-multiple: true
+          path: artifacts
       - name: NuGet login (trusted publishing)
         id: login
         uses: NuGet/login@v1
         with:
           user: ${{ secrets.NUGET_USER }}
+      - name: Push all verified lines
+        run: dotnet nuget push artifacts/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
-      - name: Push
-        run: dotnet nuget push artifacts\*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-
-  # Creates the GitHub release for the tag once nuget.org has the package. Runs only for a tag
-  # ref (a workflow_dispatch on a branch creates no release). Re-running the workflow for a
-  # tag that already has a release re-uploads the .nupkg instead of failing.
   release:
     needs: publish
     if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: nupkg
+          pattern: nupkg-*
+          merge-multiple: true
           path: artifacts
-
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}

@@ -3,6 +3,10 @@ namespace Truvio.Commerce.PowerTools.Features.PriceExplainer.Core;
 /// <summary>The selection DW evaluates price rows against (PriceContext + PriceProductSelection).</summary>
 public sealed record PriceLookupContext
 {
+    public string ProductId { get; init; } = string.Empty;
+    public string CustomerPriceGroupId { get; init; } = string.Empty;
+    public string CustomerDiscountGroupId { get; init; } = string.Empty;
+    public string ProductDiscountGroupId { get; init; } = string.Empty;
     public int? UserId { get; init; }
     public string? UserCustomerNumber { get; init; }
     public IReadOnlySet<int> UserGroupIds { get; init; } = new HashSet<int>();

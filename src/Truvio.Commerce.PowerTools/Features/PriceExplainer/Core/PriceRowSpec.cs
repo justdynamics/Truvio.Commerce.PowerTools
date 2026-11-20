@@ -6,6 +6,20 @@ namespace Truvio.Commerce.PowerTools.Features.PriceExplainer.Core;
 /// </summary>
 public sealed record PriceRowSpec
 {
+    public string ProductId { get; init; } = string.Empty;
+    public int Priority { get; init; }
+    public double DiscountPercentage { get; init; }
+    public bool AllowOrderDiscounts { get; init; } = true;
+    public bool AllowOrderLineDiscounts { get; init; } = true;
+    public string CustomerPriceGroupId { get; init; } = string.Empty;
+    public string CustomerDiscountGroupId { get; init; } = string.Empty;
+    public string ProductDiscountGroupId { get; init; } = string.Empty;
+    public bool HasValidConfiguration { get; init; } = true;
+    public string TargetKind => !string.IsNullOrEmpty(UserId) || !string.IsNullOrEmpty(UserCustomerNumber) ? "This customer"
+        : !string.IsNullOrEmpty(CustomerPriceGroupId) ? "Customer price group"
+        : !string.IsNullOrEmpty(CustomerDiscountGroupId) ? "Customer discount group" + (!string.IsNullOrEmpty(ProductDiscountGroupId) ? " x product discount group" : "")
+        : !string.IsNullOrEmpty(ProductDiscountGroupId) ? "Product discount group"
+        : !string.IsNullOrEmpty(UserGroupId) || !string.IsNullOrEmpty(CustomerGroupId) ? "User group" : "List price";
     public string Id { get; init; } = string.Empty;
     public string VariantId { get; init; } = string.Empty;
     public string LanguageId { get; init; } = string.Empty;
