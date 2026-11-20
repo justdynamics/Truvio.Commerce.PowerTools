@@ -342,12 +342,9 @@ public sealed class DwCommerceExplainer
 #if DW_HAS_PRICE_DISCOUNT_PERCENTAGE
         flags = $"Allow order discounts: {dwPrice.AllowOrderDiscounts}; allow order-line discounts: {dwPrice.AllowOrderLineDiscounts}";
 #endif
-        var fallbackSources = matrix.Rows.Where(v => v.Matches && v.Row.DiscountPercentage == matrix.FallbackDiscountPercentage
-            && (rule == PriceSelectionRule.GroupsPriorityThenLowestNet || v.ComparableAmount == 0)).Select(v => v.Row.Id).ToList();
         var discountReason = !HasDiscountApi ? "Found discount percentages are unavailable in the Base line."
             : rule == PriceSelectionRule.Unknown ? "Returned by the price provider; row provenance is not claimed."
-            : $"{PriceRuleDescriptions.Describe(rule)}; fallback {matrix.FallbackDiscountPercentage:0.##}% from matching rows {string.Join(", ", fallbackSources.Take(5))}{(fallbackSources.Count > 5 ? " (more sources omitted)" : "")}. " +
-                (matrix.Winner is { } winning ? $"Row {winning.Row.Id}: own {winning.Row.DiscountPercentage:0.##}%, effective {winning.EffectiveDiscountPercentage:0.##}%." : "Product default price fallback.");
+            : PriceRuleDescriptions.Describe(matrix);
 
         return new ExplainReport
         {

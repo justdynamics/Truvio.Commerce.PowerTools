@@ -50,11 +50,7 @@ public sealed class PriceExplainScreen : OverviewScreenBase<PriceExplainModel>
             {
                 ["Account"] = new(model.AccountName),
                 ["Product"] = new(model.ProductName),
-                ["Sees it"] = new(new Badge { Value = model.Visible ? "Yes" : "No", BadgeType = model.Visible ? BadgeType.Success : BadgeType.Danger }),
-                ["Found price"] = new(model.PriceBeforeDiscount),
-                ["Found discount"] = new(model.FoundDiscount),
-                ["Campaign discounts"] = new(model.DiscountTotal),
-                ["Final price"] = new(model.FinalPrice)
+                ["Sees it"] = new(new Badge { Value = model.Visible ? "Yes" : "No", BadgeType = model.Visible ? BadgeType.Success : BadgeType.Danger })
             }
         });
 
@@ -98,11 +94,14 @@ public sealed class PriceExplainScreen : OverviewScreenBase<PriceExplainModel>
     internal static string RenderSteps(IReadOnlyList<Core.PriceStep> steps)
     {
         var sb = new StringBuilder("<div style=\"overflow-x:auto;padding:0 1.5rem\"><table style=\"width:100%;border-collapse:collapse\"><thead><tr>");
-        foreach (var label in new[] { "Quantity", "Found price", "Found discount", "Campaign discounts", "Final unit price", "Source" })
+        foreach (var label in new[] { "Quantity from", "Found price", "Found discount", "Campaign discounts", "Final unit price", "Source" })
             sb.Append($"<th style=\"text-align:left;padding:8px\">{E(label)}</th>");
         sb.Append("</tr></thead><tbody>");
+        Core.PriceStep? previous = null;
         foreach (var step in steps)
         {
+            if (previous is not null && (step with { Quantity = previous.Quantity }) == previous) continue;
+            previous = step;
             sb.Append("<tr>");
             foreach (var value in new[] { step.Quantity.ToString("0.##"), step.FoundPrice, step.FoundDiscount, step.CampaignDiscounts, step.FinalPrice, step.Source })
                 sb.Append($"<td style=\"padding:8px;vertical-align:top\">{E(value)}</td>");
@@ -187,15 +186,4 @@ public sealed class PriceExplainScreen : OverviewScreenBase<PriceExplainModel>
         }
     }
 
-    private static IReadOnlyList<T> SafeList<T>(Func<IReadOnlyList<T>> source)
-    {
-        try
-        {
-            return source();
-        }
-        catch
-        {
-            return [];
-        }
-    }
 }

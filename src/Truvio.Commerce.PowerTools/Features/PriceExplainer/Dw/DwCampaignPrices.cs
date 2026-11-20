@@ -45,7 +45,7 @@ internal static class DwCampaignPrices
         var campaigns = new PriceInfo(found.Currency);
         foreach (var amount in applied.Values) campaigns = campaigns.Add(amount);
         var discount = found.Multiply(percentage is > 0 ? percentage.Value / 100 : 0);
-        return new(found, percentage, discount, campaigns, found.Substract(discount).Substract(campaigns), applied, special ?? new HashSet<int>());
+        return new(percentage, discount, campaigns, found.Substract(discount).Substract(campaigns), applied, special ?? new HashSet<int>());
     }
 
     // DiscountProvider is internal even though CalculateDiscountPrice is public. Mirror its

@@ -8,18 +8,18 @@ Only the default unit and stock location 0 are explained.
 
 | Line | DW minimum | Target | Package version for this release | Capabilities |
 |---|---|---|---|---|
-| Base | 10.8.4 | net8.0 | 0.13.0-beta | DW amounts at quantity breaks, standard applicable-row overview, rejection summaries, scoped campaign evidence. Found discount percentages and allow flags are unavailable. |
-| Discount | 10.25.5 | net8.0 | 0.13.1-beta | Adds found discount percentage and amount, allow flags, priority/net selection and four-value steps. |
-| Groups | 10.30.6 | net10.0 | 0.13.2-beta | Adds customer price/discount groups, product discount groups and the newer fallback rule. |
+| Base | 10.8.4 | net8.0 | 0.13.10-beta | DW amounts at quantity breaks, standard applicable-row overview, rejection summaries, scoped campaign evidence. Found discount percentages and allow flags are unavailable. |
+| Discount | 10.25.5 | net8.0 | 0.13.11-beta | Adds found discount percentage and amount, allow flags, priority/net selection and four-value steps. |
+| Groups | 10.30.6 | net10.0 | 0.13.12-beta | Adds customer price/discount groups, product discount groups and the newer fallback rule. |
 
 All use one package ID and source. The patch number reserves the last digit for the line:
 Base is `x.y.(10n+0)`, Discount is `x.y.(10n+1)`, Groups is `x.y.(10n+2)`, where `n` is the
 patch release counter. The Base version in the project must have a patch divisible by ten.
-The next patch release uses `0.13.10`, `0.13.11` and `0.13.12`; the same mapping preserves
+The next patch release uses `0.13.20`, `0.13.21` and `0.13.22`; the same mapping preserves
 prerelease suffixes and works for stable releases. Higher floors sort above lower ones
 within a release, and later releases sort above all three earlier lines.
 
-The release tag always names the Base version, currently `v0.13.0-beta`. Four-part package
+The release tag always names the Base version, currently `v0.13.10-beta`. Four-part package
 versions are not supported: the DW add-in folder parser can absorb a numeric component into
 the package name, causing DLL discovery to fail even though installation reports success.
 The build validates the intended identity before compilation, and the packed-manifest guard
@@ -27,8 +27,7 @@ requires the folder parser to return exactly the package ID and version from the
 It also checks the packed version equals the requested line version. CI runs positive mapping
 and negative packed-version checks using `.github/scripts/test-package-version.ps1`.
 
-The app-list selection behavior still needs proof using published test versions on representative hosts.
-A build/pack test is not that proof. Lower-floor packages can run on newer hosts, but they
+Lower-floor packages can run on newer hosts, but they
 cannot read APIs absent from their build floor. The screen identifies that limitation.
 
 ## Verified winner rules
@@ -88,7 +87,8 @@ final price is unavailable rather than silently treated as no discounts.
 
 The row cap applies to the applicable-price list, raw quantity list, discount list, and each
 expanded rejection sample. All rejected counts and applied amount calculations precede
-rendering caps. Applicable price steps themselves are not truncated. Large numbers of distinct
+rendering caps. Consecutive price steps with identical figures and source render once, at
+their first quantity. Every break is still calculated. Large numbers of distinct
 breaks therefore require correspondingly many provider calls. DW may populate its own caches
 when its service methods are first called; a bounded explainer query does not promise a cold
 DW cache is cheap.
@@ -102,9 +102,5 @@ Pure tests cover rule differences, priority, fallback percentages, allow flags, 
 authoritative matches, group targets, unknown/custom mode, 322,000 synthetic candidates,
 campaign selection, rendering caps, HTML encoding and context preservation.
 
-Before release, prove rendering and actual cart parity on isolated 10.8.4, 10.28.17 and 10.30.6+
-hosts with the appropriate packages. Include quantities 1/10/50, both VAT views, percentage
-and fixed campaigns, caps/rounding, group rows, custom providers and adjustments enabled.
-The in-memory volume test does not prove database/provider latency. Measure a cold and warm
-322,000-row fixture separately. No live host, publication or marketplace selection is
-validated merely by this repository's unit tests.
+See the [host results, remaining gaps and repeatable recipe](price-explainer-host-verification.md).
+Host/cart and app-list checks are separate from local tests and package verification.

@@ -88,26 +88,14 @@ accounts bypass checks entirely and are badged as such. The viewer is strictly r
 
 ## How prices are explained
 
-The found price comes from `PriceManager.FindPrice` with an explicit quantity and the selected
-account, currency, country, shop and date. `Services.Prices.FindPrices` supplies the matching
-rows in DW's order. The independent evaluator explains rejections and selects a winner only
-for a verified host rule that the installed package can represent. Priorities and price-line
-percentages are part of selection on newer hosts; lowest gross price alone is not sufficient.
-Custom price providers disable winner claims.
-
-The Discount and Groups lines show the returned price-line percentage separately from campaign
-savings. Standard percentage campaigns use the selected quantity's found price, the configured
-rounding and limits. Fixed amounts use DW's own calculation; extenders and amount-from-field
-amounts retain DW's quantity-1 value and are flagged. Savings are combined using the configured
-accumulate/highest/lowest setting. Final unit price subtracts both savings from the found price;
-the line total multiplies that unit result by the chosen quantity. Both VAT views are shown.
-This is a product-context explanation: cart-only conditions and storefront template logic are
-outside it. The New Discount Experience explicitly suppresses campaign/final calculations.
-
-Each applicable break plus quantity 1 is priced separately through the provider chain, with a
-source column. DW's raw quantity list is also shown because it can contain duplicate breaks
-and does not perform the same net-price selection. Rejected rows and out-of-scope discounts
-are counted by reason with capped, expandable samples. See [the exact rules and limits](docs/price-explainer.md).
+DW supplies the price and matching rows for the selected account, product and quantity.
+The Price section separates found price, price-line discount, campaign savings and final
+unit price, with the line total and both VAT views. Price steps show changes in values or
+source; consecutive identical steps appear once. Applicable rows come first, followed by
+rejection counts with bounded details. Custom providers disable winner claims; cart-only
+conditions and storefront template logic are outside the explanation.
+See [package capabilities, selection rules and limits](docs/price-explainer.md), and the
+[host results and verification recipe](docs/price-explainer-host-verification.md).
 
 Visibility still mirrors `AssortmentService`: the account must hold an assortment containing
 the product through a user/group permission or the anonymous flag. Products in no assortment
@@ -140,17 +128,9 @@ Use the release helper to rebuild, test, pack and verify each line:
 ./.github/scripts/build-line.ps1 -Line Groups
 ```
 
-Install the .NET 8 and .NET 10 SDKs/runtimes for all three lines. The helper derives
-`0.13.0-beta`, `0.13.1-beta` and `0.13.2-beta` from the Base release version. The Base
-patch is a multiple of ten (`10n`); Discount adds 1 and Groups adds 2. The next patch
-release uses `0.13.10`, `0.13.11` and `0.13.12`, preserving any prerelease suffix.
-This ordering also works for stable releases. Four-part package versions cannot be used:
-DW can interpret the extra number as part of the add-in name and silently skip the DLL.
+Install the .NET 8 and .NET 10 SDKs/runtimes for all three lines. This release builds
+`0.13.10-beta`, `0.13.11-beta` and `0.13.12-beta`; its tag is `v0.13.10-beta`.
+PR checks build all three; a tag publishes them after the version and floor guards pass.
+See the [version scheme and guards](docs/price-explainer.md#package-lines).
 
-PR and branch checks build all three without publishing. The tag remains `v<Base version>`
-(for this release, `v0.13.0-beta`); it runs all checks before NuGet Trusted Publishing and
-attaches every line to the GitHub release. The guards verify the packed manifest resolves
-to the intended add-in identity and version, plus the DLL's actual references, target
-framework and NuGet dependency minima. CI tests the version mapping and rejects a packed
-four-part-version regression case. A previous build against a newer DW version cannot
-silently pass as a lower-floor package.
+After publication, wait until all three versions are listed on nuget.org before installing from the app list: a host can briefly be offered a lower line.
