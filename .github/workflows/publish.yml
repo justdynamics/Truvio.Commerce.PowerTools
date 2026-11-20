@@ -29,10 +29,14 @@ jobs:
         env:
           TAG: ${{ github.ref_name }}
         run: |
+          . ./.github/scripts/package-version.ps1
           [xml]$project = Get-Content 'src/Truvio.Commerce.PowerTools/Truvio.Commerce.PowerTools.csproj'
-          $version = $project.SelectSingleNode('/Project/PropertyGroup/Version').InnerText
+          $version = Get-LinePackageVersion -Release $project.SelectSingleNode('/Project/PropertyGroup/Version').InnerText -Line Base
           if ($env:TAG -ne "v$version") { throw "Tag must be v$version" }
-      - name: Build, test, pack and verify floor
+      - name: Test package version guard
+        shell: pwsh
+        run: ./.github/scripts/test-package-version.ps1
+      - name: Build, test, pack and verify floor and add-in version
         shell: pwsh
         run: ./.github/scripts/build-line.ps1 -Line ${{ matrix.line }}
       - uses: actions/upload-artifact@v4

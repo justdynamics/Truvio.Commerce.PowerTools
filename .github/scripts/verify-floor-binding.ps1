@@ -18,10 +18,12 @@
 #>
 param(
     [Parameter(Mandatory)] [string] $Package,
-    [Parameter(Mandatory)] [string] $Floor
+    [Parameter(Mandatory)] [string] $Floor,
+    [string] $ExpectedVersion
 )
 
 $ErrorActionPreference = 'Stop'
+. "$PSScriptRoot/package-version.ps1"
 $expected = [Version]::new("$Floor.0")
 
 $work = Join-Path ([IO.Path]::GetTempPath()) ("floor-check-" + [Guid]::NewGuid().ToString('N'))
@@ -38,6 +40,14 @@ try {
     }
     $nuspec = Get-ChildItem -LiteralPath $work -Filter '*.nuspec' | Select-Object -First 1
     [xml]$manifest = Get-Content -LiteralPath $nuspec.FullName
+    $metadata = $manifest.SelectSingleNode('/*[local-name()="package"]/*[local-name()="metadata"]')
+    $packageId = $metadata.SelectSingleNode('*[local-name()="id"]').InnerText
+    $packageVersion = $metadata.SelectSingleNode('*[local-name()="version"]').InnerText
+    Assert-DwAddinIdentity -PackageId $packageId -Version $packageVersion
+    if ($ExpectedVersion -and $packageVersion -cne $ExpectedVersion) {
+        throw "Packed version $packageVersion differs from requested version $ExpectedVersion"
+    }
+    Write-Host "OK: DW add-in folder resolves $packageId / $packageVersion"
     $dependencies = @($manifest.SelectNodes('//*[local-name()="dependency"]') | Where-Object { $_.id -like 'Dynamicweb*' })
     if ($dependencies.Count -lt 5) { throw 'Missing direct Dynamicweb dependency constraints' }
     foreach ($dependency in $dependencies) {

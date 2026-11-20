@@ -141,8 +141,16 @@ Use the release helper to rebuild, test, pack and verify each line:
 ```
 
 Install the .NET 8 and .NET 10 SDKs/runtimes for all three lines. The helper derives
-`0.13.0-beta`, `0.13.0.25-beta` and `0.13.0.30-beta` from the release version. PR and branch
-checks build all three without publishing. A matching release tag runs all checks before
-NuGet Trusted Publishing and attaches every line to the GitHub release. The floor guard
-checks the packed DLL's actual references, target framework and NuGet dependency minima;
-a previous build against a newer DW version cannot silently pass as a lower-floor package.
+`0.13.0-beta`, `0.13.1-beta` and `0.13.2-beta` from the Base release version. The Base
+patch is a multiple of ten (`10n`); Discount adds 1 and Groups adds 2. The next patch
+release uses `0.13.10`, `0.13.11` and `0.13.12`, preserving any prerelease suffix.
+This ordering also works for stable releases. Four-part package versions cannot be used:
+DW can interpret the extra number as part of the add-in name and silently skip the DLL.
+
+PR and branch checks build all three without publishing. The tag remains `v<Base version>`
+(for this release, `v0.13.0-beta`); it runs all checks before NuGet Trusted Publishing and
+attaches every line to the GitHub release. The guards verify the packed manifest resolves
+to the intended add-in identity and version, plus the DLL's actual references, target
+framework and NuGet dependency minima. CI tests the version mapping and rejects a packed
+four-part-version regression case. A previous build against a newer DW version cannot
+silently pass as a lower-floor package.

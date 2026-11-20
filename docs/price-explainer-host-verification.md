@@ -2,7 +2,18 @@
 
 Use disposable hosts only. This is a verification recipe, not evidence that the hosts passed.
 Build the three packages with `.github/scripts/build-line.ps1`; install Base on 10.8.4,
-Discount on 10.28.17, and Groups on 10.30.6 or 10.30.8. Check AddInManager TypeLoadErrors,
+Discount on 10.28.17, and Groups on 10.30.6 or 10.30.8. Use these exact package names:
+
+| Line | Package |
+|---|---|
+| Base | `Truvio.Commerce.PowerTools.0.13.0-beta.nupkg` |
+| Discount | `Truvio.Commerce.PowerTools.0.13.1-beta.nupkg` |
+| Groups | `Truvio.Commerce.PowerTools.0.13.2-beta.nupkg` |
+
+Do not install the superseded four-part-version packages. An installation success response
+does not prove the add-in loaded: verify `AddinInstalled` lists PowerTools and its queries
+resolve. A four-part folder version can cause discovery to skip the DLL without a
+PowerTools entry in TypeLoadErrors. Check AddInManager TypeLoadErrors,
 open PowerTools > Commerce > Price Explainer, and inspect GeneralLog errors after rendering.
 Keep screenshots of the complete Price and Price steps sections, with the host version visible.
 

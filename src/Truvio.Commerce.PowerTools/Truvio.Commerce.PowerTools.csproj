@@ -11,6 +11,8 @@
     <!-- NuGet package metadata -->
     <PackageId>Truvio.Commerce.PowerTools</PackageId>
     <!-- Prerelease suffix renders as the BETA flag in the DW10 admin "Available apps" list -->
+    <!-- Base release: patch must be 10n. build-line.ps1 adds 1 for Discount, 2 for Groups.
+         Tags name this Base version; the next patch release starts at 0.13.10. -->
     <Version>0.13.0-beta</Version>
     <AssemblyVersion>0.13.0.0</AssemblyVersion>
     <Title>Truvio PowerTools</Title>
